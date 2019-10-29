@@ -1,0 +1,30 @@
+diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
+index 250ed85424..48314a7d64 100644
+--- a/third_party/boringssl/BUILD.gn
++++ b/third_party/boringssl/BUILD.gn
+@@ -12,7 +12,7 @@ import("BUILD.generated_tests.gni")
+ 
+ # Config for us and everybody else depending on BoringSSL.
+ config("external_config") {
+-  include_dirs = [ "src/include" ]
++  include_dirs = [ "src/include", "src/oqs/include" ]
+   if (is_component_build) {
+     defines = [ "BORINGSSL_SHARED_LIBRARY" ]
+   }
+@@ -44,7 +44,7 @@ config("no_asm_config") {
+ }
+ 
+ all_sources = crypto_sources + ssl_sources
+-all_headers = crypto_headers + ssl_headers
++all_headers = crypto_headers + ssl_headers + oqs_headers
+ 
+ # Windows' assembly is built with NASM. The other platforms use the platform
+ # assembler. Exclude Windows ARM64 because NASM targets x86 and x64 only.
+@@ -113,6 +113,7 @@ component("boringssl") {
+   sources = all_sources
+   public = all_headers
+   friend = [ ":*" ]
++  libs = ["//third_party/boringssl/src/oqs/lib/liboqs.a"]
+   deps = [
+     "//third_party/boringssl/src/third_party/fiat:fiat_license",
+   ]
