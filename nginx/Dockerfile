@@ -34,8 +34,8 @@ RUN ./configure --prefix=/opt/nginx \
                 --with-debug \
                 --with-http_ssl_module --with-openssl=/opt/openssl \
                 --without-http_gzip_module \
-                --with-cc-opt="-I /opt/openssl/oqs/include" \
-                --with-ld-opt="-L /opt/openssl/oqs/lib" && \
+                --with-cc-opt="-I/opt/openssl/oqs/include" \
+                --with-ld-opt="-L/opt/openssl/oqs/lib" && \
     sed -i 's/libcrypto.a/libcrypto.a -loqs/g' objs/Makefile && \
     sed -i 's/EVP_MD_CTX_create/EVP_MD_CTX_new/g; s/EVP_MD_CTX_destroy/EVP_MD_CTX_free/g' src/event/ngx_event_openssl.c && \
     make && make install;
@@ -57,8 +57,8 @@ RUN set -x && \
     ${OPENSSL} x509 -req -in server.csr -out server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
 
 # forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /opt/nginx/access.log && \
-    ln -sf /dev/stderr /opt/nginx/error.log;
+RUN ln -sf /dev/stdout /opt/nginx/logs/access.log && \
+    ln -sf /dev/stderr /opt/nginx/logs/error.log;
 
 EXPOSE 4433
 
