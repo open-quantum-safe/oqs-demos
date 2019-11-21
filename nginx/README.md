@@ -3,7 +3,7 @@ This directory contains a Dockerfile that builds nginx with the [OQS OpenSSL 1.1
 To get started, install Docker and run the following commands in this directory:
 
 1. `docker build --build-arg SIG_ALG=<SIG> --tag oqs-nginx-img .` (`<SIG>` can be any of the authentication algorithms listed [here](https://github.com/open-quantum-safe/openssl#supported-algorithms)).
-2. `docker run --detach --rm --name oqs-nginx --port 4433:4433 oqs-nginx-img`
+2. `docker run --detach --rm --name oqs-nginx -p 4433:4433 oqs-nginx-img`
 
 This will start a docker container that has nginx listening for TLS 1.3 connections on port 4433. The following command can be used to verify that the nginx so built is capable of using quantum-safe cryptography:
 
@@ -11,4 +11,4 @@ This will start a docker container that has nginx listening for TLS 1.3 connecti
 
 where `<KEX>` can be any key exchange algorithm listed [here](https://github.com/open-quantum-safe/openssl#supported-algorithms).
 
-The `nginx.conf` can be edited if a configuration other than the one used here is desired. In particular, the `ssl_ecdh_curve` directive can be used to restrict the quantum-safe key-exchange algorithms that nginx supports.
+`nginx.conf` can be edited if a configuration other than the one used here is desired. In particular, the `ssl_ecdh_curve` directive can be used to restrict the quantum-safe key-exchange algorithms that nginx supports.
