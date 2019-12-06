@@ -6,7 +6,7 @@ The fork, and by extension Chromium, at present only support the use of quantum-
 
 1. To obtain the source code, follow the instructions in the "Install depot_tools" and "Get the code" sections [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions.md). Be sure to obtain the entire repository history, as we will checkout a specific commit.
 
-2. Navigate to the root directory of the source code, which we will refer to hereafter as `<CHROMIMUM_ROOT>`, and run `git checkout 6d326b9edbf4c2ee1c3ad155d16012acf3c0cc0c`, which is the latest commit for which we have verified the build instructions.
+2. Navigate to the root directory of the source code, which we will refer to hereafter as `<CHROMIMUM_ROOT>`, and run `git checkout 6d326b9edbf4c2ee1c3ad155d16012acf3c0cc0c`, which is the latest commit for which we have verified the build instructions. Then, to ensure that all of chromium's third party dependencies are compatible with this commit, run `gclient sync -D --with_branch_heads --with_tags`.
 
 3. Navigate to `<CHROMIUM_ROOT>/third_party/boringssl/src`, and switch the BoringSSL source code to the OQS-BoringSSL fork by running the following commands:
 
