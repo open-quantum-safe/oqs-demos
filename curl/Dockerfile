@@ -1,21 +1,21 @@
 # Multi-stage build: First the full builder image:
 
-FROM debian:buster-slim as intermediate
+FROM alpine:3.11 as intermediate
+LABEL version="1"
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apk update && apk upgrade
+
+# Get all software packages required for builing all components:
+RUN apk add build-base linux-headers \
+            libtool automake autoconf cmake \
+            make \
+            openssl openssl-dev \
+            git docker wget
 
 # define the Curl version to be baked in
 ENV CURL_VERSION 7.66.0
-
-# Get all software packages required for builing all components:
-RUN apt-get update -qq \
-    && apt-get install -y build-essential \
-                          git \
-                          # OQS
-                          autoconf \
-                          automake \
-                          libtool \
-                          libssl-dev \
-                          # misc
-                          wget;
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -26,12 +26,10 @@ RUN git clone --single-branch --branch master https://github.com/open-quantum-sa
     git clone --single-branch --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
 
-# build liboqs - also shared
+# build liboqs shared and static
 WORKDIR /opt/liboqs
-RUN autoreconf -i && \
-    ./configure --prefix=/opt/ossl-src/oqs && \
-    make -j && \
-    make install;
+RUN mkdir build && cd build && cmake ..  -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
+RUN mkdir build-static && cd build-static && cmake ..  -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
@@ -71,10 +69,8 @@ COPY serverstart.sh ${INSTALLDIR}/bin
 
 CMD ["serverstart.sh"]
 
-# second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM debian:buster-slim
-
-RUN apt-get update -qq 
+## second stage: Only create minimal image without build tooling and intermediate build results generated above:
+FROM alpine:3.11
 
 # Default root CA signature algorithm; can be set to any listed at https://github.com/open-quantum-safe/openssl#authentication
 ARG SIG_ALG="dilithium2"
@@ -99,13 +95,13 @@ RUN set -x && \
     ${OPENSSL} req -new -newkey ${SIG_ALG} -keyout /server.key -out /server.csr -nodes -subj "/CN=localhost" -config ${OPENSSL_CNF} && \
     # generate server cert
     ${OPENSSL} x509 -req -in /server.csr -out /server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
-
+#
 WORKDIR /
 
 COPY serverstart.sh ${INSTALLDIR}/bin
 
 # Enable a normal user to create new server keys off set CA
-RUN useradd -ms /bin/bash oqs && chown oqs.oqs /server.* && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
+RUN addgroup -S oqs && adduser -S oqs -G oqs && chown oqs.oqs /server.* && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
 
 USER oqs
 CMD ["serverstart.sh"]
