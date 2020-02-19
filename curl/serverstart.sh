@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/openssl#key-exchange
 if [ "x$KEM_ALG" == "x" ]; then
@@ -19,4 +19,4 @@ fi
 openssl s_server -cert /server.crt -key /server.key -curves $KEM_ALG -www -tls1_3 -accept localhost:4433&
 
 # Open a shell for local experimentation
-bash
+sh
