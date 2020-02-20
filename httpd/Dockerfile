@@ -8,6 +8,7 @@ RUN apt-get update -qq \
                           # OQS
                           autoconf \
                           automake \
+			  cmake \
                           libtool \
                           libssl-dev \
                           # httpd
@@ -24,12 +25,9 @@ RUN git clone --single-branch --branch master https://github.com/open-quantum-sa
     git clone --single-branch --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
     wget --trust-server-names "https://www.apache.org/dyn/mirrors/mirrors.cgi?action=download&filename=httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
-# build liboqs
+# build liboqs (static linking only)
 WORKDIR /opt/liboqs
-RUN autoreconf -i && \
-    ./configure --prefix=/opt/ossl-src/oqs --enable-shared=no && \
-    make -j && \
-    make install;
+RUN mkdir build-static && cd build-static && cmake ..  -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
@@ -53,7 +51,8 @@ RUN sed -i 's,-lcrypto,-lcrypto /opt/ossl-src/oqs/lib/liboqs.a -ldl,g' configure
 ARG OPENSSL=/opt/openssl/bin/openssl
 ARG OPENSSL_CNF=/opt/ossl-src/apps/openssl.cnf
 
-ARG SIG_ALG=rsa:3072
+# Set a default QSC signature algorithm from the list at https://github.com/open-quantum-safe/openssl#authentication
+ARG SIG_ALG=dilithium2
 
 WORKDIR /opt/httpd
 COPY httpd.conf conf/httpd.conf
@@ -62,7 +61,7 @@ RUN set -x && \
     # generate CA key and cert
     ${OPENSSL} req -x509 -new -newkey ${SIG_ALG} -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365 -config ${OPENSSL_CNF} && \
     # generate server CSR
-    ${OPENSSL} req -new -newkey ${SIG_ALG} -keyout conf/server.key -out server.csr -nodes -subj "/CN=oqstest CA" -config ${OPENSSL_CNF} && \
+    ${OPENSSL} req -new -newkey ${SIG_ALG} -keyout conf/server.key -out server.csr -nodes -subj "/CN=httpd.demo.openquantumsafe.org" -config ${OPENSSL_CNF} && \
     # generate server cert
     ${OPENSSL} x509 -req -in server.csr -out conf/server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
 
