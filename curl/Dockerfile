@@ -20,6 +20,9 @@ ENV CURL_VERSION 7.66.0
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
 
+# liboqs build type variant
+ARG LIBOQS_BUILD_TYPE=Generic
+
 # get all sources
 WORKDIR /opt
 RUN git clone --single-branch --branch master https://github.com/open-quantum-safe/liboqs && \
@@ -28,8 +31,8 @@ RUN git clone --single-branch --branch master https://github.com/open-quantum-sa
 
 # build liboqs shared and static
 WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake ..  -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
-RUN mkdir build-static && cd build-static && cmake ..  -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
+RUN mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
+RUN mkdir build-static && cd build-static && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
@@ -90,18 +93,19 @@ ENV OPENSSL_CNF=${INSTALLDIR}/ssl/openssl.cnf
 
 WORKDIR ${INSTALLDIR}/bin
 
-RUN set -x && \
+RUN set -x && mkdir /opt/test && \
     # generate server CSR using pre-set CA.key & cert
-    ${OPENSSL} req -new -newkey ${SIG_ALG} -keyout /server.key -out /server.csr -nodes -subj "/CN=localhost" -config ${OPENSSL_CNF} && \
+    ${OPENSSL} req -new -newkey ${SIG_ALG} -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" -config ${OPENSSL_CNF} && \
     # generate server cert
-    ${OPENSSL} x509 -req -in /server.csr -out /server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
+    ${OPENSSL} x509 -req -in /opt/test/server.csr -out /opt/test/server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
 #
 WORKDIR /
 
 COPY serverstart.sh ${INSTALLDIR}/bin
+COPY perftest.sh ${INSTALLDIR}/bin
 
 # Enable a normal user to create new server keys off set CA
-RUN addgroup -S oqs && adduser -S oqs -G oqs && chown oqs.oqs /server.* && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
+RUN addgroup -S oqs && adduser -S oqs -G oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
 
 USER oqs
 CMD ["serverstart.sh"]
