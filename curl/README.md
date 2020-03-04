@@ -31,7 +31,33 @@ to any of the [supported KEM algorithms built into OQS-OpenSSL](https://github.c
 
 2) Setting the signature algorithm (SIG): By setting 'SIG_ALG' to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/openssl#authentication) one can run TLS using a SIG other than the one set when building the image (see above). Example: `docker run -e SIG_ALG=picnicl1fs -it oqs-curl`.
 
-## Easter egg
+#### Build type argument
 
-The docker image can also be used to execute performance tests against the different OQS algoritms: Simply start the image as shown above and then execute the standard OpenSSL handshake performance test like this `openssl s_time -connect :4433`. Be sure to first define the algorithms you are interested in, e.g., `docker run -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl`.
+The Dockerfile also facilitates building the underlying OQS library to different specifications (by setting the `--build-arg` variable `LIBOQS_BUILD_TYPE` to one of the following values):
+- "Debug" generates an image with full debugging information and without any optimizations
+- "Generic" creates an image with full compiler optimization but without any CPU feature optimization. This is the default setting.
+- Any other value creates an image with full optimizations, incl. utilization of all available CPU features.
 
+Use images build with the third option with care as they may not run on all platforms (e.g., on machines where CPU features are missing relative to the build machine).
+
+## Performance testing
+
+The docker image can also be used to execute TLS-level performance tests against the different OQS algoritms: Simply start 
+```
+docker run -it oqs-curl perftest.sh
+```
+to perform TLS handshakes for 200 seconds (TEST_TIME default value) using dilithium2 (SIG_ALG default value) and kyber512 (KEM_ALG default value) keys and certificates.
+
+A 'worked example' and more general alternative form of the command is
+```
+docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh
+```
+runs TLS handshakes for 5 seconds exercizing `picnicl1fs` and `sikep751`. Again, all [supported QSC algorithms](https://github.com/open-quantum-safe/openssl#supported-algorithms) can be set here.
+
+### "Classic"/non-QSC algorithm testing
+
+The following algorithm names may be set if one is interested in comparative performance measurements using "classic", i.e., non-QSC, crypto:
+
+- SIG_ALG: ed25519 ed448
+
+- KEM_ALG: X25519 P-384 P-256 P-521
