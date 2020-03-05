@@ -25,8 +25,8 @@ The fork, and by extension Chromium, at present only support the use of quantum-
 
 6. Finally, follow the instructions [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install-additional-build-dependencies) from the "Install additional build dependencies" section onwards to build and run Chromium.
 
-To verify that Chromium can negotiate a post-quantum key exchange:
+To verify that Chromium can perform a TLS 1.3 handshake using a post-quantum key exchange:
 
 1. Navigate again to the `<CHROMIUM_ROOT>/third_party/boringssl/src` folder, and build OQS-BoringSSL as a standalone project by following the instructions in that directory's `README.md` file.
-2. Then, in the `build` directory, run `./tool/bssl server -curves oqs_<KEX> -accept localhost:4433", where `<KEX>` is any key-exchange algorithm listed [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms).
+2. Then, in the `build` directory, run `./tool/bssl server -curves oqs_<KEX> -accept localhost:4433`, where `<KEX>` is any key-exchange algorithm listed [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms).
 3. In the Chromium browser, load `https://localhost:4433`.
