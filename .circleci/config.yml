@@ -36,7 +36,7 @@ localCheckout: &localCheckout
         command: docker tag oqs-curl $DOCKER_LOGIN/curl-generic && docker push $DOCKER_LOGIN/curl-generic && docker tag oqs-httpd-img $DOCKER_LOGIN/httpd-generic && docker push $DOCKER_LOGIN/httpd-generic && docker tag oqs-nginx-img $DOCKER_LOGIN/nginx-generic && docker push $DOCKER_LOGIN/nginx-generic
 
 
-# As of now (Mar 2020) CircleCI does not support building current OSX docker images... :-(
+# Reactivate when issue #13 is resolved:
 #.mac_job: &macjob
 #    macos:
 #       xcode: "11.3.0"
@@ -80,7 +80,7 @@ workflows:
   version: 2
   build:
     jobs:
-      - debian-buster-amd64:
+      - ubuntu-bionic-x86_64:
           context: openquantumsafe
   nightly:
     triggers:
@@ -93,6 +93,6 @@ workflows:
     jobs:
 #      - macOS:   
 #          context: openquantumsafe
-      - ubuntu-bionic-x86_64:
+      - debian-buster-amd64:
           context: openquantumsafe
 
