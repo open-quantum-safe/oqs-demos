@@ -1,0 +1,98 @@
+version: 2
+
+# CircleCI doesn't handle large file sets properly for local builds
+# https://github.com/CircleCI-Public/circleci-cli/issues/281#issuecomment-472808051
+localCheckout: &localCheckout
+  run: |-
+    PROJECT_PATH=$(cd ${CIRCLE_WORKING_DIRECTORY}; pwd)
+    mkdir -p ${PROJECT_PATH}
+    cd /tmp/_circleci_local_build_repo
+    git ls-files -z | xargs -0 -s 2090860 tar -c | tar -x -C ${PROJECT_PATH} 
+    cp -a /tmp/_circleci_local_build_repo/.git ${PROJECT_PATH}
+
+.linux_job: &linuxjob
+  docker:
+    - image: ${IMAGE}
+  steps:
+    - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+    - setup_remote_docker
+    - run:
+        name: docker login
+        command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+    - run:
+        name: checkout dependencies
+        command: git clone --single-branch https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
+    - run:
+        name: Curl
+        command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete")
+    - run: 
+        name: Apache httpd
+        command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker run --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker exec oqs-httpd bash -c 'echo  "GET /" | /opt/openssl/bin/openssl s_client -CAfile CA.crt -curves frodo640aes -crlf -connect localhost:4433')
+    - run: 
+        name: nginx
+        command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker run --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves kyber512 -connect localhost:4433)
+    - run:
+        name: Push images
+        command: docker tag oqs-curl $DOCKER_LOGIN/curl-generic && docker push $DOCKER_LOGIN/curl-generic && docker tag oqs-httpd-img $DOCKER_LOGIN/httpd-generic && docker push $DOCKER_LOGIN/httpd-generic && docker tag oqs-nginx-img $DOCKER_LOGIN/nginx-generic && docker push $DOCKER_LOGIN/nginx-generic
+
+
+# Reactivate when issue #13 is resolved:
+#.mac_job: &macjob
+#    macos:
+#       xcode: "11.3.0"
+#    steps:
+#        - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+#        - run:
+#            name: Install dependencies
+#            command: |
+#              .circleci/git_no_checkin_in_last_day.sh || (
+#              brew update &&
+#              brew cask install virtualbox &&
+#              brew install docker docker-machine &&
+#              docker-machine create default &&
+#              docker-machine ls &&
+#              docker-machine start &&
+#              docker-machine env default &&
+#              eval "$(docker-machine env default)" &&
+#              docker version &&
+#              brew unlink python@2 
+#              )
+#        - run:
+#            name: docker login
+#            command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+#        - run:
+#            name: Curl
+#            command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh)
+
+jobs:
+  debian-buster-amd64:
+    <<: *linuxjob
+    environment:
+      IMAGE: openquantumsafe/ci-debian-buster-amd64:latest
+  ubuntu-bionic-x86_64:
+    <<: *linuxjob
+    environment:
+      IMAGE: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
+#  macOS:
+#    <<: *macjob
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - ubuntu-bionic-x86_64:
+          context: openquantumsafe
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 4 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+#      - macOS:   
+#          context: openquantumsafe
+      - debian-buster-amd64:
+          context: openquantumsafe
+
