@@ -1,6 +1,6 @@
 FROM debian:buster-slim
 
-ENV HTTPD_VERSION 2.4.41
+ENV HTTPD_VERSION 2.4.43
 
 RUN apt-get update -qq \
     && apt-get install -y build-essential \
@@ -23,7 +23,7 @@ RUN apt-get update -qq \
 WORKDIR /opt
 RUN git clone --single-branch --branch master https://github.com/open-quantum-safe/liboqs && \
     git clone --single-branch --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
-    wget --trust-server-names "https://www.apache.org/dyn/mirrors/mirrors.cgi?action=download&filename=httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
+    wget --trust-server-names "https://downloads.apache.org//httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
 # build liboqs (static linking only)
 WORKDIR /opt/liboqs
