@@ -13,7 +13,7 @@ The following command can be used to verify that the nginx so built is capable o
 
 `docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves <KEX> -connect localhost:4433`
 
-where `<KEX>` can be any key exchange algorithm listed [here](https://github.com/open-quantum-safe/openssl#key-exchange).
+where `<KEX>` can be any key exchange algorithm listed in the file `nginx.conf` in the `ssl_ecdh_curve` parameter set (a subset of the ones [currently supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange) ).
 
 ## Examples
 
