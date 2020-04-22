@@ -13,7 +13,7 @@ This will start a docker container that has httpd listening for TLS 1.3 connecti
 
 `docker exec oqs-httpd /opt/openssl/bin/openssl s_client -curves <KEX> -connect localhost:4433`
 
-where `<KEX>` can be any QSC key exchange algorithm listed [here](https://github.com/open-quantum-safe/openssl#key-exchange).
+where `<KEX>` can be any QSC key exchange algorithm listed in the configuration file `httpd-ssl.conf` in the `SSLOpenSSLConfCmd Curves` configuration section (a subset of all presently supported KEM algorithms as documented [here](https://github.com/open-quantum-safe/openssl#key-exchange) ).
 
 ## Example
 
