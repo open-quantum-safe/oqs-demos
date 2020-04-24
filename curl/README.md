@@ -5,13 +5,13 @@ This directory contains a Dockerfile that builds curl with the [OQS OpenSSL 1.1.
 1) Be sure to have [docker installed](https://docs.docker.com/install).
 2) Run `docker build -t oqs-curl .` to create a post quantum-enabled OpenSSL and Curl docker image
 3) To verify all components perform quantum-safe operations, first start the container with `docker run -it oqs-curl` thus starting an OQS-enabled TLS test server.
-4) On the command prompt in the docker container query that server using `curl https://localhost:4433`. If all works, the last command returns all TLS information documenting use of OQS-enabled TLS.
+4) On the command prompt in the docker container query that server using `curl --curves kyber512 https://localhost:4433`. If all works, the last command returns all TLS information documenting use of OQS-enabled TLS. The parameter to the `--curves` argument is the KEM_ALG chosen when building the docker container ('kyber512' by default).
 
 
 ## More details
 
 The Dockerfile 
-- obtains all source code required for building the quantum-safe crypto (QSC) algorithms, the QSC-enabled version of OpenSSL (v.1.1.1), curl (v.7.66.0) 
+- obtains all source code required for building the quantum-safe crypto (QSC) algorithms, the QSC-enabled version of OpenSSL (v.1.1.1), curl (v.7.69.1) 
 - builds all libraries and applications
 - creates OQS-enabled certificate files for a mini-root certificate authority (CA) 
 - creates an OQS-enabled server certificate for running a `localhost` QSC-TLS server
@@ -27,7 +27,7 @@ docker build -t oqs-curl --build-arg SIG_ALG=qteslapiii .
 Two further, runtime configuration option exist that can both be optionally set via docker environment variables:
 
 1) Setting the key exchange mechanism (KEM): By setting 'KEM_ALG' 
-to any of the [supported KEM algorithms built into OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange) one can run TLS using a KEM other than the default algorithm 'kyber512'. Example: `docker run -e KEM_ALG=newhope1024cca -it oqs-curl`. 
+to any of the [supported KEM algorithms built into OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange) one can run TLS using a KEM other than the default algorithm 'kyber512'. Example: `docker run -e KEM_ALG=newhope1024cca -it oqs-curl`. It is always necessary to also request use of this KEM algorithm by passing it to the invocation of `curl` with the `--curves` parameter, i.e. as such in the same example: `curl --curves newhope1024cca https://localhost:4433`.
 
 2) Setting the signature algorithm (SIG): By setting 'SIG_ALG' to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/openssl#authentication) one can run TLS using a SIG other than the one set when building the image (see above). Example: `docker run -e SIG_ALG=picnicl1fs -it oqs-curl`.
 
