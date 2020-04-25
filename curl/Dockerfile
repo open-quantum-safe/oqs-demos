@@ -15,7 +15,7 @@ RUN apk add build-base linux-headers \
             git docker wget
 
 # define the Curl version to be baked in
-ENV CURL_VERSION 7.66.0
+ENV CURL_VERSION 7.69.1
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -28,6 +28,9 @@ WORKDIR /opt
 RUN git clone --single-branch --branch master https://github.com/open-quantum-safe/liboqs && \
     git clone --single-branch --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
+
+# Add curl patchfile
+ADD patch-7.69.1.oqs.txt /opt/patch-7.69.1.oqs.txt
 
 # build liboqs shared and static
 WORKDIR /opt/liboqs
@@ -58,10 +61,14 @@ RUN set -x && \
 
 # build curl - injecting OQS CA generated above into root store
 WORKDIR /opt/curl-${CURL_VERSION}
+RUN patch -p1 < /opt/patch-7.69.1.oqs.txt
+
+# For curl debugging enable it by adding the line below to the configure command:
+#                    --enable-debug \
+
 RUN env CPPFLAGS="-I/opt/ossl-src/oqs/include" \
         LDFLAGS=-Wl,-R${INSTALLDIR}/lib  \
         ./configure --prefix=${INSTALLDIR} \
-                    --enable-debug \
                     --with-ca-bundle=${INSTALLDIR}/bin/CA.crt \
                     --with-ssl=${INSTALLDIR} && \
     make -j && make install;
