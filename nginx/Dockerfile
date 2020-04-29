@@ -24,7 +24,7 @@ RUN git clone --single-branch --branch master https://github.com/open-quantum-sa
 
 # build liboqs (static only)
 WORKDIR /opt/liboqs
-RUN mkdir build-static && cd build-static && cmake ..  -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/openssl/oqs && make -j && make install
+RUN mkdir build-static && cd build-static && cmake ..  -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/openssl/oqs && make && make install
 
 # build nginx (which builds OQS-OpenSSL)
 WORKDIR /opt/nginx-${NGINX_VERSION}

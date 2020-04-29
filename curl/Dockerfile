@@ -34,15 +34,15 @@ ADD patch-7.69.1.oqs.txt /opt/patch-7.69.1.oqs.txt
 
 # build liboqs shared and static
 WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
-RUN mkdir build-static && cd build-static && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make -j && make install
+RUN mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make && make install
+RUN mkdir build-static && cd build-static && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make && make install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
 # curl looks for shared libraries
 # at ./configure time
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib" ./config shared --prefix=${INSTALLDIR} && \
-    make -j && make install;
+    make && make install;
 
 # set path to use 'new' openssl & curl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR}/bin:${PATH}"
@@ -71,7 +71,7 @@ RUN env CPPFLAGS="-I/opt/ossl-src/oqs/include" \
         ./configure --prefix=${INSTALLDIR} \
                     --with-ca-bundle=${INSTALLDIR}/bin/CA.crt \
                     --with-ssl=${INSTALLDIR} && \
-    make -j && make install;
+    make && make install;
 
 WORKDIR /
 
