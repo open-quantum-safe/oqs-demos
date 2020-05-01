@@ -7,7 +7,7 @@ localCheckout: &localCheckout
     PROJECT_PATH=$(cd ${CIRCLE_WORKING_DIRECTORY}; pwd)
     mkdir -p ${PROJECT_PATH}
     cd /tmp/_circleci_local_build_repo
-    git ls-files -z | xargs -0 -s 2090860 tar -c | tar -x -C ${PROJECT_PATH} 
+    git ls-files -z | xargs -0 -s 2090860 tar -c | tar -x -C ${PROJECT_PATH}
     cp -a /tmp/_circleci_local_build_repo/.git ${PROJECT_PATH}
 
 .linux_job: &linuxjob
@@ -25,10 +25,10 @@ localCheckout: &localCheckout
     - run:
         name: Curl
         command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete")
-    - run: 
+    - run:
         name: Apache httpd
         command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker run --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker exec oqs-httpd bash -c 'echo  "GET /" | /opt/openssl/bin/openssl s_client -CAfile CA.crt -curves frodo640aes -crlf -connect localhost:4433')
-    - run: 
+    - run:
         name: nginx
         command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker run --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves kyber512 -connect localhost:4433)
     - run:
@@ -55,7 +55,7 @@ localCheckout: &localCheckout
 #              docker-machine env default &&
 #              eval "$(docker-machine env default)" &&
 #              docker version &&
-#              brew unlink python@2 
+#              brew unlink python@2
 #              )
 #        - run:
 #            name: docker login
@@ -82,17 +82,17 @@ workflows:
     jobs:
       - ubuntu-bionic-x86_64:
           context: openquantumsafe
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 4 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-#      - macOS:   
+# Disabled until https://ideas.circleci.com/ideas/CCI-I-981 is resolved.
+#  nightly:
+#    triggers:
+#      - schedule:
+#          cron: "0 4 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - master
+#    jobs:
+#      - macOS:
 #          context: openquantumsafe
-      - debian-buster-amd64:
-          context: openquantumsafe
-
+#      - debian-buster-amd64:
+#          context: openquantumsafe
