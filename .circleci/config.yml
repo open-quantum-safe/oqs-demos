@@ -15,25 +15,12 @@ localCheckout: &localCheckout
     - image: ${IMAGE}
   steps:
     - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
-    - setup_remote_docker
     - run:
-        name: docker login
-        command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+        name: Access Secret
+        command: echo $SUPER_SECRET
     - run:
-        name: checkout dependencies
-        command: git clone --single-branch https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
-    - run:
-        name: Curl
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete")
-    - run:
-        name: Apache httpd
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker run --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker exec oqs-httpd bash -c 'echo  "GET /" | /opt/openssl/bin/openssl s_client -CAfile CA.crt -curves frodo640aes -crlf -connect localhost:4433')
-    - run:
-        name: nginx
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker run --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves kyber512 -connect localhost:4433)
-    - run:
-        name: Push images
-        command: docker tag oqs-curl $DOCKER_LOGIN/curl-generic && docker push $DOCKER_LOGIN/curl-generic && docker tag oqs-httpd-img $DOCKER_LOGIN/httpd-generic && docker push $DOCKER_LOGIN/httpd-generic && docker tag oqs-nginx-img $DOCKER_LOGIN/nginx-generic && docker push $DOCKER_LOGIN/nginx-generic
+        name: Access Secret 2
+        command: echo $SUPER_SECRET > tmpfile & cat tmpfile
 
 
 # Reactivate when issue #13 is resolved:
@@ -81,7 +68,7 @@ workflows:
   build:
     jobs:
       - ubuntu-bionic-x86_64:
-          context: openquantumsafe
+          context: test_oqs_demos
 # Disabled until https://ideas.circleci.com/ideas/CCI-I-981 is resolved.
 #  nightly:
 #    triggers:
