@@ -82,17 +82,17 @@ workflows:
     jobs:
       - ubuntu-bionic-x86_64:
           context: openquantumsafe
-# Disabled until https://ideas.circleci.com/ideas/CCI-I-981 is resolved.
-#  nightly:
-#    triggers:
-#      - schedule:
-#          cron: "0 4 * * *"
-#          filters:
-#            branches:
-#              only:
-#                - master
-#    jobs:
-#      - macOS:
-#          context: openquantumsafe
-#      - debian-buster-amd64:
-#          context: openquantumsafe
+# TBD: Review for better secret protection when https://ideas.circleci.com/ideas/CCI-I-981 is resolved.
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 4 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - macOS:
+          context: openquantumsafe
+      - debian-buster-amd64:
+          context: openquantumsafe
