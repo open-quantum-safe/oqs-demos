@@ -92,7 +92,5 @@ workflows:
               only:
                 - master
     jobs:
-      - macOS:
-          context: openquantumsafe
       - debian-buster-amd64:
           context: openquantumsafe
