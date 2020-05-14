@@ -21,7 +21,7 @@ ENV CURL_VERSION 7.69.1
 ARG INSTALLDIR=/opt/oqssa
 
 # liboqs build type variant
-ARG LIBOQS_BUILD_TYPE=Generic
+ARG LIBOQS_BUILD_DEFINES
 
 # get all sources
 WORKDIR /opt
@@ -34,7 +34,7 @@ ADD patch-7.69.1.oqs.txt /opt/patch-7.69.1.oqs.txt
 
 # build liboqs shared and static
 WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make && make install
+RUN mkdir build && cd build && cmake .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make && make install
 RUN mkdir build-static && cd build-static && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make && make install
 
 # build OQS-OpenSSL

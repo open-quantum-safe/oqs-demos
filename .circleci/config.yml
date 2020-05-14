@@ -26,14 +26,17 @@ localCheckout: &localCheckout
         name: Curl
         command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete")
     - run:
+        name: Curl generic (portable)
+        command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete")
+    - run:
         name: Apache httpd
         command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker run --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker exec oqs-httpd bash -c 'echo  "GET /" | /opt/openssl/bin/openssl s_client -CAfile CA.crt -curves frodo640aes -crlf -connect localhost:4433')
     - run:
         name: nginx
         command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker run --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves kyber512 -connect localhost:4433)
     - run:
-        name: Push images
-        command: docker tag oqs-curl $TARGETNAME/curl-generic && docker push $TARGETNAME/curl-generic && docker tag oqs-httpd-img $TARGETNAME/httpd-generic && docker push $TARGETNAME/httpd-generic && docker tag oqs-nginx-img $TARGETNAME/nginx-generic && docker push $TARGETNAME/nginx-generic
+        name: Push all images
+        command: docker tag oqs-curl-generic $TARGETNAME/curl-generic && docker push $TARGETNAME/curl-generic && docker tag oqs-curl $TARGETNAME/curl && docker push $TARGETNAME/curl && docker tag oqs-httpd-img $TARGETNAME/httpd && docker push $TARGETNAME/httpd && docker tag oqs-nginx-img $TARGETNAME/nginx && docker push $TARGETNAME/nginx
 
 
 # Reactivate when issue #13 is resolved:
