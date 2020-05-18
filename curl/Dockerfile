@@ -1,6 +1,33 @@
 # Multi-stage build: First the full builder image:
 
+# define the Curl version to be baked in
+ARG CURL_VERSION=7.69.1
+
+# Default location where all binaries wind up:
+ARG INSTALLDIR=/opt/oqssa
+
+# liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
+ARG LIBOQS_BUILD_DEFINES=
+
+# openssl build defines (https://github.com/open-quantum-safe/openssl#build-options)
+ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=p256_kyber768:X25519:kyber768:newhope1024cca"
+
+# Default root CA signature algorithm; can be set to any listed at https://github.com/open-quantum-safe/openssl#authentication
+ARG SIG_ALG="dilithium2"
+
+# Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
+ARG MAKE_DEFINES="-j 2"
+
+
 FROM alpine:3.11 as intermediate
+# Take in all global args
+ARG CURL_VERSION
+ARG INSTALLDIR
+ARG LIBOQS_BUILD_DEFINES
+ARG OPENSSL_BUILD_DEFINES
+ARG SIG_ALG
+ARG MAKE_DEFINES
+
 LABEL version="1"
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -14,15 +41,6 @@ RUN apk add build-base linux-headers \
             openssl openssl-dev \
             git docker wget
 
-# define the Curl version to be baked in
-ENV CURL_VERSION 7.69.1
-
-# Default location where all binaries wind up:
-ARG INSTALLDIR=/opt/oqssa
-
-# liboqs build type variant
-ARG LIBOQS_BUILD_DEFINES
-
 # get all sources
 WORKDIR /opt
 RUN git clone --single-branch --branch master https://github.com/open-quantum-safe/liboqs && \
@@ -30,19 +48,19 @@ RUN git clone --single-branch --branch master https://github.com/open-quantum-sa
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
 
 # Add curl patchfile
-ADD patch-7.69.1.oqs.txt /opt/patch-7.69.1.oqs.txt
+ADD patch-${CURL_VERSION}.oqs.txt /opt/patch-${CURL_VERSION}.oqs.txt
 
 # build liboqs shared and static
 WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make && make install
-RUN mkdir build-static && cd build-static && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make && make install
+RUN mkdir build && cd build && cmake .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make ${MAKE_DEFINES} && make install
+RUN mkdir build-static && cd build-static && cmake .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make ${MAKE_DEFINES} && make install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
 # curl looks for shared libraries
 # at ./configure time
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib" ./config shared --prefix=${INSTALLDIR} && \
-    make && make install;
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib" ./config shared ${OPENSSL_BUILD_DEFINES} --prefix=${INSTALLDIR} && \
+    make ${MAKE_DEFINES} && make install;
 
 # set path to use 'new' openssl & curl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR}/bin:${PATH}"
@@ -51,9 +69,6 @@ ENV PATH="${INSTALLDIR}/bin:${PATH}"
 ENV OPENSSL=${INSTALLDIR}/bin/openssl
 ENV OPENSSL_CNF=${INSTALLDIR}/ssl/openssl.cnf
 
-# Default root CA signature algorithm; can be set to any listed at https://github.com/open-quantum-safe/openssl#authentication
-ARG SIG_ALG="dilithium2"
-
 WORKDIR ${INSTALLDIR}/bin
 RUN set -x && \
     # generate CA key and cert
@@ -61,7 +76,7 @@ RUN set -x && \
 
 # build curl - injecting OQS CA generated above into root store
 WORKDIR /opt/curl-${CURL_VERSION}
-RUN patch -p1 < /opt/patch-7.69.1.oqs.txt
+RUN patch -p1 < /opt/patch-${CURL_VERSION}.oqs.txt
 
 # For curl debugging enable it by adding the line below to the configure command:
 #                    --enable-debug \
@@ -71,7 +86,7 @@ RUN env CPPFLAGS="-I/opt/ossl-src/oqs/include" \
         ./configure --prefix=${INSTALLDIR} \
                     --with-ca-bundle=${INSTALLDIR}/bin/CA.crt \
                     --with-ssl=${INSTALLDIR} && \
-    make && make install;
+    make ${MAKE_DEFINES} && make install;
 
 WORKDIR /
 
@@ -81,12 +96,9 @@ CMD ["serverstart.sh"]
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM alpine:3.11
-
-# Default root CA signature algorithm; can be set to any listed at https://github.com/open-quantum-safe/openssl#authentication
-ARG SIG_ALG="dilithium2"
-
-# Default location where all binaries wind up:
-ARG INSTALLDIR=/opt/oqssa
+# Take in all global args
+ARG INSTALLDIR
+ARG SIG_ALG
 
 # Only retain the ${INSTALLDIR} contents in the final image
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
@@ -112,7 +124,8 @@ COPY serverstart.sh ${INSTALLDIR}/bin
 COPY perftest.sh ${INSTALLDIR}/bin
 
 # Enable a normal user to create new server keys off set CA
-RUN addgroup -S oqs && adduser -S oqs -G oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
+RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
 
 USER oqs
+STOPSIGNAL SIGTERM
 CMD ["serverstart.sh"]

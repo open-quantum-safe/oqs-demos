@@ -44,3 +44,45 @@ a generic system without processor-specific runtime optimizations is built, thus
 ## Usage
 
 Information how to use the image is [available in the separate file USAGE.md](USAGE.md).
+
+## Build options
+
+The Dockerfile provided allows for significant customization of the image built:
+
+### LIBOQS_BUILD_DEFINES
+
+This permits changing the build options for the underlying library with the quantum safe algorithms. All possible options are documented [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).
+
+By default, the image is built such as to have maximum portability regardless of CPU type and optimizations available, i.e. to run on the widest possible range of cloud machines.
+
+### OPENSSL_BUILD_DEFINES
+
+This permits changing the build options for the underlying openssl library containing the quantum safe algorithms. 
+
+The default setting defines a range of default algorithms suggested for key exchange. For more information see [the documentation](https://github.com/open-quantum-safe/openssl#default-algorithms-announced).
+
+### SIG_ALG
+
+This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
+
+The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
+
+
+### INSTALL_PATH
+
+This defines the resultant location of the software installatiion.
+
+By default this is '/opt/oqssa'. It is recommended to not change this. Also, all [usage documentation](USAGE.md) assumes this path.
+
+### CURL_VERSION
+
+This defines the curl software version to be build into the image.
+
+The default version set is known to work OK and depends on a patch. Therefore changing it is *not* recommended.
+
+### MAKE_DEFINES
+
+Allow setting parameters to `make` operation, e.g., '-j <i>' where i defines the number of jobs run in parallel during build.
+
+The default is conservative and known not to overload normal machines. If one has a very powerful (many cores, >64GB RAM) machine, passing larger numbers (or only '-j' for maximum parallelism) speeds up building considerably.
+

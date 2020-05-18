@@ -9,25 +9,41 @@ This directory contains a Dockerfile that builds nginx with the [OQS OpenSSL 1.1
 1. `docker build --build-arg SIG_ALG=<SIG> -t oqs-nginx-img .` (`<SIG>` can be any of the authentication algorithms listed [here](https://github.com/open-quantum-safe/openssl#authentication)). An alternative, simplified build instruction is `docker build -t oqs-nginx-img .`: This will generate the image with a default QSC algorithm (dilithium2 -- see Dockerfile to change this).
 2. `docker run --detach --rm --name oqs-nginx -p 4433:4433 oqs-nginx-img` will start up the resulting container with QSC-enabled nginx running and listening for TLS 1.3 connections on port 4433.
 
-The following command can be used to verify that the nginx so built is capable of using quantum-safe cryptography:
+## Usage
 
-`docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves <KEX> -connect localhost:4433`
+Complete information how to use the image is [available in the separate file USAGE.md](USAGE.md).
 
-where `<KEX>` can be any key exchange algorithm listed in the file `nginx.conf` in the `ssl_ecdh_curve` parameter set (a subset of the ones [currently supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange) ).
+## Build options
 
-## Examples
+The Dockerfile provided allows for significant customization of the image built:
 
-Running `docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves saber -connect localhost:4433` will use Saber to establish the test connection.
+### LIBOQS_BUILD_DEFINES
 
-To retrieve the test page of nginx via the QSC algorithm kyber768, you can run this command `docker exec oqs-nginx bash -c 'echo "GET /" | /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves kyber768 -connect localhost:4433'`. You can check the nginx access logs via `docker logs oqs-nginx`.
+This permits changing the build options for the underlying library with the quantum safe algorithms. All possible options are documented [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).
 
-*Note:* Leaving away reference to the root certificate file 'CA.crt' in the command above lets the `GET` command fail as the TLS connection can not be properly verified.
+By default, the image is built such as to have maximum portability regardless of CPU type and optimizations available, i.e. to run on the widest possible range of cloud machines.
 
-*Note 2:* Should you fail to see the actual web server contents in the `openssl s_client` output, you may want to add the option `-ign_eof` to the command to see it: `docker exec oqs-nginx bash -c 'echo "GET /" | /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves kyber768 -connect localhost:4433 -ign_eof'`
+### SIG_ALG
+
+This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
+
+The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
 
 
-## Further options
+### NGINX_PATH
 
-`nginx.conf` can be edited if a configuration other than the one used here is desired. In particular, the `ssl_ecdh_curve` directive can be used to restrict the quantum-safe key-exchange algorithms that nginx supports. After changing the configuration, the `docker build -t oqs-nginx-img .` command has to be re-run of course.
+This defines the resultant location of the nginx installatiion.
 
-*Final Note:* You might want to delete the named test container at the end by running `docker rm -f oqs-nginx`.
+By default this is '/opt/nginx'. It is recommended to not change this. Also, all [usage documentation](USAGE.md) assumes this path.
+
+### NGINX_VERSION
+
+This defines the nginx software version to be build into the image.
+
+The default version set is known to work OK but one could try any value available [for download](https://nginx.org/en/download.html).
+
+### MAKE_DEFINES
+
+Allow setting parameters to `make` operation, e.g., '-j <i>' where i defines the number of jobs run in parallel during build.
+
+The default is conservative and known not to overload normal machines. If one has a very powerful (many cores, >64GB RAM) machine, passing larger numbers (or only '-j' for maximum parallelism) speeds up building considerably.
