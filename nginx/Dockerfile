@@ -72,15 +72,16 @@ RUN ./configure --prefix=${NGINX_PATH} \
     make ${MAKE_DEFINES} && make install;
 
 WORKDIR ${NGINX_PATH}
-RUN set -x && \
+
     # generate CA key and cert
+    # generate server CSR
+    # generate server cert
+RUN set -x && \
     mkdir cacert && \
     mkdir pki && \
     ${OPENSSL_PATH}/apps/openssl req -x509 -new -newkey ${SIG_ALG} -keyout CA.key -out cacert/CA.crt -nodes -subj "/CN=oqstest CA" -days 365 -config ${OPENSSL_PATH}/apps/openssl.cnf && \
-    # generate server CSR
     ${OPENSSL_PATH}/apps/openssl req -new -newkey ${SIG_ALG} -keyout pki/server.key -out server.csr -nodes -subj "/CN=oqs-nginx" -config ${OPENSSL_PATH}/apps/openssl.cnf && \
-    # generate server cert
-    ${OPENSSL_PATH}/apps/openssl x509 -req -in server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey CA.key -CAcreateserial -days 365;
+    ${OPENSSL_PATH}/apps/openssl x509 -req -in server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey CA.key -CAcreateserial -days 365
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM alpine 

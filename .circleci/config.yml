@@ -30,10 +30,10 @@ localCheckout: &localCheckout
         command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete")
     - run:
         name: Apache httpd
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker run --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker exec oqs-httpd bash -c 'echo  "GET /" | /opt/openssl/bin/openssl s_client -CAfile CA.crt -curves frodo640aes -crlf -connect localhost:4433')
+        command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker network create httpd-test && docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433)
     - run:
         name: nginx
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker run --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker exec oqs-nginx /opt/openssl/apps/openssl s_client -CAfile CA.crt -curves kyber512 -connect localhost:4433)
+        command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker network create nginx-test && docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433)
     - run:
         name: Push all images
         command: docker tag oqs-curl-generic $TARGETNAME/curl:latest && docker push $TARGETNAME/curl:latest && docker tag oqs-curl $TARGETNAME/curl:optimized && docker push $TARGETNAME/curl:optimized && docker tag oqs-httpd-img $TARGETNAME/httpd:latest && docker push $TARGETNAME/httpd:latest && docker tag oqs-nginx-img $TARGETNAME/nginx:latest && docker push $TARGETNAME/nginx:latest

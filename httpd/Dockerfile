@@ -59,7 +59,7 @@ RUN mkdir build-static && cd build-static && cmake ..  -DBUILD_SHARED_LIBS=OFF -
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
 RUN ./config no-shared --prefix=${OPENSSL_PATH} && \
-    make ${MAKE_DEFINES} && make install_sw;
+    make ${MAKE_DEFINES} && make install;
 
 # build httpd
 WORKDIR /opt/httpd-${HTTPD_VERSION}
@@ -67,29 +67,30 @@ RUN sed -i 's,-lcrypto,-lcrypto /opt/ossl-src/oqs/lib/liboqs.a -ldl,g' configure
     env CPPFLAGS="-I/opt/ossl-src/oqs/include" \
         ./configure --prefix=${HTTPD_PATH} \
                     --enable-debugger-mode \
-                    --enable-ssl --with-ssl=/opt/openssl \
+                    --enable-ssl --with-ssl=${OPENSSL_PATH} \
                     --enable-ssl-staticlib-deps \
                     --enable-mods-static=ssl && \
     # Append liboqs to the PROGRAM_LDADD variable definition in the generated Makefile
     sed -i 's,(LIBS),(LIBS) /opt/ossl-src/oqs/lib/liboqs.a,g' Makefile && \
-    make && make install;
+    make ${MAKE_DEFINES} && make install;
 
 # prepare to run httpd
-ARG OPENSSL_CNF=/opt/ossl-src/apps/openssl.cnf
+ARG OPENSSL_CNF=${OPENSSL_PATH}/ssl/openssl.cnf
 
 # Set a default QSC signature algorithm from the list at https://github.com/open-quantum-safe/openssl#authentication
 ARG SIG_ALG=dilithium2
 
 WORKDIR ${HTTPD_PATH}
+
+    # generate CA key and cert
+    # generate server CSR
+    # generate server cert
 RUN set -x && \
     mkdir pki && \
     mkdir cacert && \
-    # generate CA key and cert
     ${OPENSSL_PATH}/bin/openssl req -x509 -new -newkey ${SIG_ALG} -keyout cacert/CA.key -out cacert/CA.crt -nodes -subj "/CN=oqstest CA" -days 365 -config ${OPENSSL_CNF} && \
-    # generate server CSR
     ${OPENSSL_PATH}/bin/openssl req -new -newkey ${SIG_ALG} -keyout pki/server.key -out pki/server.csr -nodes -subj "/CN=oqs-httpd" -config ${OPENSSL_CNF} && \
-    # generate server cert
-    ${OPENSSL_PATH}/bin/openssl x509 -req -in pki/server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey cacert/CA.key -CAcreateserial -days 365;
+    ${OPENSSL_PATH}/bin/openssl x509 -req -in pki/server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey cacert/CA.key -CAcreateserial -days 365
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM debian:buster-slim 
