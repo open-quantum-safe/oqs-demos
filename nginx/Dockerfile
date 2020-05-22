@@ -52,8 +52,8 @@ RUN apk add build-base linux-headers \
 #
 # get OQS sources
 WORKDIR /opt
-RUN git clone --single-branch --branch master https://github.com/open-quantum-safe/liboqs && \
-    git clone --single-branch --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl && \
+RUN git clone --depth 1 --branch master https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl && \
     wget nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar -zxvf nginx-${NGINX_VERSION}.tar.gz;
 
 # build liboqs (static only)

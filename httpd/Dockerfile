@@ -48,8 +48,8 @@ RUN apt-get update -qq \
 
 # get sources
 WORKDIR /opt
-RUN git clone --single-branch --branch master https://github.com/open-quantum-safe/liboqs && \
-    git clone --single-branch --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
+RUN git clone --depth 1 --branch master https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
     wget --trust-server-names "https://downloads.apache.org//httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
 # build liboqs (static linking only)
