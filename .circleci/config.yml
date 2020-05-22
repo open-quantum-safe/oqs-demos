@@ -21,7 +21,7 @@ localCheckout: &localCheckout
         command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
     - run:
         name: checkout dependencies
-        command: git clone --single-branch https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
+        command: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
     - run:
         name: Curl
         command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh || echo "Test complete")
