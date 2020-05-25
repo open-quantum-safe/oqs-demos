@@ -36,20 +36,6 @@ RUN apk add build-base linux-headers \
             openssl openssl-dev \
             git wget pcre-dev
 
-#RUN apt-get update -qq \
-#    && apt-get install -y build-essential \
-#                          git \
-#                          # OQS
-#                          autoconf \
-#                          automake \
-#			  cmake \
-#                          libtool \
-#                          libssl-dev \
-#                          # nginx
-#                          libpcre3-dev \
-#                          # misc
-#                          wget;
-#
 # get OQS sources
 WORKDIR /opt
 RUN git clone --single-branch --branch master https://github.com/open-quantum-safe/liboqs && \
