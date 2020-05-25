@@ -95,7 +95,7 @@ COPY serverstart.sh ${INSTALLDIR}/bin
 CMD ["serverstart.sh"]
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:3.11
+FROM alpine:3.11 as dev
 # Take in all global args
 ARG INSTALLDIR
 ARG SIG_ALG
@@ -117,15 +117,20 @@ RUN set -x && mkdir /opt/test && \
     ${OPENSSL} req -new -newkey ${SIG_ALG} -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" -config ${OPENSSL_CNF} && \
     # generate server cert
     ${OPENSSL} x509 -req -in /opt/test/server.csr -out /opt/test/server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
-#
-WORKDIR /
 
 COPY serverstart.sh ${INSTALLDIR}/bin
 COPY perftest.sh ${INSTALLDIR}/bin
+
+WORKDIR ${INSTALLDIR}
+
+FROM dev
+ARG INSTALLDIR
+
+WORKDIR /
 
 # Enable a normal user to create new server keys off set CA
 RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
 
 USER oqs
-STOPSIGNAL SIGTERM
 CMD ["serverstart.sh"]
+STOPSIGNAL SIGTERM
