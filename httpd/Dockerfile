@@ -86,6 +86,9 @@ RUN set -x && \
     ${OPENSSL_PATH}/bin/openssl req -new -newkey ${SIG_ALG} -keyout pki/server.key -out pki/server.csr -nodes -subj "/CN=oqs-httpd" -config ${OPENSSL_CNF} && \
     ${OPENSSL_PATH}/bin/openssl x509 -req -in pki/server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey cacert/CA.key -CAcreateserial -days 365
 
+# Some size optimization:
+RUN rm -rf ${HTTPD_PATH}/bin/ab
+
 # second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM alpine
 # Take in global args
@@ -98,9 +101,6 @@ RUN apk add pcre-dev expat-dev
 COPY --from=intermediate ${HTTPD_PATH} ${HTTPD_PATH}
 # copy over manually build libapr{util}
 COPY --from=intermediate /usr/local/apr/lib  /usr/local/apr/lib
-
-# Some size optimization:
-RUN rm -rf ${HTTPD_PATH}/bin/ab
 
 #Enable this if you want to have openssl also in this image
 #COPY --from=intermediate ${OPENSSL_PATH}/apps/openssl ${OPENSSL_PATH}
