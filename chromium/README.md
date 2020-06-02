@@ -23,9 +23,11 @@ This directory contains instructions and corresponding patches to build the Chro
 
 6. Finally, follow the instructions [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install-additional-build-dependencies) from the "Install additional build dependencies" section onwards to build Chromium.
 
-To verify that Chromium can perform a TLS 1.3 handshake using a post-quantum key exchange and authentication algorithm:
+To verify that Chromium can perform a TLS 1.3 handshake using a post-quantum key exchange:
 
 0. Navigate to `<CHROMIUM_ROOT>`, and start Chromium by executing `./out/Default/chrome --ignore-certificate-errors`
 1. Navigate again to the `<CHROMIUM_ROOT>/third_party/boringssl/src` folder, and build OQS-BoringSSL as a standalone project by following the instructions in that directory's `README.md` file.
-2. Then, in the `build` directory, run `./tool/bssl server -accept 4433 -www -loop -curves <KEX>`, where `<KEX>` can be any key-exchange algorithm that are both listed [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms) and are listed in the array [here](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375).
+2. Then, in the `build` directory, run `./tool/bssl server -accept 4433 -www -loop -curves <KEX>`, where `<KEX>` can be any key-exchange algorithm named [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms) that is supported by default by Chromium. The [kDefaultGroups array](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375) lists all such algorithms\*.
 3. Load `https://localhost:4433` in Chromium.
+
+\* For an explanation of why Chromium supports only a subset of key-exchange algorithms by default, consult [OQS-BoringSSL's Implementation Notes wiki page](https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes).
