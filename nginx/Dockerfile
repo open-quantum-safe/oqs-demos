@@ -53,7 +53,7 @@ RUN ./configure --prefix=${NGINX_PATH} \
                 --with-http_ssl_module --with-openssl=${OPENSSL_PATH} \
                 --without-http_gzip_module \
                 --with-cc-opt=-I${OPENSSL_PATH}/oqs/include \
-                --with-ld-opt="-L/opt/openssl/oqs/lib" && \
+                --with-ld-opt="-L${OPENSSL_PATH}/oqs/lib" && \
     sed -i 's/libcrypto.a/libcrypto.a -loqs/g' objs/Makefile && \
     make ${MAKE_DEFINES} && make install;
 
