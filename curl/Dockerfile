@@ -10,7 +10,7 @@ ARG INSTALLDIR=/opt/oqssa
 ARG LIBOQS_BUILD_DEFINES=
 
 # openssl build defines (https://github.com/open-quantum-safe/openssl#build-options)
-ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=p256_kyber768:X25519:kyber768:newhope1024cca"
+ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=p384_kyber768:X25519:kyber768:newhope1024cca"
 
 # Default root CA signature algorithm; can be set to any listed at https://github.com/open-quantum-safe/openssl#authentication
 ARG SIG_ALG="dilithium2"
