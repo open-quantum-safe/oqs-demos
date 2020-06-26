@@ -37,7 +37,7 @@ docker run --network nginx-test -it openquantumsafe/curl curl -k https://oqs-ngi
 This nginx image supports all quantum-safe key exchange algorithms [presently supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange). If you want to control with algorithm is actually used, you can request one from the list above to the curl command with the '--curves' parameter, e.g., requesting the hybrid Kyber768 variant:
 
 ```
-docker run -it openquantumsafe/curl curl -k https://oqs-nginx:4433  --curves p256_kyber768
+docker run -it openquantumsafe/curl curl -k https://oqs-nginx:4433  --curves p384_kyber768
 ```
 
 
