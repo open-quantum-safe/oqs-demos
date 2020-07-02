@@ -60,7 +60,6 @@ def gen_conf(filename, indexbasefilename):
    with open(TEMPLATE_FILE, "r") as tf:
      for line in tf:
        i.write(line)
-   i.write("<ul>\n")
 
    with open(filename, "w") as f:
      # baseline config
@@ -78,12 +77,25 @@ def gen_conf(filename, indexbasefilename):
      f.write("server {\n")
      f.write("    listen      80;\n")
      f.write("    server_name "+TESTFQDN+";\n")
+     f.write("    access_log  /opt/nginx/logs/80-access.log;\n")
+     f.write("    error_log   /opt/nginx/logs/80-error.log;\n\n")
      f.write("    location / {\n")
      f.write("            root   html;\n")
      f.write("            index  "+indexbasefilename+";\n")
      f.write("    }\n")
      f.write("}\n")
-     # ToDo: (classic) SSL entrypoint
+     f.write("server {\n")
+     f.write("    listen      443 ssl;\n")
+     f.write("    server_name "+TESTFQDN+";\n")
+     f.write("    access_log  /opt/nginx/logs/443-access.log;\n")
+     f.write("    error_log   /opt/nginx/logs/443-error.log;\n\n")
+     f.write("    ssl_certificate     /etc/letsencrypt/live/test.openquantumsafe.org/fullchain.pem;;\n")
+     f.write("    ssl_certificate_key /etc/letsencrypt/live/test.openquantumsafe.org/privkey.pem;\n\n")
+     f.write("    location / {\n")
+     f.write("            root   html;\n")
+     f.write("            index  "+indexbasefilename+";\n")
+     f.write("    }\n")
+     f.write("}\n")
 
      f.write("\n")
      for sig in common.signatures:
@@ -102,19 +114,20 @@ def gen_conf(filename, indexbasefilename):
            f.write("            root   html;\n")
            f.write("            index  index.html index.htm;\n")
            f.write("    }\n\n")
-           i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
+           #i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
+           i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
            f.write("}\n\n")
            port = port+1
      f.write("}\n")
-   i.write("</ul>\n")
+   i.write("</table>\n")
    i.write("</body>\n")
    i.close()
 
 def main():
    # first generate certs for all supported sig algs:
-   for sig in common.signatures:
-      gen_cert(sig)
+   #for sig in common.signatures:
+   #   gen_cert(sig)
    # now do conf and index-base file
    gen_conf("interop.conf", "index-base.html")
 
