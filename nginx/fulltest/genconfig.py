@@ -42,7 +42,7 @@ def gen_cert(sig_alg):
                               '-keyout', os.path.join(PKIPATH, '{}_srv.key'.format(sig_alg)),
                               '-out', os.path.join(PKIPATH, '{}_srv.csr'.format(sig_alg)),
                               '-nodes',
-                                  '-subj', '/CN=test.openquantumsafe.org',
+                                  '-subj', '/CN='+TESTFQDN,
                               '-config', OPENSSL_CNF])
    # generate server cert off common root
    common.run_subprocess([OPENSSL, 'x509', '-req',
@@ -89,8 +89,8 @@ def gen_conf(filename, indexbasefilename):
      f.write("    server_name "+TESTFQDN+";\n")
      f.write("    access_log  /opt/nginx/logs/443-access.log;\n")
      f.write("    error_log   /opt/nginx/logs/443-error.log;\n\n")
-     f.write("    ssl_certificate     /etc/letsencrypt/live/test.openquantumsafe.org/fullchain.pem;;\n")
-     f.write("    ssl_certificate_key /etc/letsencrypt/live/test.openquantumsafe.org/privkey.pem;\n\n")
+     f.write("    ssl_certificate     /etc/letsencrypt/live/"+TESTFQDN+"/fullchain.pem;\n")
+     f.write("    ssl_certificate_key /etc/letsencrypt/live/"+TESTFQDN+"/privkey.pem;\n\n")
      f.write("    location / {\n")
      f.write("            root   html;\n")
      f.write("            index  "+indexbasefilename+";\n")
@@ -111,8 +111,10 @@ def gen_conf(filename, indexbasefilename):
            f.write("    ssl_protocols       TLSv1.3;\n")
            f.write("    ssl_ecdh_curve      "+k+";\n")
            f.write("    location / {\n")
+           f.write("            ssi    on;\n")
+           f.write("            set    $oqs_alg_name \""+sig+"-"+k+"\";\n")
            f.write("            root   html;\n")
-           f.write("            index  index.html index.htm;\n")
+           f.write("            index  success.html;\n")
            f.write("    }\n\n")
            #i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
            i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
@@ -126,8 +128,8 @@ def gen_conf(filename, indexbasefilename):
 
 def main():
    # first generate certs for all supported sig algs:
-   #for sig in common.signatures:
-   #   gen_cert(sig)
+   for sig in common.signatures:
+      gen_cert(sig)
    # now do conf and index-base file
    gen_conf("interop.conf", "index-base.html")
 

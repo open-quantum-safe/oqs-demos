@@ -55,7 +55,7 @@ tr:nth-child(even) {
 <ol>
 <li>If not already done, download the test CA certificate from <a href="CA.crt">here</a> to the directory you want to execute your tests from.</li>
 <li>Select the algorithm combination to be tested from the list below. Assume this is <i>sig/kex (port)</i>.</li>
-<li>Connect to the corresponding port with a QSC-enabled client side software, e.g., curl. Using a ready-made docker image this could be facilitated by running <br><pre>docker run -v `pwd`:/ca -it openquantumsafe/curl curl --cacert /ca/CA.crt https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre>Be sure to insert the <i>port</i> and <i>kex</i> values chosen above.<br>The test will be successful if the NGINX default web site contents are received.</li>
+<li>Connect to the corresponding port with a QSC-enabled client side software, e.g., curl. Using a ready-made docker image this could be facilitated by running <br><pre>docker run -v `pwd`:/ca -it openquantumsafe/curl curl --cacert /ca/CA.crt https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre>Be sure to insert the <i>port</i> and <i>kex</i> values chosen above.<br>The test will be successful if a web page indicating successful connection establishment (and display of the OQS algorithm combination configured as well as the client-supported key exchange mechanism) is received.</li>
 </ol>
 
 <p>Notes: </p>
