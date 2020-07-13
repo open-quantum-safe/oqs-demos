@@ -24,7 +24,7 @@ def gen_cert(sig_alg):
                                      '-out', os.path.join(CAROOTDIR, "CA.crt"),
                                      '-nodes',
                                          '-subj', '/CN=oqstest_CA',
-                                         '-days', '1000',
+                                         '-days', '500',
                                      '-config', OPENSSL_CNF])
            print("New root cert residing in %s." % (os.path.join(CAROOTDIR, "CA.crt")))
 
@@ -124,6 +124,7 @@ def gen_conf(filename, indexbasefilename):
      f.write("}\n")
    i.write("</table>\n")
    i.write("</body>\n")
+   i.write("</html>\n")
    i.close()
 
 def main():
