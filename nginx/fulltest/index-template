@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #eeeeee;
+}
+</style>
 <title>Open Quantum Safe interop test server for quantum-safe cryptography</title>
 </head>
 <body>
@@ -38,7 +55,7 @@
 <ol>
 <li>If not already done, download the test CA certificate from <a href="CA.crt">here</a> to the directory you want to execute your tests from.</li>
 <li>Select the algorithm combination to be tested from the list below. Assume this is <i>sig/kex (port)</i>.</li>
-<li>Connect to the corresponding port with a QSC-enabled client side software, e.g., curl. Using a ready-made docker image this could be facilitated by running <br><pre>docker run -v `pwd`:/ca -it openquantumsafe/curl curl --cacert /ca/CA.crt https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre>Be sure to insert the <i>port</i> and <i>kex</i> values chosen above.<br>The test will be successful if the NGINX default web site contents are received.</li>
+<li>Connect to the corresponding port with a QSC-enabled client side software, e.g., curl. Using a ready-made docker image this could be facilitated by running <br><pre>docker run -v `pwd`:/ca -it openquantumsafe/curl curl --cacert /ca/CA.crt https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre>Be sure to insert the <i>port</i> and <i>kex</i> values chosen above.<br>The test will be successful if a web page indicating successful connection establishment (and display of the OQS algorithm combination configured as well as the client-supported key exchange mechanism) is received.</li>
 </ol>
 
 <p>Notes: </p>
@@ -56,4 +73,10 @@
 <p>The list below provides links to the entry points of all OQS signature / key exchange algorithm combinations supported. The port for each combination is also displayed explicitly in brackets.</p>
 
 
-
+<table>
+  <tr>
+    <th>Signature algorithm</th>
+    <th>Key exchange algorithm</th>
+    <th>Port</th>
+    <th>Link</th>
+  </tr>
