@@ -28,7 +28,7 @@ ARG OPENSSL_BUILD_DEFINES
 ARG SIG_ALG
 ARG MAKE_DEFINES
 
-LABEL version="1"
+LABEL version="2"
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -78,15 +78,22 @@ RUN set -x && \
 WORKDIR /opt/curl-${CURL_VERSION}
 RUN patch -p1 < /opt/patch-${CURL_VERSION}.oqs.txt
 
+# Download and integrate LetsEncrypt Root CA to CA bundle
+RUN wget https://letsencrypt.org/certs/letsencryptauthorityx3.pem.txt && cat ${INSTALLDIR}/bin/CA.crt >> letsencryptauthorityx3.pem.txt 
+
 # For curl debugging enable it by adding the line below to the configure command:
 #                    --enable-debug \
 
 RUN env CPPFLAGS="-I/opt/ossl-src/oqs/include" \
         LDFLAGS=-Wl,-R${INSTALLDIR}/lib  \
         ./configure --prefix=${INSTALLDIR} \
-                    --with-ca-bundle=${INSTALLDIR}/bin/CA.crt \
+                    --with-ca-bundle=${INSTALLDIR}/oqs-bundle.pem \
                     --with-ssl=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install;
+    make ${MAKE_DEFINES} && make install && mv letsencryptauthorityx3.pem.txt ${INSTALLDIR}/oqs-bundle.pem;
+
+# Download current test.openquantumsafe.org test CA cert
+WORKDIR ${INSTALLDIR}
+RUN wget https://test.openquantumsafe.org/CA.crt && mv CA.crt oqs-testca.pem
 
 WORKDIR /
 
