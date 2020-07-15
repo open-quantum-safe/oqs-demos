@@ -23,9 +23,6 @@ localCheckout: &localCheckout
         name: checkout dependencies
         command: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
     - run:
-        name: nginx
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker network create nginx-test && docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433)
-    - run:
         name: Curl
         command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker build --target dev -t oqs-curl-dev . && docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh || echo "Test complete")
     - run:
@@ -34,6 +31,9 @@ localCheckout: &localCheckout
     - run:
         name: Apache httpd
         command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker network create httpd-test && docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433)
+    - run:
+        name: nginx
+        command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker network create nginx-test && docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433)
     - run:
         name: Push all images
         command: docker tag oqs-curl-generic $TARGETNAME/curl:latest && docker push $TARGETNAME/curl:latest && docker tag oqs-curl $TARGETNAME/curl:optimized && docker push $TARGETNAME/curl:optimized && docker tag oqs-curl-dev $TARGETNAME/curl-dev && docker push $TARGETNAME/curl-dev && docker tag oqs-httpd-img $TARGETNAME/httpd:latest && docker push $TARGETNAME/httpd:latest && docker tag oqs-nginx-img $TARGETNAME/nginx:latest && docker push $TARGETNAME/nginx:latest
