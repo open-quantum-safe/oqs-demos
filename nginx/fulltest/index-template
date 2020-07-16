@@ -36,6 +36,8 @@ tr:nth-child(even) {
 <li>curve IDs, code-points, and OIDs as specified in <a href="https://docs.google.com/spreadsheets/d/12YarzaNv3XQNLnvDsWLlRKwtZFhRrDdWf36YlzwrPeg/edit#gid=0">this spreadsheet</a>.</li>
 </ul>
 
+<p>This corresponds to the OQS release version 0.3. </p>
+
 <p>These specifications should not be taken as a standard, de facto and otherwise, and are subject to change at any time.</p>
 
 <p>More details are available at <a href="https://github.com/open-quantum-safe/openssl/wiki/Integrating-PQC-into-TLS-1.3">Github</a>.</p>
@@ -55,7 +57,7 @@ tr:nth-child(even) {
 <ol>
 <li>If not already done, download the test CA certificate from <a href="CA.crt">here</a> to the directory you want to execute your tests from.</li>
 <li>Select the algorithm combination to be tested from the list below. Assume this is <i>sig/kex (port)</i>.</li>
-<li>Connect to the corresponding port with a QSC-enabled client side software, e.g., curl. Using a ready-made docker image this could be facilitated by running <br><pre>docker run -v `pwd`:/ca -it openquantumsafe/curl curl --cacert /ca/CA.crt https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre>Be sure to insert the <i>port</i> and <i>kex</i> values chosen above.<br>The test will be successful if a web page indicating successful connection establishment (and display of the OQS algorithm combination configured as well as the client-supported key exchange mechanism) is received.</li>
+<li>Connect to the corresponding port with a QSC-enabled client side software, e.g., curl. Using a ready-made docker image this could be facilitated by running <br><pre>docker run -v `pwd`:/ca -it openquantumsafe/curl:0.3 curl --cacert /ca/CA.crt https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre>Be sure to insert the <i>port</i> and <i>kex</i> values chosen above.<br>The test will be successful if a web page indicating successful connection establishment (and display of the OQS algorithm combination configured as well as the client-supported key exchange mechanism) is received.</li>
 </ol>
 
 <p>Notes: </p>
@@ -64,8 +66,9 @@ tr:nth-child(even) {
 <li><p>Another equally valid approach would be to build all required software from source and then execute it locally. Examples for this can be found in <a href="https://github.com/open-quantum-safe/oqs-demos">the OQS Github repository</a>.</p>
 <p>In this way, you could for example verify correct operation of all components using openssl's <i>s_client</i> function by running <pre>echo "GET /" | openssl s_client -CAfile CA.crt --connect test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre> Again, values for <i>port</i> and <i>kex</i> must be suitably set.</p></li>
 <li>Using "openssl s_client" has the additional benefit that it also displays the actual algorithms utilized: <i>Server Temp Key</i> describes the key exchange algorithm and <i>Peer signature type</i> the signature algorithm actually used.</li>
-<li>The OQS docker hub containers also provide a ready-made QSC-openssl distribution facilitating this test: You can do this for example with this command: <pre>docker run -v `pwd`:/ca -it openquantumsafe/curl openssl s_client --connect test.openquantumsafe.org:6000 -CAfile /ca/CA.crt </pre> Then issue the <tt>GET /</tt> command on the command line to retrieve an information page.</li>
+<li>The OQS docker hub containers also provide a ready-made QSC-openssl distribution facilitating this test: You can do this for example with this command: <pre>docker run -v `pwd`:/ca -it openquantumsafe/curl:0.3 openssl s_client --connect test.openquantumsafe.org:6000 -CAfile /ca/CA.crt </pre> Then issue the <tt>GET /</tt> command on the command line to retrieve an information page.</li>
 <li>Using any algorithm with an 'oqs...default' name would necessitate client side software built with the exact same default algorithms set by the underlying OQS software. For details see <a href="https://github.com/open-quantum-safe/openssl/wiki/Using-liboqs-algorithms-not-in-the-fork">here</a>. Therefore interoperability testing against these algorithms may fail.</li>
+<li>The OQS docker images are pre-loaded with the test CA certificate which allow simplified testing bypassing the need to first obtain the test CA certificate and mounting this into the docker image. Therefore, testing a specific algorithm can be done simply without any preparation by running <br><pre>docker run -it openquantumsafe/curl:0.3 curl --cacert /opt/oqssa/oqs-testca.pem https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre></li>
 </ol>
 
 <h2> List of all supported QSC Signature / Key Exchange algorithms </h2>
