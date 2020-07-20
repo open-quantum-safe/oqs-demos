@@ -19,7 +19,7 @@ This directory contains instructions and corresponding patches to build the Chro
 - `cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=<CHROMIUM_ROOT>/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF`
 - `ninja && ninja install`
 
-5. Now, navigate to `<CHROMIUM_ROOT>` and apply the `BUILD.gn.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `thid_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
+5. Now, navigate to `<CHROMIUM_ROOT>` and apply the `qsc-certs.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `thid_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
 
 6. Finally, follow the instructions [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install-additional-build-dependencies) from the "Install additional build dependencies" section onwards to build Chromium.
 
