@@ -3,14 +3,37 @@ import os
 
 # Script assumes nginx to have been built for this platform using the ../(nginx-)Dockerfile instructions
 
+############# Configuration section starting here
+
+# This is where the explanation HTML code is
 TEMPLATE_FILE="index-template"
+
+# This is where nginx is (to be) installed
 BASEPATH="/opt/nginx/"
+
+# This is the (relative to BASEPATH) path of all certificates
 PKIPATH="pki"
+
+# This is the port where all algorithms start to be present(ed)
 STARTPORT=6000
+
+# This is the local location of the OQS-enabled OpenSSL
 OPENSSL="/opt/oqssa/bin/openssl"
+
+# This is the local OQS-OpenSSL config file
 OPENSSL_CNF="/opt/oqssa/ssl/openssl.cnf"
+
+# This is the fully-qualified domain name of the server to be set up
+# Ensure this is in sync with contents of ext-csr.conf file
 TESTFQDN="test.openquantumsafe.org"
+
+# This is the local folder where the root CA (key and cert) resides
 CAROOTDIR="root"
+
+
+
+
+############# Functions starting here
 
 # Generate cert chain (server and CA for a given sig alg:
 # srv crt/key wind up in '<path>/<sigalg>_srv.crt|key
@@ -42,7 +65,7 @@ def gen_cert(sig_alg):
                               '-keyout', os.path.join(PKIPATH, '{}_srv.key'.format(sig_alg)),
                               '-out', os.path.join(PKIPATH, '{}_srv.csr'.format(sig_alg)),
                               '-nodes',
-                                  '-subj', '/CN='+TESTFQDN,
+                              '-subj', '/CN='+TESTFQDN,
                               '-config', OPENSSL_CNF])
    # generate server cert off common root
    common.run_subprocess([OPENSSL, 'x509', '-req',
@@ -51,6 +74,8 @@ def gen_cert(sig_alg):
                                   '-CA', os.path.join(CAROOTDIR, 'CA.crt'),
                                   '-CAkey', os.path.join(CAROOTDIR, 'CA.key'),
                                   '-CAcreateserial',
+                                  '-extfile', 'ext-csr.conf', 
+                                  '-extensions', 'v3_req',
                                   '-days', '365'])
 
 # generates nginx config
@@ -100,6 +125,7 @@ def gen_conf(filename, indexbasefilename):
      f.write("\n")
      for sig in common.signatures:
         for kex in common.key_exchanges:
+           # replace oqs_kem_default with X25519:
            k = "X25519" if kex=='oqs_kem_default' else kex
            f.write("server {\n")
            f.write("    listen              0.0.0.0:"+str(port)+" ssl;\n\n")
@@ -116,15 +142,19 @@ def gen_conf(filename, indexbasefilename):
            f.write("            root   html;\n")
            f.write("            index  success.html;\n")
            f.write("    }\n\n")
+           # acttivate for more boring links-only display:
            #i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
+
+           # deactivate if you don't like tables:
            i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
            f.write("}\n\n")
            port = port+1
      f.write("}\n")
+   # deactivate if you don't like tables:
    i.write("</table>\n")
-   i.write("</body>\n")
-   i.write("</html>\n")
+
+   i.write("</body></html>\n")
    i.close()
 
 def main():
