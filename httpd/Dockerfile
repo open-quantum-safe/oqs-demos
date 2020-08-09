@@ -43,7 +43,7 @@ RUN git clone --depth 1 --branch master https://github.com/open-quantum-safe/lib
     git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
     wget http://mirror.easyname.ch/apache//apr/apr-1.7.0.tar.gz && tar xzvf apr-1.7.0.tar.gz && \
     wget http://mirror.easyname.ch/apache//apr/apr-util-1.6.1.tar.gz && tar xzvf apr-util-1.6.1.tar.gz && \
-    wget --trust-server-names "https://downloads.apache.org//httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
+    wget --trust-server-names "https://archive.apache.org/dist/httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
 # build liboqs (static linking only)
 WORKDIR /opt/liboqs
