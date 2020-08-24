@@ -1,7 +1,8 @@
 import common
 import os
+import json
 
-# Script assumes nginx to have been built for this platform using the ../(nginx-)Dockerfile instructions
+# Script assumes nginx to have been built for this platform using build-ubuntu.sh
 
 ############# Configuration section starting here
 
@@ -18,10 +19,10 @@ PKIPATH="pki"
 STARTPORT=6000
 
 # This is the local location of the OQS-enabled OpenSSL
-OPENSSL="/opt/oqssa/bin/openssl"
+OPENSSL="/tmp/opt/openssl/apps/openssl"
 
 # This is the local OQS-OpenSSL config file
-OPENSSL_CNF="/opt/oqssa/ssl/openssl.cnf"
+OPENSSL_CNF="/tmp/opt/openssl/apps/openssl.cnf"
 
 # This is the fully-qualified domain name of the server to be set up
 # Ensure this is in sync with contents of ext-csr.conf file
@@ -30,7 +31,8 @@ TESTFQDN="test.openquantumsafe.org"
 # This is the local folder where the root CA (key and cert) resides
 CAROOTDIR="root"
 
-
+# This is the file containing the SIG/KEM/port assignments
+ASSIGNMENT_FILE="assignments.json"
 
 
 ############# Functions starting here
@@ -78,9 +80,36 @@ def gen_cert(sig_alg):
                                   '-extensions', 'v3_req',
                                   '-days', '365'])
 
+def write_nginx_config(f, i, port, sig, k):
+           f.write("server {\n")
+           f.write("    listen              0.0.0.0:"+str(port)+" ssl;\n\n")
+           f.write("    server_name         "+TESTFQDN+";\n")
+           f.write("    access_log          "+BASEPATH+"logs/"+sig+"-access.log;\n")
+           f.write("    error_log           "+BASEPATH+"logs/"+sig+"-error.log;\n\n")
+           f.write("    ssl_certificate     "+BASEPATH+PKIPATH+"/"+sig+"_srv.crt;\n")
+           f.write("    ssl_certificate_key "+BASEPATH+PKIPATH+"/"+sig+"_srv.key;\n\n")
+           f.write("    ssl_protocols       TLSv1.3;\n")
+           if k!="*" :  
+              f.write("    ssl_ecdh_curve      "+k+";\n")
+           f.write("    location / {\n")
+           f.write("            ssi    on;\n")
+           if k!="*" :  
+              f.write("            set    $oqs_alg_name \""+sig+"-"+k+"\";\n")
+           f.write("            root   html;\n")
+           f.write("            index  success.html;\n")
+           f.write("    }\n\n")
+           # activate for more boring links-only display:
+           #i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
+
+           # deactivate if you don't like tables:
+           i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
+
+           f.write("}\n\n")
+
 # generates nginx config
 def gen_conf(filename, indexbasefilename):
    port = STARTPORT
+   assignments={}
    i = open(indexbasefilename, "w")
    with open(TEMPLATE_FILE, "r") as tf:
      for line in tf:
@@ -124,31 +153,15 @@ def gen_conf(filename, indexbasefilename):
 
      f.write("\n")
      for sig in common.signatures:
+        assignments[sig]={}
+        assignments[sig]["*"]=port
+        write_nginx_config(f, i, port, sig, "*")
+        port = port+1
         for kex in common.key_exchanges:
            # replace oqs_kem_default with X25519:
            k = "X25519" if kex=='oqs_kem_default' else kex
-           f.write("server {\n")
-           f.write("    listen              0.0.0.0:"+str(port)+" ssl;\n\n")
-           f.write("    server_name         "+TESTFQDN+";\n")
-           f.write("    access_log          "+BASEPATH+"logs/"+sig+"-access.log;\n")
-           f.write("    error_log           "+BASEPATH+"logs/"+sig+"-error.log;\n\n")
-           f.write("    ssl_certificate     "+BASEPATH+PKIPATH+"/"+sig+"_srv.crt;\n")
-           f.write("    ssl_certificate_key "+BASEPATH+PKIPATH+"/"+sig+"_srv.key;\n\n")
-           f.write("    ssl_protocols       TLSv1.3;\n")
-           f.write("    ssl_ecdh_curve      "+k+";\n")
-           f.write("    location / {\n")
-           f.write("            ssi    on;\n")
-           f.write("            set    $oqs_alg_name \""+sig+"-"+k+"\";\n")
-           f.write("            root   html;\n")
-           f.write("            index  success.html;\n")
-           f.write("    }\n\n")
-           # acttivate for more boring links-only display:
-           #i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
-
-           # deactivate if you don't like tables:
-           i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
-
-           f.write("}\n\n")
+           write_nginx_config(f, i, port, sig, k)
+           assignments[sig][k]=port
            port = port+1
      f.write("}\n")
    # deactivate if you don't like tables:
@@ -156,6 +169,8 @@ def gen_conf(filename, indexbasefilename):
 
    i.write("</body></html>\n")
    i.close()
+   with open(ASSIGNMENT_FILE, 'w') as outfile:
+      json.dump(assignments, outfile)
 
 def main():
    # first generate certs for all supported sig algs:

@@ -36,7 +36,7 @@ tr:nth-child(even) {
 <li>curve IDs, code-points, and OIDs as specified in <a href="https://docs.google.com/spreadsheets/d/1xk0sQICZkzAZp_pzXu9BO-tHzoqmSFU7fB3Tk1rvQqs/edit?usp=sharing">this spreadsheet</a>.</li>
 </ul>
 
-<p>This corresponds to the OQS release version 0.3.0. </p>
+<p>This corresponds to the OQS release version 0.4.0. </p>
 
 <p>These specifications should not be taken as a standard, de facto and otherwise, and are subject to change at any time.</p>
 
@@ -74,6 +74,8 @@ tr:nth-child(even) {
 <h2> List of all supported QSC Signature / Key Exchange algorithms </h2>
 
 <p>The list below provides links to the entry points of all OQS signature / key exchange algorithm combinations supported. The port for each combination is also displayed explicitly in brackets.</p>
+
+<p>For automated testing, a JSON file encoding all available SIG/KEM combinations and the respective ports where they can be found is <a href="assignments.json">available for download here</a>. <i>We explicitly want to warn that algorithm/port combinations are subject to change. Be sure to download the most current JSON file before testing.</i></p>
 
 
 <table>
