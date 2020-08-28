@@ -3,8 +3,11 @@
 # Script assumes nginx to have been built for this platform, e.g. using the build-ubuntu.sh script
 NGINX_INSTALL_DIR=/opt/nginx
 
-# cleanup: Beware - also kills root CA!
-rm -rf *.tgz pki root common.py *.html interop.conf assignments.json
+# Set this to document support of specific version. Be sure to keep this in sync with what is specified in build-ubuntu.sh.
+LIBOQS_RELEASE=0.4.0
+
+# cleanup: retaining root CA!
+rm -rf *.tgz pki common.py *.html interop.conf assignments.json
 
 # Obtain current list of algorithms
 wget https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/oqs-test/common.py
@@ -13,6 +16,9 @@ mkdir pki
 
 # Now generate config file, incl. CA and certs
 python3 genconfig.py
+
+# Be sure to set the proper RELEASE version:
+sed -i "s/LIBOQS_RELEASE/${LIBOQS_RELEASE}/g" index-base.html
 
 # Now move all piece-parts in place
 rm -rf ${NGINX_INSTALL_DIR}/pki
