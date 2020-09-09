@@ -23,7 +23,7 @@ Further be aware that both cloning the source code as well as building Chromium 
 
 Note: You might have to install `ninja` if not already done, e.g., by running `sudo apt-get install ninja`. You also might want to run `SKIP_TESTS=doxygen,style ninja run_tests` to validate liboqs operating OK on your machine. For this you need to install `pytest` if not already present on your machine, e.g., by running `sudo apt-get install python3-pytest python3-pytest-xdist` first.
 
-5. After successfully installing liboqs as per the above, navigate to `<CHROMIUM_ROOT>` and apply the `BUILD.gn.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `third_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
+5. After successfully installing liboqs as per the above, navigate to `<CHROMIUM_ROOT>` and apply the `oqs-mods.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `third_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
 
 Note: For this to succeed, you might have to install go if not already present on your machine, e.g., by running `sudo apt install golang-go`. If _any_ error occurs in this step, Chromium will build fine, just without support for quantum-safe crypto, i.e., only the final testing steps below will fail.
 
