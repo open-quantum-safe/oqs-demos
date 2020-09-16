@@ -44,7 +44,11 @@ tr:nth-child(even) {
 
 <h4> Caveats </h4>
 
-<p>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/openssl#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</p>
+<ol>
+<li>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/openssl#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</li>
+
+<li>When using the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/master/chromium">OQS-enabled Chromium build</a> to access this web site, be aware of the limitations concerning supported algorithms as documented <a href="https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes">here</a>. Therefore, only the following hybrid algorithms will work: P256_BIKE1L1CPA, P256_FRODO640AES, P256_KYBER90S512, P256_NTRU_HPS2048509, P256_LIGHTSABER, P256_SIDHP434, P256_SIKEP434.</li>
+</ol>
 
 <h2> Certificates </h2>
 
