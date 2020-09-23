@@ -9,11 +9,11 @@ In most cases, Dockerfiles encode the instructions for ease-of-use: Just do `doc
 
 Currently supported packages:
 
-|                  | **Build instructions**                 | **Pre-built Docker image**                                                                         |
-|------------------|----------------------------------------|----------------------------------------------------------------------------------------------------|
-| **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl)   |
-| **Apache httpd** | [Github: oqs-demos/httpd](httpd)       | [Dockerhub: openquantumsafe/httpd](https://hub.docker.com/repository/docker/openquantumsafe/httpd) |
-| **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx) |
-| **Chromium**     | [Github: oqs-demos/chromium](chromium) | (Not available)                                                                                    |
+|                  | **Build instructions**                 | **Pre-built Docker image or binary files**                                                                                   |
+|------------------|----------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl)                             |
+| **Apache httpd** | [Github: oqs-demos/httpd](httpd)       | [Dockerhub: openquantumsafe/httpd](https://hub.docker.com/repository/docker/openquantumsafe/httpd)                           |
+| **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx)                           |
+| **Chromium**     | [Github: oqs-demos/chromium](chromium) | [Binary for Ubuntu 18.04](https://github.com/open-quantum-safe/oqs-demos/releases/download/v0.4.0/chromium-ubuntu-0.4.0.tgz) |
 
 You can use the curl and Chromium clients with the Open Quantum Safe test server at https://test.openquantumsafe.org/.
