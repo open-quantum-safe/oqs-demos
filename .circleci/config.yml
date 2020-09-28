@@ -93,10 +93,33 @@ jobs:
                   docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
                   docker push $TARGETNAME/nginx:latest
 
+  ubuntu_x64_openssh:
+    description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
+    docker:
+      - image: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Test OpenSSH
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-openssh-img . &&
+            docker run --rm --name oqs-openssh oqs-openssh-img connect-test.sh
+          working_directory: openssh
+
 workflows:
   version: 2.1
   build:
     jobs:
       - ubuntu_x64_openssl:
+          name: ubuntu-bionic
+          context: openquantumsafe
+      - ubuntu_x64_openssh:
           name: ubuntu-bionic
           context: openquantumsafe

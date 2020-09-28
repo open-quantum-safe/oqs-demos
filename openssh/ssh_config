@@ -1,0 +1,107 @@
+#	$OpenBSD: ssh_config,v 1.33 2017/05/07 23:12:57 djm Exp $
+
+# This is the ssh client system-wide configuration file.  See
+# ssh_config(5) for more information.  This file provides defaults for
+# users, and the values can be changed in per-user configuration files
+# or on the command line.
+
+# Configuration data is parsed as follows:
+#  1. command line options
+#  2. user-specific file
+#  3. system-wide file
+# Any configuration value is only changed the first time it is set.
+# Thus, host-specific definitions should be at the beginning of the
+# configuration file, and defaults at the end.
+
+# Site-wide defaults for some commonly used options.  For a comprehensive
+# list of available options, their meanings and defaults, please see the
+# ssh_config(5) man page.
+
+# Host *
+#   ForwardAgent no
+#   ForwardX11 no
+#   PasswordAuthentication yes
+#   HostbasedAuthentication no
+#   GSSAPIAuthentication no
+#   GSSAPIDelegateCredentials no
+#   BatchMode no
+#   CheckHostIP yes
+#   AddressFamily any
+#   ConnectTimeout 0
+#   StrictHostKeyChecking ask
+#   IdentityFile ~/.ssh/id_rsa
+#   IdentityFile ~/.ssh/id_dsa
+#   IdentityFile ~/.ssh/id_ecdsa
+#   IdentityFile ~/.ssh/id_ed25519
+#   Port 22
+#   Protocol 2
+#   Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc
+#   MACs hmac-md5,hmac-sha1,umac-64@openssh.com
+#   EscapeChar ~
+#   Tunnel no
+#   TunnelDevice any:any
+#   PermitLocalCommand no
+#   VisualHostKey no
+#   ProxyCommand ssh -q -W %h:%p gateway.example.com
+#   RekeyLimit 1G 1h
+#
+
+### Settings for quantum-safe key-exchange and authentication
+
+# Key-exchange algorithms
+KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org,curve25519-sha256@libssh.org
+
+# The host key algorithms ssh accepts
+HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519
+
+# The algorithms used for public key authentication
+PubkeyAcceptedKeyTypes ssh-p256-dilithium2,ssh-ed25519
+
+# Define how unknown host keys should be handled
+#StrictHostKeyChecking ask
+
+# The port ssh is connecting to per default
+Port 2222
+
+# All IdentityFile options, enabled ones should match PubkeyAcceptedKeyTypes
+# IdentityFile ~/.ssh/id_rsa
+# IdentityFile ~/.ssh/id_dsa
+# IdentityFile ~/.ssh/id_ecdsa
+IdentityFile ~/.ssh/id_ed25519
+# IdentityFile ~/.ssh/id_oqsdefault
+# IdentityFile ~/.ssh/id_dilithium2
+# IdentityFile ~/.ssh/id_falcon512
+# IdentityFile ~/.ssh/id_mqdss3148
+# IdentityFile ~/.ssh/id_picnicl1fs
+# IdentityFile ~/.ssh/id_picnic3l1
+# IdentityFile ~/.ssh/id_qteslapi
+# IdentityFile ~/.ssh/id_rainbowiaclassic
+# IdentityFile ~/.ssh/id_rainbowiiicclassic
+# IdentityFile ~/.ssh/id_rainbowvcclassic
+# IdentityFile ~/.ssh/id_sphincsharaka128frobust
+# IdentityFile ~/.ssh/id_sphincssha256128frobust
+# IdentityFile ~/.ssh/id_sphincsshake256128frobust
+# IdentityFile ~/.ssh/id_rsa3072_oqsdefault
+# IdentityFile ~/.ssh/id_p256_oqsdefault
+# IdentityFile ~/.ssh/id_rsa3072_dilithium2
+IdentityFile ~/.ssh/id_p256_dilithium2
+# IdentityFile ~/.ssh/id_rsa3072_falcon512
+# IdentityFile ~/.ssh/id_p256_falcon512
+# IdentityFile ~/.ssh/id_rsa3072_mqdss3148
+# IdentityFile ~/.ssh/id_p256_mqdss3148
+# IdentityFile ~/.ssh/id_rsa3072_picnicl1fs
+# IdentityFile ~/.ssh/id_p256_picnicl1fs
+# IdentityFile ~/.ssh/id_rsa3072_picnic3l1
+# IdentityFile ~/.ssh/id_p256_picnic3l1
+# IdentityFile ~/.ssh/id_rsa3072_qteslapi
+# IdentityFile ~/.ssh/id_p256_qteslapi
+# IdentityFile ~/.ssh/id_rsa3072_rainbowiaclassic
+# IdentityFile ~/.ssh/id_p256_rainbowiaclassic
+# IdentityFile ~/.ssh/id_p384_rainbowiiicclassic
+# IdentityFile ~/.ssh/id_p521_rainbowvcclassic
+# IdentityFile ~/.ssh/id_rsa3072_sphincsharaka128frobust
+# IdentityFile ~/.ssh/id_p256_sphincsharaka128frobust
+# IdentityFile ~/.ssh/id_rsa3072_sphincssha256128frobust
+# IdentityFile ~/.ssh/id_p256_sphincssha256128frobust
+# IdentityFile ~/.ssh/id_rsa3072_sphincsshake256128frobust
+# IdentityFile ~/.ssh/id_p256_sphincsshake256128frobust
