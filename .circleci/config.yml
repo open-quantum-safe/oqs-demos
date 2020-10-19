@@ -16,14 +16,10 @@ localCheckout: &localCheckout
     cp -a /tmp/_circleci_local_build_repo/.git ${PROJECT_PATH}
 
 jobs:
-  linux_x64_openssl:
-    description: A template for building and pushing OQS demo Docker VMs
-    parameters:
-      CONTAINER:
-        description: "The docker container to use."
-        type: string
+  ubuntu_x64_openssl:
+    description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that depend on OQS-OpenSSL
     docker:
-      - image: << params.CONTAINER >>
+      - image: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
         auth:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
@@ -67,43 +63,30 @@ jobs:
             sleep 2 &&
             docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
           working_directory: nginx
-      - run:
-          name: Push all images
-          command: |
-            docker tag oqs-curl-generic $TARGETNAME/curl:latest &&
-            docker push $TARGETNAME/curl:latest &&
-            docker tag oqs-curl $TARGETNAME/curl:optimized &&
-            docker push $TARGETNAME/curl:optimized &&
-            docker tag oqs-curl-dev $TARGETNAME/curl-dev &&
-            docker push $TARGETNAME/curl-dev &&
-            docker tag oqs-httpd-img $TARGETNAME/httpd:latest &&
-            docker push $TARGETNAME/httpd:latest &&
-            docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
-            docker push $TARGETNAME/nginx:latest
+      - when:
+          condition:
+            or:
+              - equal: [ master, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push all images
+                command: |
+                  docker tag oqs-curl-generic $TARGETNAME/curl:latest &&
+                  docker push $TARGETNAME/curl:latest &&
+                  docker tag oqs-curl $TARGETNAME/curl:optimized &&
+                  docker push $TARGETNAME/curl:optimized &&
+                  docker tag oqs-curl-dev $TARGETNAME/curl-dev &&
+                  docker push $TARGETNAME/curl-dev &&
+                  docker tag oqs-httpd-img $TARGETNAME/httpd:latest &&
+                  docker push $TARGETNAME/httpd:latest &&
+                  docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
+                  docker push $TARGETNAME/nginx:latest
 
 workflows:
   version: 2.1
   build:
-    when:
-      equal: [ master, << pipeline.git.branch >> ]
     jobs:
-      - linux_x64_openssl:
-          name: ubuntu-bionic
-          # TBD: Review for better secret protection when https://ideas.circleci.com/ideas/CCI-I-981 is resolved.
-          context: openquantumsafe
-          CONTAINER: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
-      - linux_x64_openssl:
-          name: debian-buster
-          context: openquantumsafe
-          CONTAINER: openquantumsafe/ci-debian-buster-amd64:latest
-  openssl_commit:
-    when: << pipeline.parameters.new_openssl_commit >>
-    jobs:
-      - linux_x64_openssl:
+      - ubuntu_x64_openssl:
           name: ubuntu-bionic
           context: openquantumsafe
-          CONTAINER: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
-      - linux_x64_openssl:
-          name: debian-buster
-          context: openquantumsafe
-          CONTAINER: openquantumsafe/ci-debian-buster-amd64:latest
