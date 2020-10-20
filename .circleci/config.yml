@@ -1,4 +1,9 @@
-version: 2
+version: 2.1
+
+parameters:
+  new_openssl_commit:
+    type: boolean
+    default: false
 
 # CircleCI doesn't handle large file sets properly for local builds
 # https://github.com/CircleCI-Public/circleci-cli/issues/281#issuecomment-472808051
@@ -10,90 +15,78 @@ localCheckout: &localCheckout
     git ls-files -z | xargs -0 -s 2090860 tar -c | tar -x -C ${PROJECT_PATH}
     cp -a /tmp/_circleci_local_build_repo/.git ${PROJECT_PATH}
 
-.linux_job: &linuxjob
-  docker:
-    - image: ${IMAGE}
-  steps:
-    - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
-    - setup_remote_docker
-    - run:
-        name: docker login
-        command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
-    - run:
-        name: checkout dependencies
-        command: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
-    - run:
-        name: Curl
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker build --target dev -t oqs-curl-dev . && docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh || echo "Test complete")
-    - run:
-        name: Curl generic (portable)
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete")
-    - run:
-        name: Apache httpd
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd httpd && docker build -t oqs-httpd-img . && docker network create httpd-test && docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img && sleep 2 && docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433)
-    - run:
-        name: nginx
-        command: .circleci/git_no_checkin_in_last_day.sh || (cd nginx && docker build -t oqs-nginx-img . && docker network create nginx-test && docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img && sleep 2 && docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433)
-    - run:
-        name: Push all images
-        command: docker tag oqs-curl-generic $TARGETNAME/curl:latest && docker push $TARGETNAME/curl:latest && docker tag oqs-curl $TARGETNAME/curl:optimized && docker push $TARGETNAME/curl:optimized && docker tag oqs-curl-dev $TARGETNAME/curl-dev && docker push $TARGETNAME/curl-dev && docker tag oqs-httpd-img $TARGETNAME/httpd:latest && docker push $TARGETNAME/httpd:latest && docker tag oqs-nginx-img $TARGETNAME/nginx:latest && docker push $TARGETNAME/nginx:latest
-
-
-# Reactivate when issue #13 is resolved:
-#.mac_job: &macjob
-#    macos:
-#       xcode: "11.3.0"
-#    steps:
-#        - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
-#        - run:
-#            name: Install dependencies
-#            command: |
-#              .circleci/git_no_checkin_in_last_day.sh || (
-#              brew update &&
-#              brew cask install virtualbox &&
-#              brew install docker docker-machine &&
-#              docker-machine create default &&
-#              docker-machine ls &&
-#              docker-machine start &&
-#              docker-machine env default &&
-#              eval "$(docker-machine env default)" &&
-#              docker version &&
-#              brew unlink python@2
-#              )
-#        - run:
-#            name: docker login
-#            command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
-#        - run:
-#            name: Curl
-#            command: .circleci/git_no_checkin_in_last_day.sh || (cd curl && docker build -t oqs-curl . && docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh)
-
 jobs:
-  debian-buster-amd64:
-    <<: *linuxjob
-    environment:
-      IMAGE: openquantumsafe/ci-debian-buster-amd64:latest
-  ubuntu-bionic-x86_64:
-    <<: *linuxjob
-    environment:
-      IMAGE: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
-#  macOS:
-#    <<: *macjob
+  ubuntu_x64_openssl:
+    description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that depend on OQS-OpenSSL
+    docker:
+      - image: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Checkout dependencies
+          command: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
+      - run:
+          name: Test Curl
+          command: |
+            docker build -t oqs-curl . &&
+            docker build --target dev -t oqs-curl-dev . &&
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh || echo "Test complete"
+          working_directory: curl
+      - run:
+          name: Test Curl with portable liboqs
+          command: |
+            docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . &&
+            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete"
+          working_directory: curl
+      - run:
+          name: Test Apache httpd
+          command: |
+            docker build -t oqs-httpd-img . &&
+            docker network create httpd-test &&
+            docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img &&
+            sleep 2 &&
+            docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433
+          working_directory: httpd
+      - run:
+          name: Test nginx
+          command: |
+            docker build -t oqs-nginx-img . &&
+            docker network create nginx-test &&
+            docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img &&
+            sleep 2 &&
+            docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
+          working_directory: nginx
+      - when:
+          condition:
+            or:
+              - equal: [ master, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push all images
+                command: |
+                  docker tag oqs-curl-generic $TARGETNAME/curl:latest &&
+                  docker push $TARGETNAME/curl:latest &&
+                  docker tag oqs-curl $TARGETNAME/curl:optimized &&
+                  docker push $TARGETNAME/curl:optimized &&
+                  docker tag oqs-curl-dev $TARGETNAME/curl-dev &&
+                  docker push $TARGETNAME/curl-dev &&
+                  docker tag oqs-httpd-img $TARGETNAME/httpd:latest &&
+                  docker push $TARGETNAME/httpd:latest &&
+                  docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
+                  docker push $TARGETNAME/nginx:latest
 
 workflows:
-  version: 2
+  version: 2.1
   build:
     jobs:
-      - ubuntu-bionic-x86_64:
-          context: openquantumsafe
-# TBD: Review for better secret protection when https://ideas.circleci.com/ideas/CCI-I-981 is resolved.
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 4 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - debian-buster-amd64:
+      - ubuntu_x64_openssl:
+          name: ubuntu-bionic
           context: openquantumsafe
