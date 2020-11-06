@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/openssl#key-exchange
 if [ "x$KEM_ALG" == "x" ]; then

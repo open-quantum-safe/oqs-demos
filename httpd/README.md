@@ -51,5 +51,3 @@ Allow setting parameters to `make` operation, e.g., '-j nnn' where nnn defines t
 
 The default is conservative and known not to overload normal machines. If one has a very powerful (many cores, >64GB RAM) machine, passing larger numbers (or only '-j' for maximum parallelism) speeds up building considerably.
 
-
-

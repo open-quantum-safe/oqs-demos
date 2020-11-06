@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/openssl#key-exchange
 if [ "x$KEM_ALG" == "x" ]; then
@@ -10,7 +11,7 @@ if [ "x$SIG_ALG" == "x" ]; then
 	export SIG_ALG=dilithium2
 fi
 
-# Optionally set TEST_TIME 
+# Optionally set TEST_TIME
 if [ "x$TEST_TIME" == "x" ]; then
 	export TEST_TIME=100
 fi
@@ -20,7 +21,7 @@ fi
 if [ "x$SIG_ALG" != "x" ]; then
     cd /opt/oqssa/bin
     # generate new server CSR using pre-set CA.key & cert
-    openssl req -new -newkey $SIG_ALG -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" 
+    openssl req -new -newkey $SIG_ALG -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost"
     if [ $? -ne 0 ]; then
        echo "Error generating keys - aborting."
        exit 1

@@ -1,6 +1,6 @@
 # Multi-stage build: First the full builder image:
 
-# First: global build arguments: 
+# First: global build arguments:
 
 # liboqs build type variant; build non-optimized by default (maximum portability of image):
 ARG LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF"
@@ -31,20 +31,20 @@ ARG MAKE_DEFINES
 
 # Get all software packages required for builing all components:
 RUN apk add build-base linux-headers \
-            libtool automake autoconf cmake \
+            libtool automake autoconf cmake ninja \
             make \
             openssl openssl-dev \
             git wget pcre-dev
 
 # get OQS sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch master https://github.com/open-quantum-safe/liboqs && \
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl && \
     wget nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar -zxvf nginx-${NGINX_VERSION}.tar.gz;
 
 # build liboqs (static only)
 WORKDIR /opt/liboqs
-RUN mkdir build-static && cd build-static && cmake ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${OPENSSL_PATH}/oqs .. && make ${MAKE_DEFINES} && make install
+RUN mkdir build-static && cd build-static && cmake -G"Ninja" ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=${OPENSSL_PATH}/oqs .. && ninja && ninja install
 
 # build nginx (which builds OQS-OpenSSL)
 WORKDIR /opt/nginx-${NGINX_VERSION}
