@@ -36,13 +36,13 @@ jobs:
             # all of them might exhaust memory
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-curl . &&
             docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . &&
-            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh | grep connections
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh 
           working_directory: curl
       - run:
           name: Test Curl with portable liboqs
           command: |
             docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . &&
-            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl perftest.sh | grep connections
+            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl perftest.sh 
           working_directory: curl
       - run:
           name: Test Apache httpd

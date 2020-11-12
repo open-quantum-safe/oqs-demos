@@ -44,4 +44,4 @@ openssl s_server -cert /opt/test/server.crt -key /opt/test/server.key -curves $K
 sleep 1
 
 # Run handshakes for $TEST_TIME seconds
-openssl s_time -curves $KEM_ALG -connect :4433 -new -time $TEST_TIME -verify 1
+openssl s_time -curves $KEM_ALG -connect :4433 -new -time $TEST_TIME -verify 1 | grep connections
