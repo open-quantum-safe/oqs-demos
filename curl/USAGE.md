@@ -35,9 +35,9 @@ to perform TLS handshakes for 200 seconds (TEST_TIME default value) using dilith
 
 A 'worked example' and more general alternative form of the command is
 ```
-docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh
+docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl perftest.sh
 ```
-runs TLS handshakes for 5 seconds exercizing `picnicl1fs` and `sikep751`. Again, all [supported QSC algorithms](https://github.com/open-quantum-safe/openssl#supported-algorithms) can be set here. Be sure to properly distinguish between SIGnature_ALGorithms and KEM(Key Exchange Mechanism)_ALGorithms.
+runs TLS handshakes for 5 seconds exercizing `picnicl1full` and `sikep751`. Again, all [supported QSC algorithms](https://github.com/open-quantum-safe/openssl#supported-algorithms) can be set here. Be sure to properly distinguish between SIGnature_ALGorithms and KEM(Key Exchange Mechanism)_ALGorithms.
 
 
 ### Algorithm performance

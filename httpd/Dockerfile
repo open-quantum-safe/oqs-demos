@@ -31,7 +31,7 @@ ARG MAKE_DEFINES
 
 # Get all software packages required for builing all components:
 RUN apk add build-base linux-headers \
-            libtool automake autoconf cmake \
+            libtool automake autoconf cmake ninja \
             make \
             openssl openssl-dev \
             git wget pcre-dev \
@@ -39,7 +39,7 @@ RUN apk add build-base linux-headers \
 
 # get sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch master https://github.com/open-quantum-safe/liboqs && \
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
     wget http://mirror.easyname.ch/apache//apr/apr-1.7.0.tar.gz && tar xzvf apr-1.7.0.tar.gz && \
     wget http://mirror.easyname.ch/apache//apr/apr-util-1.6.1.tar.gz && tar xzvf apr-util-1.6.1.tar.gz && \
@@ -47,7 +47,7 @@ RUN git clone --depth 1 --branch master https://github.com/open-quantum-safe/lib
 
 # build liboqs (static linking only)
 WORKDIR /opt/liboqs
-RUN mkdir build-static && cd build-static && cmake ..  -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && make ${MAKE_DEFINES} && make install
+RUN mkdir build-static && cd build-static && cmake -G"Ninja" ..  -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja && ninja install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src

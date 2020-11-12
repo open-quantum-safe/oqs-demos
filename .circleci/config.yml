@@ -30,25 +30,24 @@ jobs:
           name: Authenticate to Docker
           command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
       - run:
-          name: Checkout dependencies
-          command: git clone --depth 1 https://github.com/open-quantum-safe/liboqs.git tmp/liboqs && git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable --single-branch https://github.com/open-quantum-safe/openssl.git tmp/openssl
-      - run:
           name: Test Curl
           command: |
-            docker build -t oqs-curl . &&
-            docker build --target dev -t oqs-curl-dev . &&
-            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh || echo "Test complete"
+            # The CircleCI executor offers 35 cores, but using
+            # all of them might exhaust memory
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-curl . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . &&
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh 
           working_directory: curl
       - run:
           name: Test Curl with portable liboqs
           command: |
-            docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . &&
-            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1fs -it oqs-curl perftest.sh || echo "Test complete"
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . &&
+            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl perftest.sh 
           working_directory: curl
       - run:
           name: Test Apache httpd
           command: |
-            docker build -t oqs-httpd-img . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-httpd-img . &&
             docker network create httpd-test &&
             docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img &&
             sleep 2 &&
@@ -57,7 +56,7 @@ jobs:
       - run:
           name: Test nginx
           command: |
-            docker build -t oqs-nginx-img . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-nginx-img . &&
             docker network create nginx-test &&
             docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img &&
             sleep 2 &&

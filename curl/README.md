@@ -26,10 +26,10 @@ docker build -t oqs-curl --build-arg SIG_ALG=qteslapiii .
 
 Two further, runtime configuration option exist that can both be optionally set via docker environment variables:
 
-1) Setting the key exchange mechanism (KEM): By setting 'KEM_ALG' 
-to any of the [supported KEM algorithms built into OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange) one can run TLS using a KEM other than the default algorithm 'kyber512'. Example: `docker run -e KEM_ALG=newhope1024cca -it oqs-curl`. It is always necessary to also request use of this KEM algorithm by passing it to the invocation of `curl` with the `--curves` parameter, i.e. as such in the same example: `curl --curves newhope1024cca https://localhost:4433`.
+1) Setting the key exchange mechanism (KEM): By setting 'KEM_ALG'
+to any of the [supported KEM algorithms built into OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange) one can run TLS using a KEM other than the default algorithm 'kyber512'. Example: `docker run -e KEM_ALG=ntru_hps2048509 -it oqs-curl`. It is always necessary to also request use of this KEM algorithm by passing it to the invocation of `curl` with the `--curves` parameter, i.e. as such in the same example: `curl --curves ntru_hps2048509 https://localhost:4433`.
 
-2) Setting the signature algorithm (SIG): By setting 'SIG_ALG' to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/openssl#authentication) one can run TLS using a SIG other than the one set when building the image (see above). Example: `docker run -e SIG_ALG=picnicl1fs -it oqs-curl`.
+2) Setting the signature algorithm (SIG): By setting 'SIG_ALG' to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/openssl#authentication) one can run TLS using a SIG other than the one set when building the image (see above). Example: `docker run -e SIG_ALG=picnicl1full -it oqs-curl`.
 
 #### Build type argument(s)
 
