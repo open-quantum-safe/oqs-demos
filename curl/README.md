@@ -11,7 +11,7 @@ This directory contains a Dockerfile that builds curl with the [OQS OpenSSL 1.1.
 ## More details
 
 The Dockerfile 
-- obtains all source code required for building the quantum-safe crypto (QSC) algorithms, the QSC-enabled version of OpenSSL (v.1.1.1), curl (v.7.69.1) 
+- obtains all source code required for building the quantum-safe crypto (QSC) algorithms, the QSC-enabled version of OpenSSL (v.1.1.1), curl (v.7.73.0) 
 - builds all libraries and applications
 - creates OQS-enabled certificate files for a mini-root certificate authority (CA) 
 - creates an OQS-enabled server certificate for running a `localhost` QSC-TLS server
@@ -78,7 +78,7 @@ By default this is '/opt/oqssa'. It is recommended to not change this. Also, all
 
 This defines the curl software version to be build into the image.
 
-The default version set is known to work OK and depends on a patch. Therefore changing it is *not* recommended.
+The default version set is known to work OK providing features required for selecting QSC algorithms (via the `--curves` option). Therefore changing it is *not* recommended.
 
 ### MAKE_DEFINES
 
