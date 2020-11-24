@@ -1,7 +1,7 @@
 # Multi-stage build: First the full builder image:
 
 # define the Curl version to be baked in
-ARG CURL_VERSION=7.69.1
+ARG CURL_VERSION=7.73.0
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -47,9 +47,6 @@ RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboq
     git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
 
-# Add curl patchfile
-ADD patch-${CURL_VERSION}.oqs.txt /opt/patch-${CURL_VERSION}.oqs.txt
-
 # build liboqs shared and static
 WORKDIR /opt/liboqs
 RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
@@ -76,7 +73,6 @@ RUN set -x; \
 
 # build curl - injecting OQS CA generated above into root store
 WORKDIR /opt/curl-${CURL_VERSION}
-RUN patch -p1 < /opt/patch-${CURL_VERSION}.oqs.txt
 
 # Download and integrate LetsEncrypt Root CA to CA bundle
 RUN wget https://letsencrypt.org/certs/letsencryptauthorityx3.pem.txt && cat ${INSTALLDIR}/bin/CA.crt >> letsencryptauthorityx3.pem.txt 
