@@ -7,7 +7,7 @@ ARG CURL_VERSION=7.73.0
 ARG INSTALLDIR=/opt/oqssa
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
-ARG LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=ON"
+ARG LIBOQS_BUILD_DEFINES=
 
 # openssl build defines (https://github.com/open-quantum-safe/openssl#build-options)
 ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=p384_kyber768:X25519:kyber768"
