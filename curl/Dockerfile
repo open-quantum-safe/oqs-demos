@@ -7,7 +7,7 @@ ARG CURL_VERSION=7.73.0
 ARG INSTALLDIR=/opt/oqssa
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
-ARG LIBOQS_BUILD_DEFINES=
+ARG LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=ON"
 
 # openssl build defines (https://github.com/open-quantum-safe/openssl#build-options)
 ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=p384_kyber768:X25519:kyber768"
@@ -50,7 +50,7 @@ RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboq
 # build liboqs shared and static
 WORKDIR /opt/liboqs
 RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
-RUN mkdir build-static && cd build-static && cmake -G"Ninja" .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
+RUN mkdir build-static && cd build-static && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
