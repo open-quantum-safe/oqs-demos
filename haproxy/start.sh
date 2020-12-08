@@ -11,7 +11,9 @@ cd /opt/haproxy
 if [ $# -eq 1 ]; then
    # backend address as sole optional parameter
    echo "Setting target backend $1"
-   sed -i "s/127.0.0.1:8282/$1/g" /opt/haproxy/conf/haproxy.cfg 
+   sed -i "s/127.0.0.1:8181/$1/g" /opt/haproxy/conf/haproxy.cfg 
+   # removing backend 2
+   sed -i "s/server server2 127\.0\.0\.1\:8182 cookie server2//g" /opt/haproxy/conf/haproxy.cfg
 fi
 
 # Start backends:
