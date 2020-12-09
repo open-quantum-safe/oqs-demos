@@ -50,7 +50,7 @@ RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboq
 # build liboqs shared and static
 WORKDIR /opt/liboqs
 RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
-RUN mkdir build-static && cd build-static && cmake -G"Ninja" .. -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
+RUN mkdir build-static && cd build-static && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
 
 # build OQS-OpenSSL
 WORKDIR /opt/ossl-src
