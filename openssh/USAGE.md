@@ -15,13 +15,17 @@ For limitations of the post-quantum algorithms themselves, refer to [this](https
 
 ## Slightly more advanced usage options
 
-### Change install location
-
-The OQS-OpenSSH binaries, configuration files and host keys are located in the default install location `/opt/oqs-ssh/`. This location can be changed at build time with `--build-arg INSTALL_DIR=</path/to/new/location>`.
-
 ### Access the man pages of oqs-ssh
 
-Man pages for oqs-ssh are installed in `<INSTALL_DIR>/share/man` and can be viewed by for example `man -l <INSTALL_DIR>/share/man/man1/ssh.1` or `man -l <INSTALL_DIR>/share/man/man5/ssh.5`. Note that those man pages are **not** different from the original ssh man pages. So it might be easier to consult them on your local system or the internet. 
+Man pages for oqs-ssh are installed in `<INSTALL_DIR>/share/man` and can be viewed by for example 
+``` bash
+docker run -it --rm openquantumsafe/openssh man -l /opt/oqs-ssh/share/man/man1/ssh.1
+```
+ or
+ ```bash
+docker run -it --rm openquantumsafe/openssh man -l /opt/oqs-ssh/share/man/man5/ssh.5
+ ```
+ Note that those man pages do **not** differ from the original ssh man pages. So it might be easier to consult them on your local system or the internet.
 
 Direct links to man pages: [ssh(1)](https://linux.die.net/man/1/ssh), [sshd(8)](https://linux.die.net/man/8/sshd), [ssh_config(5)](https://linux.die.net/man/5/ssh_config), [sshd_config(5)](https://linux.die.net/man/5/sshd_config)
 
@@ -39,32 +43,36 @@ Note that as long as the backwards compatibility is maintained, the system can n
 
 ### Key re-generation
 
-When the image is run normally (`docker run -it oqs-img -t oqs-ssh`) it invokes the script [key-regen.sh](key-regen.sh). It generates all host and identity keys that **do not exist** and **are necessary** according to the configuration files ([ssh_config](ssh_config) and [sshd_config](sshd_config)). Their necessity is determinded based on the following parameters:
+When the image is run without a command, like
+```bash
+docker run -it openquantumsafe/openssh -t oqs-ssh
+```
+it generates all host and identity keys that **do not exist** and **are necessary** according to the configuration files ([ssh_config](ssh_config) and [sshd_config](sshd_config)). Their necessity is determinded based on the following parameters:
 1. `IdentityFile` for **identity keys**: For every entry (there may be multiple) the corresponding key is generated.
    - e.g. `IdentityFile ~/.ssh/id_ed25519` or
    - `IdentityFile ~/.ssh/id_p256_dilithium2`
 2. `HostKeyAlgorithms` for **host keys**: For every algorithm listed a host key will be generated.
    - e.g. `HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519`
 
-Note that the `key-regen.sh` script is executed as the `root` user.
+That to generate the host keys and start the `sshd` the image needs to be run as the `root` user, meaning the `docker run` command shall not contain the `--user oqs` option.
 
 As mentioned above those keys will only be generated if they don't yet exist. So even though the script is executed every time a container is started (or run), it usually only does something the first time. If any host key was generated, the `sshd` service will be restarted.
 
-The location where `key-regen.sh` is looking for `ssh_config`/`sshd_config` is the install directory of `oqs-ssh`. The [Dockerfile](Dockerfile) puts this location into the variable `OQS_INSTALL_DIR` where it will be accessible from the script.
+The location where `key-gen.sh` is looking for `ssh_config`/`sshd_config` is the install directory of `oqs-ssh`.
 ## Using oqs-ssh for quantum-safe remote access with minimal intrusion
 
 One use case of quantum-safe ssh running in docker could be accessing a remote system without messing with its ssh(d) installation or other parts of the system you maybe don't want to interact with. This means minimal intrusion and everything can easily be removed again. This is done by running this docker image on said system and sharing its network space. Thus it is possible to access host ports from **within** the docker container. Normally, the use case of docker is one of isolation with some shared directories and published ports at max. So this solution works around the usual docker limitations.
 
 Additionally, it is advised to **change the default username and password** when building the image because your plan is to expose it to the world.
 
-```html
+```
 Structure of quantum-safe remote access using docker containers
 
 +------------------+                +----------------------+
 |      Client      |                |         Host         |
 |  +------------+  |                |  +----------------+  |
 |  |            |  |                |  |                |  |
-|  |   Docker   +--------------------->+     Docker     |  |
+|  |   Docker   +--------------------=>+     Docker     |  |
 |  |            |  |       Port 2222|  |                |  |
 |  +------------+  |                |  +-------+--------+  |
 |                  |                |          |           |
@@ -80,36 +88,34 @@ Structure of quantum-safe remote access using docker containers
 ### Set up the server (docker container on target-host)
 
 To start the ssh server, meaning the docker container on the host system, follow those instructions:
-- Build the docker image as usual, change username and password
-       
-       docker build --build-arg OQS_USER=<my-desired-username> --build-arg OQS_PASSWORD=<my-desired-password> -t oqs-openssh-img .
 - Run the docker image with
 
-       docker run -dit --network host --name oqs-ssh oqs-ssh-img
+       docker run -dit --network host --name oqs-ssh openquantumsafe/openssh
 
 - Or, if you want the container to automatically start with docker
 
-       docker run -dit --network host --name oqs-ssh --restart unless-stopped oqs-openssh-img
+       docker run -dit --network host --name oqs-ssh --restart unless-stopped openquantumsafe/openssh
 
 The `--network host` option will attach the container directly to your host's network, sharing its IP. The sshd in the container is now accessible from the outside using the host's IP address and the specified port (2222 per default).
 
 Be aware that the port 2222 also needs to be open in any firewall's there may be!
 
+If you want to seriously use this image to connect to a machine, it is **strongly advised** to change the default password of the `oqs` user. This can be done in the **running** container either with
+```bash
+docker exec -it oqs-ssh passwd oqs
+```
+or you can build the image yourself with a different default password from the sources on [Github](https://github.com/openquantumsafe/oqs-demos).
 ### Set up the client
 
-For the client side, you need to compile yourself a docker image as described in the 'Quick start' section of the [README.md](README.md). You then run it as normal with
+For the client side, you run the image with
 ```bash
-docker run -dit --name oqs-ssh oqs-ssh-img
+docker run -it openquantumsafe/openssh ssh <username>@<remote-host-ip> -p 2222
 ```
-after that you can run the ssh client directly
-```bash
-docker exec -it --user oqs oqs-ssh ssh <remote-docker-username>@<remote-host-ip> -p 2222
-```
-You are then prompted to enter the password for the remote server.
+You are then prompted to enter the password for the remote server. Defaults are `oqs` for `<username>` and `oqs.pw` as password. It is strongly adviced to change this password as described above.
 
 You may omit `-p 2222` if this port is configured accordingly in `ssh_config` on the client (which is the default).
 
-And most importantly, we can now access the host's sshd from within the docker image by addressing port 22 via the localhost, using the host's credentials.
+And most importantly, we can now access the host's `sshd` from within the docker image by addressing port 22 via the localhost, using the host's credentials.
 ```bash
 ssh <username>@localhost -p 22
 ```
@@ -126,3 +132,7 @@ To ease rapid startup and teardown, we strongly recommend using the docker [--na
 ### Port: 2222
 
 Port at which (oqs-)sshd listens by default for quantum-safe ssh connections. Defined/changeable in `sshd_config`.
+
+## Disclaimer
+
+[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).

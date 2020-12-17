@@ -112,6 +112,16 @@ jobs:
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-openssh-img . &&
             docker run --rm --name oqs-openssh oqs-openssh-img connect-test.sh
           working_directory: openssh
+      - when:
+          condition:
+            equal: [ main, << pipeline.git.branch >> ]
+          steps:
+            - run:
+                name: Push openssh image
+                command: |
+                  docker tag oqs-openssh-img $TARGETNAME/openssh:latest &&
+                  docker push $TARGETNAME/openssh:latest &&
+
 
 workflows:
   version: 2.1

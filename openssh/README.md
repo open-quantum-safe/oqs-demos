@@ -6,15 +6,30 @@ This directory contains a Dockerfile that builds the [OQS OpenSSH fork](https://
 
 [Install Docker](https://docs.docker.com/install) and run the following commands in this directory:
 
-1. Run `docker build -t oqs-openssh-img .` This will generate the image with the name `oqs-openssh-img`
-2. `docker run --name oqs-openssh-server -ditp 2222:2222 --rm oqs-openssh-img`
-This will start a docker container that has sshd listening for SSH connections on port 2222 and this port is forwarded to and accessible via `localhost:2222`.
-3. `docker run --rm --name oqs-openssh-client -dit oqs-openssh-img` will start a docker container with the same properties as `oqs-openssh-server` except the port 2222 is not published.
-4. You can hop on either of those two containers as a non-root user (oqs) to use the built-in OQS-OpenSSH binaries or do other shenanigans by typing
-`docker exec -ti -u oqs oqs-openssh-server /bin/sh`
-Of course adjust the container's name accordingly if hopping onto the client (==> `oqs-openssh-client`).
+Make sure to change to the `openssh` directory. The command
+```bash
+docker build -t oqs-openssh-img .
+```
+will generate the image with the name `oqs-openssh-img`.
 
-It is possible that the `docker build [...]` command fails with something like `Got permission denied while trying to connect to the Docker daemon socket [...]`. That is because the active user is not a member of the `docker` group yet. To fix this run:
+Then running
+```bash
+docker run --name oqs-openssh-server -ditp 2222:2222 --rm oqs-openssh-img
+```
+will start a docker container with fresh keys that has `sshd` listening for SSH connections on port 2222 and this port is forwarded to and accessible via `localhost:2222`.
+
+Note that due to the `--rm` option the container will be removed as soon as it is stopped, it may be omitted to keep the container.
+
+With the command
+```bash
+docker run --rm -dit oqs-openssh-img ssh oqs@localhost
+```
+you run the image, generate fresh keys, start the `sshd` and directly connect to it with the user `oqs`, and default password `oqs.pw`. This is not really practical but enough for demonstration purposes.
+
+
+### Docker permissions
+
+It is possible that the `docker build [...]` command fails with something like `Got permission denied while trying to connect to the Docker daemon socket [...]`. That is because the active user is not a member of the `docker` group yet. To fix this, run
 ```bash
 usermod -aG docker <user>
 newgrp docker
@@ -23,13 +38,28 @@ The first command adds user `<user>` to the group `docker`, and the second simul
 
 ### Connect from container to container via OQS-SSH
 
-1. To connect to another docker container, we first need to create a docker network by typing `docker network create oqs-openssh-net`.
+1. Make sure two containers of the openssh-img are running. One will be the server and the other one the client. On how to get those containers up and running refer to the [Quick Start](README.md#quick-start) section.
 
-1. Then connect the containers to this network by typing `docker network connect oqs-openssh-net <name-of-container>` where `<name-of-container>` is once the server's and once the client's name. Obviously this does not work if the containers are not yet running, in this case refer to the [Quick Start](README.md#quick-start) section.
+2. Create a docker network with
+   
+        docker network create oqs-openssh-net
 
-1. Then connect to the server by typing `docker exec -ti oqs-openssh-client ssh oqs@oqs-openssh-server` and authenticating the user `oqs` with its default password `oqs.pw`.
+3. Then connect the containers to this network with
+        
+        docker network connect oqs-openssh-net oqs-openssh-server
 
-As server and client are based on the same image, connecting from the server to the client's ssh daemon is possible as well. For that use the same command and exchange `server` and `client`.
+    and
+
+        docker network connect oqs-openssh-net oqs-openssh-client
+
+
+4. Now connect from the client to the server with
+    
+        docker exec -ti oqs-openssh-client ssh oqs@oqs-openssh-server
+    
+    and authenticate the user `oqs` with its default password `oqs.pw`.
+
+As server and client are based on the same image and both have `sshd` running, connecting from the server to the client's ssh daemon is possible as well. For that use the same commands as above and exchange `server` and `client` accordingly.
 
 ## More details
 
@@ -41,11 +71,14 @@ The Dockerfile
 - by default creates host keys based on the enabled host key algorithms in `sshd_config`\*
 - by default creates identity keys based on the config file `ssh_config`\*
 
-\*those steps are executed when the image is startet.
+\*those steps are executed when the image is started.
 
 **Note for the interested**: The build process is two-stage with the final image only retaining all executables, libraries and include-files to utilize OQS-enabled openssh.
 
-The re-generation of the host and identity keys happens via the script [key-regen.sh](key-regen.sh) that is called with a `CMD` command at the end of the [Dockerfile](Dockerfile). The script checks if the required key already exist and gerenates it if necessary.
+### Key generation
+
+The generation of the host and identity keys happens via the script [key-gen.sh](key-gen.sh) that is called indirectly via the `ENTRYPOINT [ "./entrypoint.sh" ]` command at the end of the [Dockerfile](Dockerfile). The script checks if the required key already exist and gerenates it if necessary. This script is called every time the container is started. It checks for existing keys before it generates them so it will never overwrite a key.
+
 #### Build type argument(s)
 
 The Dockerfile also facilitates building the underlying OQS library to different specifications (by setting the `--build-arg` variable `LIBOQS_BUILD_DEFINES` as defined [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).
@@ -56,6 +89,8 @@ docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -f 
 ``` 
 a generic system without processor-specific runtime optimizations is built, thus ensuring execution on all computers (at the cost of maximum runtime performance).
 
+## Updating the liboqs version
+Currently the used version of liboqs is [0.4.0](https://github.com/open-quantum-safe/liboqs/releases/tag/0.4.0). Be aware that upon changing this version, which can be done in the [Dockerfile](Dockerfile), the default algorithms may change. If this is the case [sshd_config](sshd_config)/[sshd_config](sshd_config) must be updated accordingly.
 ## Usage
 
 Information how to use the image is [available in the separate file USAGE.md](USAGE.md).
@@ -66,7 +101,7 @@ The Dockerfile provided allows for some customization of the image built. Those 
 
 ### INSTALL_DIR
 
-This defines the resultant location of the software installation.
+This sets the location of the software installation including the configuration files and host keys inside the docker image.
 
 By default this is `/opt/oqs-ssh`. When it is changed, every occurrence of this default path is replaced with it at build time. That means that for example the `ssh_config` file copied to the container can differ from the original [ssh_config](ssh_config) because it is edited during build.
 
@@ -91,11 +126,16 @@ This allows to configure some additional build options for building OQS-OpenSSH.
 These parameters will be overridden if specified again in `OPENSSH_BUILD_OPTIONS`.
 
 `/opt/ossh-src/oqs` is the location the intermediate build in the Dockerfile writes the compiled liboqs binaries to. This should not be changed, as it does not influence the final docker image.
+
 ### MAKE_DEFINES
 
 Allow setting parameters to `make` operation, e.g., `-j nnn` where nnn defines the number of jobs run in parallel during build. 
 
 The default is conservative and known not to overload normal machines (default: `-j 2`). If one has a very powerful (many cores, >64GB RAM) machine, passing larger numbers (or only `-j` for maximum parallelism) speeds up the build considerably.
+
+### MAKE_INSTALL
+
+This build argument defines the make install target of the OpenSSH installation is defined. Default is `install-nokeys`, so no keys are generated when installing. Another valid value would be `install` which generates keys when installing. Note that this may take quite some time depending on the enabled algorithms, [here you find more information](https://github.com/open-quantum-safe/openssh#supported-algorithms) about what algorithms are enabled by default.
 
 ### OQS_USER
 

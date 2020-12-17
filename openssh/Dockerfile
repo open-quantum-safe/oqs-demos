@@ -4,14 +4,22 @@
 ARG DEFAULT_INSTALL_DIR=/opt/oqs-ssh
 ARG INSTALL_DIR=${DEFAULT_INSTALL_DIR}
 
+# liboqs version
+# ATTENTION: Changing this could mean that further adaptions in sshd_config and ssh_config are required
+ARG LIBOQS_RELEASE="0.4.0"
+
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
 ARG LIBOQS_BUILD_DEFINES=
+
+# Open quantum safe OpenSSH release
+ARG OQS_OPENSSH_RELEASE="OQS-OpenSSH-snapshot-2020-08"
 
 # openssh build defines (https://github.com/open-quantum-safe/openssh#step-2-build-the-fork)
 ARG OPENSSH_BUILD_OPTIONS=
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j2"
+ARG MAKE_INSTALL="install-nokeys"
 
 # Define the username of the normal user
 ARG OQS_USER="oqs"
@@ -20,9 +28,12 @@ ARG OQS_PASSWORD="oqs.pw"
 FROM alpine:3.11 as intermediate
 # Take in all global args
 ARG INSTALL_DIR
+ARG LIBOQS_RELEASE
 ARG LIBOQS_BUILD_DEFINES
+ARG OQS_OPENSSH_RELEASE
 ARG OPENSSH_BUILD_OPTIONS
 ARG MAKE_DEFINES
+ARG MAKE_INSTALL
 ARG OQS_USER
 
 LABEL version="2"
@@ -42,15 +53,15 @@ RUN apk add gcc musl-dev linux-headers \
 
 # get all sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch 0.4.0 https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch OQS-OpenSSH-snapshot-2020-08 https://github.com/open-quantum-safe/openssh ossh-src;
+RUN git clone --depth 1 --branch ${LIBOQS_RELEASE} https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch ${OQS_OPENSSH_RELEASE} https://github.com/open-quantum-safe/openssh ossh-src;
 
 # build liboqs static (does not work with shared lib!)
 WORKDIR /opt/liboqs
 # RUN mkdir build && cd build && cmake .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossh-src/oqs && make ${MAKE_DEFINES} && make install
 RUN mkdir build-static && cd build-static && cmake .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossh-src/oqs && make ${MAKE_DEFINES} && make install
 
-# build OQS-OpenSSH, this will automatically generate host keys for all SIG algorithms
+# builds and installs OQS-OpenSSH
 WORKDIR /opt/ossh-src
 RUN autoreconf && ./configure \
     --with-libs=-lm \
@@ -60,7 +71,7 @@ RUN autoreconf && ./configure \
     --with-mantype=man \
     ${OPENSSH_BUILD_OPTIONS}
 RUN make ${MAKE_DEFINES} && \
-    make install-nokeys
+    make ${MAKE_INSTALL}
 
 CMD ["sh"]
 STOPSIGNAL SIGTERM
@@ -115,8 +126,8 @@ COPY serverstart.sh ${INSTALL_DIR}/test/
 # RUN sed -in "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/serverstart.sh
 COPY connect-test.sh ${INSTALL_DIR}/test/
 # RUN sed -in "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/connect-test.sh
-COPY key-regen.sh ${INSTALL_DIR}/scripts/
-# RUN sed -in "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/key-regen.sh
+COPY key-gen.sh ${INSTALL_DIR}/scripts/
+# RUN sed -in "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/key-gen.sh
 
 # set path to use 'new' openssh
 ENV PATH="${INSTALL_DIR}/bin:${PATH}"
@@ -128,6 +139,10 @@ STOPSIGNAL SIGTERM
 # Expose port 2222 as this is the chosen ssh port for oqs-ssh
 EXPOSE 2222
 
-# Re-generate the host keys and start a shell
 WORKDIR /home/${OQS_USER}/
-CMD ["sh", "-c", "RESTART_SSHD=yes key-regen.sh; /bin/sh"]
+
+# Generate the host and identity keys (see key-gen.sh) and start a shell
+COPY entrypoint.sh .
+RUN chmod a+x ./entrypoint.sh
+ENTRYPOINT [ "./entrypoint.sh" ]
+CMD [ "/bin/sh" ]

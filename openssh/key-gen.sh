@@ -1,12 +1,11 @@
 #!/bin/bash
-# set -ex
 
 if [ "x${EUID}" != "x0" ]; then
     echo "Must be root! Aborting..."
     exit 1
 fi
 
-# Get all active identity files from ssh_config and generate a file for each
+# Get all active identity key files from ssh_config and generate a file for each
 ID_DIR="/home/${OQS_USER}/.ssh"
 readarray ID_ALGS <<< $(sed -n "s:^identityfile.*/id_::Ip" ${OQS_INSTALL_DIR}/ssh_config)
 # Find longest name
@@ -16,7 +15,7 @@ for alg in ${ID_ALGS[@]}; do
         MAX_LEN=${#alg}
     fi
 done
-echo "Generating identity files as configured in ${OQS_INSTALL_DIR}/ssh_config:"
+echo "Generating identity key files as configured in ${OQS_INSTALL_DIR}/ssh_config:"
 for alg in ${ID_ALGS[@]}; do
     printf "\t%-$((MAX_LEN + 1))s" ${alg^^}
     if [ $alg == "rsa" ] || [ $alg == "dsa" ] || [ $alg == "ecdsa*" ] || [ $alg == "ed25519*" ]; then
@@ -38,9 +37,8 @@ for alg in ${ID_ALGS[@]}; do
         fi
     fi
 done
-# echo " done!"
 
-# Regenerate existing host keys
+# Generate not existing host keys
 HOST_KEY_DIR=$(echo $OQS_INSTALL_DIR | sed 's:/*$::')
 echo -e "\nGenerating host key files as configured in $OQS_INSTALL_DIR/sshd_config (all HostKeyAlgorithms):"
 
@@ -70,9 +68,11 @@ for alg in "${HOST_KEY_ALGS[@]}"; do
         fi
     fi
 done
-# echo " done!"
 
 if [ "x$RESTART_SSHD" != "x" ]; then
     echo ""
     rc-service oqs-sshd restart
+else
+# make sure service is running
+    rc-service oqs-sshd start
 fi
