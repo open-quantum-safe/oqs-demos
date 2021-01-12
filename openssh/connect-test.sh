@@ -2,6 +2,9 @@
 
 [[ $DEBUGLVL -gt 1 ]] && set -ex
 
+# Stop the sshd service that may was started before, otherwise it won't work with others than the default algorithms
+rc-service oqs-sshd stop
+
 # default options
 OPTIONS=${OPTIONS:="-q -o BatchMode=yes -o StrictHostKeyChecking=no"}
 
@@ -12,6 +15,7 @@ KEM=${KEM_ALG:="ecdh-nistp384-kyber-1024"}
 SSH_DIR="/home/${OQS_USER}/.ssh"
 SIG_ID_FILE="${SSH_DIR}/id_${SIG//-/_}"
 echo "y" | su ${OQS_USER} -c "${OQS_INSTALL_DIR}/bin/ssh-keygen -t ssh-${SIG} -f ${SIG_ID_FILE} -N \"\" -q"
+echo ""
 cat ${SIG_ID_FILE}.pub >> ${SSH_DIR}/authorized_keys
 [[ $DEBUGLVL -gt 0 ]] && echo "Debug1: New identity key '${SIG_ID_FILE}(.pub)' created!"
 OPTIONS="${OPTIONS} -i ${SIG_ID_FILE}"
@@ -30,7 +34,7 @@ fi
 
 # See if TEST_TIME was set, if not use default
 if [ "x${TEST_TIME}" == "x" ]; then
-    TEST_TIME=3
+    TEST_TIME=60
 fi
 OPTIONS="${OPTIONS} -o ConnectTimeout=${TEST_TIME}"
 
@@ -57,9 +61,11 @@ CMD="ssh ${OPTIONS} ${TEST_HOST} 'exit 0'"
 eval "$SSH_PREFIX\"$CMD\""
 
 if [ $? -eq 0 ]; then
-    echo "Successfully connected to ${TEST_HOST}!"
+    echo ""
+    echo "[ OK ] Connected to ${TEST_HOST} using ${KEM} and ${SIG}!"
     exit 0
 else
-    echo "Failed connecting to ${TEST_HOST}!"
+    echo ""
+    echo "[FAIL] Could not connect to ${TEST_HOST} using ${KEM} and ${SIG}!"
     exit 1
 fi

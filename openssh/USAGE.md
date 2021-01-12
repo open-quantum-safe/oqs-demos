@@ -29,6 +29,10 @@ docker run -it --rm openquantumsafe/openssh man -l /opt/oqs-ssh/share/man/man5/s
 
 Direct links to man pages: [ssh(1)](https://linux.die.net/man/1/ssh), [sshd(8)](https://linux.die.net/man/8/sshd), [ssh_config(5)](https://linux.die.net/man/5/ssh_config), [sshd_config(5)](https://linux.die.net/man/5/sshd_config)
 
+## Key-based client authentication
+
+Key-based client authentication works just as it does with normal SSH. Just add your post-quantum public key (normally located under `~/.ssh/*.pub`) to the `authorized_keys` file on the server (normally located under `~/.ssh/authorized_keys`).
+
 ## Seriously more advanced usage options
 
 ### Choosing the algorithms
@@ -72,7 +76,7 @@ Structure of quantum-safe remote access using docker containers
 |      Client      |                |         Host         |
 |  +------------+  |                |  +----------------+  |
 |  |            |  |                |  |                |  |
-|  |   Docker   +--------------------=>+     Docker     |  |
+|  |   Docker   +--------------------->+     Docker     |  |
 |  |            |  |       Port 2222|  |                |  |
 |  +------------+  |                |  +-------+--------+  |
 |                  |                |          |           |

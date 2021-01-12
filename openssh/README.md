@@ -22,9 +22,9 @@ Note that due to the `--rm` option the container will be removed as soon as it i
 
 With the command
 ```bash
-docker run --rm -dit oqs-openssh-img ssh oqs@localhost
+docker run --rm -it oqs-openssh-img ssh oqs@localhost
 ```
-you run the image, generate fresh keys, start the `sshd` and directly connect to it with the user `oqs`, and default password `oqs.pw`. This is not really practical but enough for demonstration purposes.
+you run the image and directly connect to it with the user `oqs` and the default password `oqs.pw`. This is not really practical but enough for demonstration purposes.
 
 
 ### Docker permissions
@@ -44,14 +44,9 @@ The first command adds user `<user>` to the group `docker`, and the second simul
    
         docker network create oqs-openssh-net
 
-3. Then connect the containers to this network with
+3. Then connect the container with the server running to this network with
         
         docker network connect oqs-openssh-net oqs-openssh-server
-
-    and
-
-        docker network connect oqs-openssh-net oqs-openssh-client
-
 
 4. Now connect from the client to the server with
     
@@ -62,6 +57,8 @@ The first command adds user `<user>` to the group `docker`, and the second simul
 As server and client are based on the same image and both have `sshd` running, connecting from the server to the client's ssh daemon is possible as well. For that use the same commands as above and exchange `server` and `client` accordingly.
 
 ## More details
+
+### General information
 
 The Dockerfile 
 - obtains all source code required for building the quantum-safe cryptography (QSC) algorithms and the [QSC-enabled version of OpenSSH (7.9-2020-08_p1)](https://github.com/open-quantum-safe/openssh/releases/tag/OQS-OpenSSH-snapshot-2020-08)
@@ -77,9 +74,9 @@ The Dockerfile
 
 ### Key generation
 
-The generation of the host and identity keys happens via the script [key-gen.sh](key-gen.sh) that is called indirectly via the `ENTRYPOINT [ "./entrypoint.sh" ]` command at the end of the [Dockerfile](Dockerfile). The script checks if the required key already exist and gerenates it if necessary. This script is called every time the container is started. It checks for existing keys before it generates them so it will never overwrite a key.
+The generation of the host and identity keys happens via the script [key-gen.sh](key-gen.sh) that is called indirectly via the `ENTRYPOINT [ "./entrypoint.sh" ]` command at the end of the [Dockerfile](Dockerfile). The script checks if the required key already exist and gerenates it if necessary. This script is called every time the container is started. It checks for existing keys before it generates them so it will **never** overwrite an already existing key.
 
-#### Build type argument(s)
+### Build type argument(s)
 
 The Dockerfile also facilitates building the underlying OQS library to different specifications (by setting the `--build-arg` variable `LIBOQS_BUILD_DEFINES` as defined [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).
 
@@ -89,11 +86,48 @@ docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -f 
 ``` 
 a generic system without processor-specific runtime optimizations is built, thus ensuring execution on all computers (at the cost of maximum runtime performance).
 
-## Updating the liboqs version
+### Updating the liboqs version
 Currently the used version of liboqs is [0.4.0](https://github.com/open-quantum-safe/liboqs/releases/tag/0.4.0). Be aware that upon changing this version, which can be done in the [Dockerfile](Dockerfile), the default algorithms may change. If this is the case [sshd_config](sshd_config)/[sshd_config](sshd_config) must be updated accordingly.
+
+### Compatibility with standard SSH
+
+As this is a demonstration of post-quantum cryptography, backwards compatibility (enabling classical algorithms) is not activated by default. It can be enabled easily by adding the desired classical algorithms in ssh_config and sshd_config accordingly, then build the Docker image with those new configuration files.
+
+To enable classical SSH support on client side, edit/add lines in [ssh_config](ssh_config) as follows: 
+
+```
+KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org,curve25519-sha256@libssh.org
+
+HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519
+
+PubkeyAcceptedKeyTypes ssh-p256-dilithium2,ssh-ed25519
+
+IdentityFile ~/.ssh/id_ed25519
+```
+
+For adding support for classical SSH on server side, edit/add lines in [sshd_config](sshd_config) as follows:
+
+```
+KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org,curve25519-sha256
+
+HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519
+
+PubkeyAcceptedKeyTypes ssh-p256-dilithium2,ssh-ed25519
+
+HostKey /opt/oqs-ssh/ssh_host_ed25519_key
+```
+
+### Enabling more PQC algorithms
+
+Long story short: Thus far, no more algorithms may be enabled for this Docker image than described [here](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2020-08#supported-algorithms). You can find more details on the why below.
+
+It can be difficult to figure what PQC algorithms are enabled, where you can enable them and how. The supported algorithms in release `OQS-OpenSSH-snapshot-2020-08` (the one used when building this Docker image) are listed [in this section](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2020-08#supported-algorithms). Be especially aware of the limitation for the signature algorithms, where only all L1 signature algorithms and all **Rainbow Classic** variants are enabled by default (classic only, documentation has it slightly wrong there).
+
+Enabling more algorithms would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) according to [this documentation](https://github.com/open-quantum-safe/openssh/wiki/Using-liboqs-supported-algorithms-in-the-fork#code-generation). Additionally, you need to make sure that the algorithms are enabled in [liboqs](https://github.com/open-quantum-safe/liboqs) as well (see [here for more information](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs#oqs_enable_kem_algoqs_enable_sig_alg)). Enabling more algorithms in `liboqs` can be done at Docker build time using the build option `LIBOQS_BUILD_DEFINES`. But enabling them in `OpenSSH` would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) after checking out `openssh` in the Dockerfile, and this is not implemented at this moment.
+
 ## Usage
 
-Information how to use the image is [available in the separate file USAGE.md](USAGE.md).
+More information on how to use the image is [available in the separate file USAGE.md](USAGE.md).
 
 ## Build options
 

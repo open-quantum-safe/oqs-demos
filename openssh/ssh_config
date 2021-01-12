@@ -46,16 +46,19 @@
 #   RekeyLimit 1G 1h
 #
 
-### Settings for quantum-safe key-exchange and authentication
+
+###############################################################################
+#-- Settings for QUANTUM-SAFE key-exchange and authentication -----------------
+###############################################################################
 
 # Key-exchange algorithms
-KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org,curve25519-sha256@libssh.org
+KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org
 
 # The host key algorithms ssh accepts
-HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519
+HostKeyAlgorithms ssh-p256-dilithium2
 
 # The algorithms used for public key authentication
-PubkeyAcceptedKeyTypes ssh-p256-dilithium2,ssh-ed25519
+PubkeyAcceptedKeyTypes ssh-p256-dilithium2
 
 # Define how unknown host keys should be handled
 #StrictHostKeyChecking ask
@@ -67,7 +70,7 @@ Port 2222
 # IdentityFile ~/.ssh/id_rsa
 # IdentityFile ~/.ssh/id_dsa
 # IdentityFile ~/.ssh/id_ecdsa
-IdentityFile ~/.ssh/id_ed25519
+# IdentityFile ~/.ssh/id_ed25519
 # IdentityFile ~/.ssh/id_oqsdefault
 # IdentityFile ~/.ssh/id_dilithium2
 # IdentityFile ~/.ssh/id_falcon512

@@ -30,6 +30,7 @@ fi
 # SSH_DIR="/home/${OQS_USER}/.ssh"
 HOST_KEY_FILE="${SSH_DIR}/ssh_host_${SIG//-/_}_key"
 echo "y" | ${OQS_INSTALL_DIR}/bin/ssh-keygen -t ssh-${SIG} -f ${OQS_INSTALL_DIR}/${HOST_KEY_FILE} -N "" -q
+echo ""
 # cat ${HOST_KEY_FILE}.pub >> ${SSH_DIR}/authorized_keys
 [[ $DEBUGLVL -gt 0 ]] && echo "Debug1: New host key '${HOST_KEY_FILE}(.pub)' created!"
 # OPTIONS="${OPTIONS} -i ${HOST_KEY_FILE}"

@@ -13,20 +13,19 @@
 ### Settings for quantum-safe key-exchange and authentication
 
 # Key-exchange algorithms
-KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org,curve25519-sha256
+KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org
 
 # Host key algorithms, these determine the generated host keys
-HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519
+HostKeyAlgorithms ssh-p256-dilithium2
 
 # Those determine the accepted public keys for public key authentication
-PubkeyAcceptedKeyTypes ssh-p256-dilithium2,ssh-ed25519
+PubkeyAcceptedKeyTypes ssh-p256-dilithium2
 
 # The port sshd is listening on
 Port 2222
 
 # The host keys used for host authentication they should match they HostKeyAlgorithms (with all - replaced by _)
 HostKey /opt/oqs-ssh/ssh_host_p256_dilithium2_key
-HostKey /opt/oqs-ssh/ssh_host_ed25519_key
 
 
 # Settings for Classic SSH
