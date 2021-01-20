@@ -86,7 +86,7 @@ ARG OQS_PASSWORD
 
 RUN apk update \
     && apk upgrade \
-    && apk add man bash
+    && apk add man bash nano
 
 # Only retain the ${INSTALL_DIR} contents in the final image
 COPY --from=intermediate ${INSTALL_DIR} ${INSTALL_DIR}

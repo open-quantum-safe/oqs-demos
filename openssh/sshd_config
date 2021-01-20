@@ -10,7 +10,9 @@
 # possible, but leave them commented.  Uncommented options override the
 # default value.
 
-### Settings for quantum-safe key-exchange and authentication
+###############################################################################
+#-- Settings for QUANTUM-SAFE key-exchange and authentication -----------------
+###############################################################################
 
 # Key-exchange algorithms
 KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org
@@ -24,11 +26,58 @@ PubkeyAcceptedKeyTypes ssh-p256-dilithium2
 # The port sshd is listening on
 Port 2222
 
-# The host keys used for host authentication they should match they HostKeyAlgorithms (with all - replaced by _)
+# The host keys used for host authentication
+# Uncomment line to enable corresponding algorithm
+#HostKey /opt/oqs-ssh/ssh_host_rsa_key
+#HostKey /opt/oqs-ssh/ssh_host_dsa_key
+#HostKey /opt/oqs-ssh/ssh_host_ed25519_key
+
+#HostKey /opt/oqs-ssh/ssh_host_oqsdefault_key
+#HostKey /opt/oqs-ssh/ssh_host_dilithium2_key
+#HostKey /opt/oqs-ssh/ssh_host_falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_mqdss3148_key
+#HostKey /opt/oqs-ssh/ssh_host_picnicl1fs_key
+#HostKey /opt/oqs-ssh/ssh_host_picnic3l1_key
+#HostKey /opt/oqs-ssh/ssh_host_qteslapi_key
+#HostKey /opt/oqs-ssh/ssh_host_rainbowiaclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_rainbowiiicclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_rainbowvcclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_sphincsharaka128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_sphincssha256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_sphincsshake256128frobust_key
+
+#HostKey /opt/oqs-ssh/ssh_host_p256_oqsdefault_key
 HostKey /opt/oqs-ssh/ssh_host_p256_dilithium2_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_mqdss3148_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_picnicl1fs_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_picnic3l1_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_qteslapi_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_rainbowiaclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_sphincsharaka128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_sphincssha256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_sphincsshake256128frobust_key
+
+#HostKey /opt/oqs-ssh/ssh_host_p384_rainbowiiicclassic_key
+ 
+#HostKey /opt/oqs-ssh/ssh_host_p521_rainbowvcclassic_key
+
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_oqsdefault_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_dilithium2_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_mqdss3148_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_picnicl1fs_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_picnic3l1_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_qteslapi_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_rainbowiaclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincsharaka128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincssha256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincsshake256128frobust_key
 
 
-# Settings for Classic SSH
+###############################################################################
+#-- Settings for CLASSICAL SSH ------------------------------------------------
+###############################################################################
 #AddressFamily any
 #ListenAddress 0.0.0.0
 #ListenAddress ::

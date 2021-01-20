@@ -45,4 +45,3 @@ eval $CMD
 if [ "x${CONNECT_TEST}" == "x" ]; then
     sh
 fi
-
