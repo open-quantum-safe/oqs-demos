@@ -50,7 +50,7 @@ To easily connect from one container to another, we can make use of the docker's
 
    type `yes` to add the host to the `known_hosts` and authenticate the user `oqs` with its default password `oqs.pw`.
 
-Congratulations, you just connected from one docker container to another in a quantum safe manner! To see how to use this in a more practical setting, see how to use docker to quantum safely connect to a remote host in [USAGE.md](USAGE.md#Using-oqs-ssh-for-quantum-safe-remote-access-with-minimal-intrusion).
+Congratulations, you just connected from one docker container to another in a quantum safe manner! To use this in a more practical setting, see how to use docker to quantum safely connect to a remote host in section **Using oqs-ssh for quantum safe remote access with minimal intrusion** down below.
 
 ## Access the man pages of oqs-ssh
 
@@ -74,7 +74,7 @@ Key-based client authentication works just as it does with normal SSH. Just add 
 
 One use case of quantum-safe ssh running in docker could be accessing a remote system without messing with its ssh(d) installation or other parts of the system you maybe don't want to interact with. This means minimal intrusion and everything can easily be removed again. This is done by running this docker image on said system and sharing its network space. Thus it is possible to access host ports from **within** the docker container. Normally, the use case of docker is one of isolation with some shared directories and published ports at max. So this solution works around the usual docker limitations.
 
-Additionally, it is advised to **change the default username and password** when building the image because your plan is to expose it to the world.
+Additionally, it is advised to [change the default username and password](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/README.md#oqs_password) and then building the image yourself because your plan is to expose it to the world.
 
 ```
 Structure of quantum-safe remote access using docker containers
@@ -119,17 +119,17 @@ Or you build the image yourself with a different default password from the sourc
 
 #### Enable classical SSH
 
-Because we wan't to be able to connect to our host that does not run OQS-SSH, we first need to enable classical SSH capabilities for the client **on the host system**.
+Because we want to be able to connect to our host that does not run OQS-SSH, we first need to enable classical SSH capabilities for the client **on the host system**.
 
 1. After running the image, run a shell with `docker exec -it oqs-ssh /bin/bash`
 
-2. Run `nano /etc/oqs-ssh/ssh_config` and 
+2. Run `nano /opt/oqs-ssh/ssh_config` and 
    - uncomment the line `# IdentityFile ~/.ssh/id_ed25519`,
    - add `ssh-ed25519` to `HostkeyAlgorithms` and `PubkeyAcceptedKeyTypes` (comma-separated)
    - add `curve25519-sha256@libssh.org` to `KexAlgorithms` (comma-separated)
 
 3. Save and exit your editor
-4. Run `rc-service oqs-ssh restart`
+4. Run `rc-service oqs-sshd restart`
 5. Run `/opt/oqs-ssh/scripts/key-gen.sh`
 6. Run `ssh <username>@localhost -p 22` with `<username>` being your host's username to test your setup
 7. If everything went smoothly, your docker container connected with your host's classical `sshd`
@@ -179,13 +179,13 @@ The image's default key exchange algorithm is `ecdh-nistp384-kyber-1024-sha384@o
 
 **In `ssh_config` (client side)**
 - `KexAlgorithms`: Comma-separated list of enabled key-exchange algorithms. Priority given by order. Names according to [this KEX naming scheme](https://github.com/open-quantum-safe/openssh#key-exchange).
-- `IdentityKey`: Path to identity key files. One entry for one file, can have multiple entries. SSH will look for those files when connecting to a host. Names of the key files need to be `~/.ssh/id_<SIG>` in order for them to be successfully generated. `<SIG>` is a post-quantum signature algorithm according to [this SIG naming scheme](https://github.com/open-quantum-safe/openssh#digital-signature), with every `-` replace by `_`. A list with of some possible `IdentityKey` values can be found [here](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/ssh_config).
+- `IdentityKey`: Path to identity key files. One entry for one file, can have multiple entries. SSH will look for those files when connecting to a host. Names of the key files need to be `~/.ssh/id_<SIG>` in order for them to be successfully generated. `<SIG>` is a post-quantum signature algorithm according to [this SIG naming scheme](https://github.com/open-quantum-safe/openssh#digital-signature), with every `-` replaced by `_`. A list with of some possible `IdentityKey` values can be found [here](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/ssh_config).
 - `PubkeyAcceptedKeyTypes`: Comma-separated list of identity keys the client offers to the host. Priority given by order. Note that if no corresponding `IdentityFile` is specified, this algorithm is ignored.
 - `HostKeyAlgorithms`: Comma-separated list of the host key types the client accepts from the server. Names according to [this SIG naming scheme](https://github.com/open-quantum-safe/openssh#digital-signature).
 
 **In `sshd_config` (server side)**
 - `KexAlgorithms`: Comma-separated list of enabled key-exchange algorithms. Priority given by order. Names according to [this KEX naming scheme](https://github.com/open-quantum-safe/openssh#key-exchange).
-- `HostKey`: Path to host key files. One entry for one file, can have multiple entries. SSHD will look for those files when offering a host key to a client. Names of the key files need to be `/opt/oqs-ssh/ssh_host_<SIG>_key` in order for them to be successfully generated. `<SIG>` is a post-quantum signature algorithm according to [this SIG naming scheme](https://github.com/open-quantum-safe/openssh#digital-signature), with every `-` replace by `_`. A list with of some possible `HostKey` values can be found [here](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/sshd_config).
+- `HostKey`: Path to host key files. One entry for one file, can have multiple entries. SSHD will look for those files when offering a host key to a client. Names of the key files need to be `/opt/oqs-ssh/ssh_host_<SIG>_key` in order for them to be successfully generated. `<SIG>` is a post-quantum signature algorithm according to [this SIG naming scheme](https://github.com/open-quantum-safe/openssh#digital-signature), with every `-` replaced by `_`. A list with of some possible `HostKey` values can be found [here](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/sshd_config).
 - `HostKeyAlgorithms`: Comma-separated list of the host offers to the client. Priority given by order. Note that if no corresponding `HostKey` is specified, this algorithm is ignored. Names according to [this SIG naming scheme](https://github.com/open-quantum-safe/openssh#digital-signature)
 - `PubkeyAcceptedKeyTypes`: Comma-separated list of public keys the host will accept from the client.
 
@@ -198,9 +198,9 @@ Be aware that configurations for `sshd` and `ssh` may be entirely different as l
 
 ## Automatic key generation
 
-The generation of the host and identity keys happens via the script [key-gen.sh](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/key-gen.sh) that is executed automatically every time the container started or run. The script checks if the required key already exist and gerenates it if necessary. This script is called every time the container is started, meaning the first time the container is run (`docker run ...`) and it is startet again (`docker start ...`) after a reboot or a `docker stop ...` command. It checks for existing keys before it generates new ones so it will **never** overwrite an already existing key. It also makes sure `sshd` is startet after at boot time or is restartet after new host keys were generated.
+The generation of the host and identity keys happens via the script [key-gen.sh](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/key-gen.sh) that is executed automatically every time the container started or run. The script checks if the required key already exist and generates it if necessary. This script is called every time the container is started, meaning the first time the container is run (`docker run ...`) and it is started again (`docker start ...`) after a reboot or a `docker stop ...` command. It checks for existing keys before it generates new ones so it will **never** overwrite an already existing key. It also makes sure `sshd` is started after at boot time or is restarted after new host keys were generated.
 
-Which keys to generate is determined using the configuration files (`ssh_config` and `sshd_config`). A key's necessity is determinded based on the following parameters:
+Which keys to generate is determined using the configuration files (`ssh_config` and `sshd_config`). The need for a specific key is determined based on the following parameters:
 1. `IdentityFile` (in `ssh_config`) for **identity keys**: For every entry (there may be multiple) the corresponding identity key is generated.
    - e.g. `IdentityFile ~/.ssh/id_ed25519` or
    - `IdentityFile ~/.ssh/id_p256_dilithium2`
@@ -221,9 +221,9 @@ Post-quantum safe algorithms must (in theory) be enabled at docker image build t
 Long story short: Thus far, no more algorithms may be enabled for this Docker image than described [here](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2020-08#supported-algorithms). Find out **More details on the why** below.
 
 ### More details on the why
-It is not quite straight forward how to figure out what PQC algorithms are actually enabled, where to enable them and how. The supported algorithms in release `OQS-OpenSSH-snapshot-2020-08` (the one used when building this Docker image) are listed [in this section](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2020-08#supported-algorithms). Be especially aware of the limitation for the signature algorithms, where only all L1 signature algorithms and all **Rainbow Classic** variants are enabled by default. **Classic** rainbow only, documentation has it slightly wrong there. This is already corrected in newer releases.
+It is not quite straight forward how to figure out what PQC algorithms are actually enabled, where to enable them and how. The supported algorithms in release `OQS-OpenSSH-snapshot-2020-08` (the one used when building this Docker image) are listed [in this section](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2020-08#supported-algorithms). Be especially aware of the limitation for the signature algorithms, where only all L1 signature algorithms and all **Rainbow Classic** variants are enabled by default. **Classic** rainbow only, documentation has it slightly wrong there. This is corrected and clarified in more detail [in newer releases](https://github.com/open-quantum-safe/openssh#digital-signature).
 
-Enabling more algorithms would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) according to [this documentation](https://github.com/open-quantum-safe/openssh/wiki/Using-liboqs-supported-algorithms-in-the-fork#code-generation). Additionally, you need to make sure that the algorithms are enabled in [liboqs](https://github.com/open-quantum-safe/liboqs) as well (see [here for more information](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs#oqs_enable_kem_algoqs_enable_sig_alg)). Enabling more algorithms in `liboqs` can be done at Docker build time using the build option `LIBOQS_BUILD_DEFINES`. But enabling them in `OpenSSH` would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) after checking out `openssh` in the [Dockerfile](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/Dockerfile), and this is just not implemented at this moment in time.
+Enabling more algorithms would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) according to [this documentation](https://github.com/open-quantum-safe/openssh/wiki/Using-liboqs-supported-algorithms-in-the-fork#code-generation). Additionally, you need to make sure that the algorithms are enabled in [liboqs](https://github.com/open-quantum-safe/liboqs) as well (see [here for more information](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs#oqs_enable_kem_algoqs_enable_sig_alg)). Enabling more algorithms in `liboqs` can be done at Docker build time using the build option `LIBOQS_BUILD_DEFINES`. But enabling them in `OpenSSH` would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) after checking out `openssh` in the [Dockerfile](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/Dockerfile), and in this docker image this is just not implemented at this moment in time.
 
 ## Compatibility with standard SSH
 
