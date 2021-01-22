@@ -1,0 +1,181 @@
+#	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+
+# This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/oqs-ssh/bin
+
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+###############################################################################
+#-- Settings for QUANTUM-SAFE key-exchange and authentication -----------------
+###############################################################################
+
+# Key-exchange algorithms
+KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org
+
+# Host key algorithms, these determine the generated host keys
+HostKeyAlgorithms ssh-p256-dilithium2
+
+# Those determine the accepted public keys for public key authentication
+PubkeyAcceptedKeyTypes ssh-p256-dilithium2
+
+# The port sshd is listening on
+Port 2222
+
+# The host keys used for host authentication
+# Uncomment line to enable corresponding algorithm
+#HostKey /opt/oqs-ssh/ssh_host_rsa_key
+#HostKey /opt/oqs-ssh/ssh_host_dsa_key
+#HostKey /opt/oqs-ssh/ssh_host_ed25519_key
+
+#HostKey /opt/oqs-ssh/ssh_host_oqsdefault_key
+#HostKey /opt/oqs-ssh/ssh_host_dilithium2_key
+#HostKey /opt/oqs-ssh/ssh_host_falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_mqdss3148_key
+#HostKey /opt/oqs-ssh/ssh_host_picnicl1fs_key
+#HostKey /opt/oqs-ssh/ssh_host_picnic3l1_key
+#HostKey /opt/oqs-ssh/ssh_host_qteslapi_key
+#HostKey /opt/oqs-ssh/ssh_host_rainbowiaclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_rainbowiiicclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_rainbowvcclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_sphincsharaka128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_sphincssha256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_sphincsshake256128frobust_key
+
+#HostKey /opt/oqs-ssh/ssh_host_p256_oqsdefault_key
+HostKey /opt/oqs-ssh/ssh_host_p256_dilithium2_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_mqdss3148_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_picnicl1fs_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_picnic3l1_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_qteslapi_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_rainbowiaclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_sphincsharaka128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_sphincssha256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_p256_sphincsshake256128frobust_key
+
+#HostKey /opt/oqs-ssh/ssh_host_p384_rainbowiiicclassic_key
+ 
+#HostKey /opt/oqs-ssh/ssh_host_p521_rainbowvcclassic_key
+
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_oqsdefault_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_dilithium2_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_mqdss3148_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_picnicl1fs_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_picnic3l1_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_qteslapi_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_rainbowiaclassic_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincsharaka128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincssha256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincsshake256128frobust_key
+
+
+###############################################################################
+#-- Settings for CLASSICAL SSH ------------------------------------------------
+###############################################################################
+#AddressFamily any
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+#HostKey /opt/oqs-ssh/ssh_host_rsa_key
+
+# Ciphers and keying
+#RekeyLimit default none
+
+# Logging
+#SyslogFacility AUTH
+#LogLevel INFO
+
+# Authentication:
+
+#LoginGraceTime 2m
+#PermitRootLogin prohibit-password
+#StrictModes yes
+#MaxAuthTries 6
+#MaxSessions 10
+
+#PubkeyAuthentication yes
+
+# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
+# but this is overridden so installations will only check .ssh/authorized_keys
+#AuthorizedKeysFile	.ssh/authorized_keys
+
+#AuthorizedPrincipalsFile none
+
+#AuthorizedKeysCommand none
+#AuthorizedKeysCommandUser nobody
+
+# For this to work you will also need host keys in /opt/oqs-ssh/ssh_known_hosts
+#HostbasedAuthentication no
+# Change to yes if you don't trust ~/.ssh/known_hosts for
+# HostbasedAuthentication
+#IgnoreUserKnownHosts no
+# Don't read the user's ~/.rhosts and ~/.shosts files
+#IgnoreRhosts yes
+
+# To disable tunneled clear text passwords, change to no here!
+#PasswordAuthentication yes
+#PermitEmptyPasswords no
+
+# Change to no to disable s/key passwords
+#ChallengeResponseAuthentication yes
+
+# Kerberos options
+#KerberosAuthentication no
+#KerberosOrLocalPasswd yes
+#KerberosTicketCleanup yes
+#KerberosGetAFSToken no
+
+# GSSAPI options
+#GSSAPIAuthentication no
+#GSSAPICleanupCredentials yes
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+#UsePAM no
+
+#AllowAgentForwarding yes
+#AllowTcpForwarding yes
+#GatewayPorts no
+#X11Forwarding no
+#X11DisplayOffset 10
+#X11UseLocalhost yes
+#PermitTTY yes
+#PrintMotd yes
+#PrintLastLog yes
+#TCPKeepAlive yes
+#PermitUserEnvironment no
+#Compression delayed
+#ClientAliveInterval 0
+#ClientAliveCountMax 3
+#UseDNS no
+#PidFile /var/run/sshd.pid
+#MaxStartups 10:30:100
+#PermitTunnel no
+#ChrootDirectory none
+#VersionAddendum none
+
+# no default banner path
+#Banner none
+
+# override default of no subsystems
+Subsystem	sftp	/opt/oqs-ssh/libexec/sftp-server
+
+# Example of overriding settings on a per-user basis
+#Match User anoncvs
+#	X11Forwarding no
+#	AllowTcpForwarding no
+#	PermitTTY no
+#	ForceCommand cvs server
