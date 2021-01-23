@@ -114,3 +114,7 @@ Defaults to `oqs`. The docker file creates a non-root user during build. The pur
 ## OQS_PASSWORD
 
 Defaults to `oqs.pw`. This is the password for the `OQS_USER`. A password is needed to enable the authentication method 'password' for ssh.
+
+# Authors
+
+Nico Schwab, Willi Meier, Christoph Wildfeuer (ISE @ FHNW)
