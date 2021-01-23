@@ -1,6 +1,7 @@
 [![open-quantum-safe](https://circleci.com/gh/open-quantum-safe/oqs-demos.svg?style=svg)](https://app.circleci.com/pipelines/github/open-quantum-safe/oqs-demos)
 
-# oqs-demos
+oqs-demos
+=========
 
 ## Purpose
 
