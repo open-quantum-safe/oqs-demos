@@ -115,7 +115,7 @@ If you want to seriously use this image to connect to a machine, it is **strongl
 ```
 docker exec -it oqs-ssh passwd oqs
 ```
-Or you build the image yourself with a different default password from the sources on [Github](https://github.com/openquantumsafe/oqs-demos).
+Or you build the image yourself with a different default password from the sources on [Github](https://github.com/open-quantum-safe/oqs-demos).
 
 #### Enable classical SSH
 
@@ -267,4 +267,4 @@ Port at which (oqs-)sshd listens for quantum-safe ssh connections. Defined/chang
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/openssh#limitations-and-security).
