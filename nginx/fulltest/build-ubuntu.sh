@@ -1,24 +1,30 @@
+#!/bin/bash
+
+# defines the install path
 export NGINX_PATH=/opt/nginx
-export OPENSSL_PATH=/tmp/opt/openssl
 
 # define the nginx version to include
 export NGINX_VERSION=1.16.1
 
-# define the OQS releases to use, unset to deploy master branch
+# define the OQS releases to use; unset to deploy main branch
 export LIBOQS_RELEASE=0.4.0
+
+# defines the OQS-OpenSSL version to use; be sure to match with liboqs version
 export OPENSSL_RELEASE=OQS-OpenSSL_1_1_1-stable-snapshot-2020-08
+
+# Temporary openssl build path; keep in synch with genconfig.py
+export OPENSSL_PATH=/tmp/opt/openssl
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 export MAKE_DEFINES="-j 4"
 
-
 # prerequisites:
-sudo apt install libtool automake autoconf cmake make openssl git wget libssl-dev libpcre3-dev
+sudo apt install -y libtool automake autoconf cmake make openssl git wget libssl-dev libpcre3-dev
 
 # get OQS sources
 rm -rf /tmp/opt && mkdir /tmp/opt && cd /tmp/opt
 if [ -z "$LIBOQS_RELEASE" ]; then
-git clone --depth 1 --branch master https://github.com/open-quantum-safe/liboqs && \
+git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
 git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl 
 else
 echo "Deploying stable liboqs release ${LIBOQS_RELEASE}"
@@ -41,5 +47,9 @@ cd /tmp/opt/nginx-${NGINX_VERSION}
                 --with-cc-opt=-I${OPENSSL_PATH}/oqs/include \
                 --with-ld-opt="-L${OPENSSL_PATH}/oqs/lib" && \
     sed -i 's/libcrypto.a/libcrypto.a -loqs/g' objs/Makefile && \
-    make ${MAKE_DEFINES} && make modules && make install;
+    make ${MAKE_DEFINES} && make modules ;
+
+if [ $# -eq 1 ] && [ $1 = "install" ];  then
+   make install
+fi
 

@@ -2,7 +2,7 @@
 
 This is an [nginx](https://nginx.org) docker image building on the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows nginx to negotiate quantum-safe keys and use quantum-safe authentication using TLS 1.3.
 
-If you built the docker image yourself following the instructions [here](https://github.com/open-quantum-safe/oqs-demos/tree/master/nginx), exchange the name of the image from 'openquantumsafe/nginx' in the examples below suitably.
+If you built the docker image yourself following the instructions [here](https://github.com/open-quantum-safe/oqs-demos/tree/main/nginx), exchange the name of the image from 'openquantumsafe/nginx' in the examples below suitably.
 
 This image has a built-in non-root user to permit execution without particular [docker privileges](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) such as to allow installation in all types of Kubernetes clusters.
 
@@ -51,7 +51,7 @@ If you want to adapt the docker image to your needs you may want to change the n
 docker run -p 4433:4433 -v `pwd`/nginx-conf:/opt/nginx/nginx-conf openquantumsafe/nginx
 ```
 
-*Note*: Of particular interest is the parameter `ssl_ecdh_curve` as it can be used to set the (quantum safe) cryptographic algorithms supported by the nginx installation. See the example in the 'nginx.conf' built into the image and [accessible here](https://github.com/open-quantum-safe/oqs-demos/blob/master/nginx/nginx-conf/nginx.conf).
+*Note*: Of particular interest is the parameter `ssl_ecdh_curve` as it can be used to set the (quantum safe) cryptographic algorithms supported by the nginx installation. See the example in the 'nginx.conf' built into the image and [accessible here](https://github.com/open-quantum-safe/oqs-demos/blob/main/nginx/nginx-conf/nginx.conf).
 
 ### Logfile access
 
