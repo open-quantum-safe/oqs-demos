@@ -16,7 +16,7 @@ Further be aware that both cloning the source code as well as building Chromium 
 
 4. In a directory of your choosing, clone and build liboqs as follows:
 
-- `git clone --branch master https://github.com/open-quantum-safe/liboqs.git`
+- `git clone --branch main https://github.com/open-quantum-safe/liboqs.git`
 - `cd liboqs && mkdir build && cd build`
 - `cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=<CHROMIUM_ROOT>/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF`
 - `ninja && ninja install`
