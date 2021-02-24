@@ -19,7 +19,7 @@ jobs:
   ubuntu_x64_openssl:
     description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that depend on OQS-OpenSSL
     docker:
-      - image: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
         auth:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
@@ -96,7 +96,7 @@ jobs:
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
     docker:
-      - image: openquantumsafe/ci-ubuntu-bionic-x86_64:latest
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
         auth:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
@@ -128,8 +128,8 @@ workflows:
   build:
     jobs:
       - ubuntu_x64_openssl:
-          name: ubuntu-bionic
+          name: ubuntu-openssl
           context: openquantumsafe
       - ubuntu_x64_openssh:
-          name: ubuntu-bionic
+          name: ubuntu-openssh
           context: openquantumsafe
