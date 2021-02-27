@@ -1,5 +1,5 @@
 diff --git a/net/cert/internal/simple_path_builder_delegate.cc b/net/cert/internal/simple_path_builder_delegate.cc
-index e4259ee6eb39..74e8158edfda 100644
+index e4259ee6eb39..511b5fb48cd2 100644
 --- a/net/cert/internal/simple_path_builder_delegate.cc
 +++ b/net/cert/internal/simple_path_builder_delegate.cc
 @@ -35,6 +35,10 @@ bool IsAcceptableCurveForEcdsa(int curve_nid) {
@@ -10,6 +10,18 @@ index e4259ee6eb39..74e8158edfda 100644
 +      return true;
 +  }
 +
+   return false;
+ }
+ 
+@@ -110,6 +114,10 @@ bool SimplePathBuilderDelegate::IsPublicKeyAcceptable(EVP_PKEY* public_key,
+     return true;
+   }
+ 
++  if (IS_OQS_PKEY(pkey_id)) {
++    return true;
++  }
++
+   // Unexpected key type.
    return false;
  }
  

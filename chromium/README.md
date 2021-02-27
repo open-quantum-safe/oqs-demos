@@ -1,4 +1,4 @@
-This directory contains instructions and corresponding patches to build the Chromium web browser using the [OQS-BoringSSL fork](https://github.com/open-quantum-safe/boringssl), thereby enabling Chromium to use quantum-safe key exchange algorithms. Note that these instructions have only been tested on an Ubuntu 19.10 x86_64 machine and apply at present only to a subset of quantum-safe key-exchanges as [documented here](https://github.com/open-quantum-safe/boringssl#key-exchange).
+This directory contains instructions and corresponding patches to build the Chromium web browser using the [OQS-BoringSSL fork](https://github.com/open-quantum-safe/boringssl), thereby enabling Chromium to use quantum-safe key exchange algorithms. Note that these instructions have been tested only on Ubuntu 18, 19, and 20 (x86_64) installations and apply at present only to a subset of quantum-safe key-exchanges as [documented here](https://github.com/open-quantum-safe/boringssl#key-exchange).
 
 Further be aware that both cloning the source code as well as building Chromium can take several hours if you do not have excellent network connectivity and serious multicore CPUs at your disposal: The download has a size of over 40GB and even a size-and-performance optimized build (see note below) takes 1143 CPU user minutes on a 2.6GHz i7 CPU, i.e. something like 300 minutes or 5 hours on a quad-core system.
 
@@ -7,6 +7,8 @@ Further be aware that both cloning the source code as well as building Chromium 
 1. To obtain the source code, follow the instructions in the "Install depot_tools" and "Get the code" sections [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install). Note: Do *not* set `--no-history` to save time as you need git history in the next step.
 
 2. Navigate to the root directory of the source code, which we will refer to hereafter as `<CHROMIMUM_ROOT>`, and run `git checkout 85.0.4161.2`, which is the latest tag for which we have verified the build instructions. Then, to ensure that all of chromium's third party dependencies are compatible with this tag, run `gclient sync`.
+
+*Note*: Depending on the OS version installed, you may have to install python2, e.g., using `sudo apt install -y python2`, and ensure it's set as the system default, e.g., via `sudo ln -s /usr/bin/python2 /usr/bin/python`.
 
 3. Navigate to `<CHROMIUM_ROOT>/third_party/boringssl/src`, and switch the BoringSSL source code to the OQS-BoringSSL fork by running the following commands:
 
@@ -51,3 +53,7 @@ An alternative test consists of using the newly built Chromium to access the OQS
 Note: In order to avoid certificate warnings, you need to [download the test site certificate](https://test.openquantumsafe.org/CA.crt) using the newly-built chromium. Then click the "..." Control extensions button in the top-right window corner of your newly built Chromium browser, select "Settings", click on "Privacy and Security" in the newly opened window on the left, click on "Security" in the window pane on the right, scroll down and click on "Manage certificates", click on the "Certificates" tab in the newly opened screen, click on "Import" near the top of the newly opened pane and click on the "Downloads" folder on the file selector window that opens. Then double-click on "CA.crt" and check the box next to "Trust this certificate for identifying websites" and finally click "OK".
 
 \* For an explanation of why Chromium supports only a subset of key-exchange algorithms by default, consult [OQS-BoringSSL's Implementation Notes wiki page](https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes).
+
+### Shipping binary
+
+If all steps outlined above have been successfully executed, one can extract a standalone binary distribution by running `tar czvf chromium-binary.tgz -T ~/git/oqs-demos/chromium/chromium-tar-files.txt` within the directory `<CHROMIUM_ROOT>/out/Default` and moving the resulting `tgz` archive to a suitable machine with all UI components for execution. 
