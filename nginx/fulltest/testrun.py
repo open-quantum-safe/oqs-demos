@@ -13,7 +13,7 @@ for sig in assignments:
     print("Testing %s:" % (sig))
     for kem in assignments[sig]:
        # assemble testing command
-       cmd = "docker run -v "+os.path.abspath(os.getcwd())+":/ca -it "+sys.argv[1]+" curl --cacert /ca/CA.crt https://test.openquantumsafe.org:"+str(assignments[sig][kem])
+       cmd = "docker run -v "+os.path.abspath(os.getcwd())+"/ca:/ca -it "+sys.argv[1]+" curl --cacert /ca/CA.crt https://test.openquantumsafe.org:"+str(assignments[sig][kem])
        if kem!="*": # don't prescribe KEM
           cmd=cmd+" --curves "+kem
        dockerrun = subprocess.run(cmd.split(" "),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
