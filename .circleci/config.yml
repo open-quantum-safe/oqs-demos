@@ -97,7 +97,9 @@ jobs:
                   docker tag oqs-haproxy-img $TARGETNAME/haproxy:latest &&
                   docker push $TARGETNAME/haproxy:latest &&
                   docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
-                  docker push $TARGETNAME/nginx:latest
+                  docker push $TARGETNAME/nginx:latest &&
+                  docker tag oqs-ossl3-img $TARGETNAME/oqs-ossl3:latest &&
+                  docker push $TARGETNAME/oqs-ossl3:latest
 
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
