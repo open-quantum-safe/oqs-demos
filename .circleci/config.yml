@@ -17,7 +17,7 @@ localCheckout: &localCheckout
 
 jobs:
   ubuntu_x64_openssl:
-    description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that depend on OQS-OpenSSL
+    description: A template for building and pushing OQS demo Docker images on Ubuntu that depend on OQS-OpenSSL
     docker:
       - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
         auth:
@@ -74,7 +74,7 @@ jobs:
       - run:
           name: Test Provider
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 2" -t oqs-ossl3-img . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . &&
             docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt"
           working_directory: openssl3
       - when:
@@ -102,7 +102,7 @@ jobs:
                   docker push $TARGETNAME/oqs-ossl3:latest
 
   ubuntu_x64_openssh:
-    description: A template for building and pushing OQS demo Docker images on Ubuntu Bionic that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
+    description: A template for building and pushing OQS demo Docker images on Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
     docker:
       - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
         auth:

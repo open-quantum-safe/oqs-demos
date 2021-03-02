@@ -4,7 +4,8 @@
 ARG INSTALLDIR=/opt/oqssa
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
-ARG LIBOQS_BUILD_DEFINES=
+# by default OFF as McEliece AVX otherwise fails to link (TBD)
+ARG LIBOQS_BUILD_DEFINES=-DOQS_USE_CPU_EXTENSIONS=OFF
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 2"
