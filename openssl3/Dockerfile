@@ -4,8 +4,6 @@
 ARG INSTALLDIR=/opt/oqssa
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
-# by default OFF as McEliece AVX otherwise fails to link (TBD)
-#ARG LIBOQS_BUILD_DEFINES=-DOQS_USE_CPU_EXTENSIONS=OFF
 ARG LIBOQS_BUILD_DEFINES=
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
@@ -39,7 +37,7 @@ RUN apk add build-base linux-headers \
 WORKDIR /opt
 RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
-    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git 
+    git clone --depth 1 --branch mb-linkmceliece https://github.com/open-quantum-safe/oqs-provider.git
 
 WORKDIR /opt/liboqs
 RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
