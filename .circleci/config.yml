@@ -30,6 +30,12 @@ jobs:
           name: Authenticate to Docker
           command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
       - run:
+          name: Test Provider
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . &&
+            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt"
+          working_directory: openssl3
+      - run:
           name: Test Curl
           command: |
             # The CircleCI executor offers 35 cores, but using
@@ -71,12 +77,6 @@ jobs:
             sleep 2 &&
             docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
           working_directory: nginx
-      - run:
-          name: Test Provider
-          command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . &&
-            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt"
-          working_directory: openssl3
       - when:
           condition:
             or:
