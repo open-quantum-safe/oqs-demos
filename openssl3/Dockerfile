@@ -5,7 +5,7 @@ ARG INSTALLDIR=/opt/oqssa
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
 # Disable AVX for ClassicMcEliece until liboqs fix lands
-ARG LIBOQS_BUILD_DEFINES="-DBUILD_SHARED_LIBS=ON -DOQS_ENABLE_KEM_classic_mceliece_348864_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_348864f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_460896f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6688128f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6960119f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_8192128_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_8192128f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_460896_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6688128_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6960119_avx=OFF"
+ARG LIBOQS_BUILD_DEFINES="-DOQS_ENABLE_KEM_classic_mceliece_348864_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_348864f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_460896f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6688128f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6960119f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_8192128_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_8192128f_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_460896_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6688128_avx=OFF -DOQS_ENABLE_KEM_classic_mceliece_6960119_avx=OFF"
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 2"
@@ -45,8 +45,6 @@ RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAK
 
 # build OpenSSL3
 WORKDIR /opt/openssl
-# curl looks for shared libraries
-# at ./configure time
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib" ./config shared --prefix=${INSTALLDIR} && \
     make ${MAKE_DEFINES} && make install;
 
