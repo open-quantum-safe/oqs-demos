@@ -19,4 +19,4 @@ Beyond interacting with the built-in test server (utilizing `openssl s_server`) 
 
 ## Limitations
 
-This image is limited in functionality as per the [open issues documented for oqs-provider](https://github.com/open-quantum-safe/oqs-provider/issues).
+This image is limited in functionality as per the [open issues documented for oqs-provider](https://github.com/open-quantum-safe/oqs-provider/issues). It also is [not fit for productive use](https://github.com/open-quantum-safe/openssl#limitations-and-security).
