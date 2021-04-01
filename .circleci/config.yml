@@ -45,10 +45,10 @@ jobs:
             docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh 
           working_directory: curl
       - run:
-          name: Test Curl with portable liboqs
+          name: Test Curl with generic liboqs
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -t oqs-curl-generic . &&
-            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl perftest.sh 
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic" -t oqs-curl-generic . &&
+            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl-generic perftest.sh 
           working_directory: curl
       - run:
           name: Test Apache httpd

@@ -2,8 +2,8 @@
 
 # First: global build arguments: 
 
-# liboqs build type variant; build non-optimized by default (maximum portability of image):
-ARG LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF"
+# liboqs build type variant; maximum portability of image:
+ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
 # installation paths
 ARG OPENSSL_PATH=/opt/openssl
