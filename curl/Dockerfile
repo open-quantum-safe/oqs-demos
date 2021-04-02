@@ -6,8 +6,8 @@ ARG CURL_VERSION=7.73.0
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
 
-# liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
-ARG LIBOQS_BUILD_DEFINES=
+# liboqs build type variant; maximum portability of image:
+ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
 # openssl build defines (https://github.com/open-quantum-safe/openssl#build-options)
 ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=p384_kyber768:X25519:kyber768"

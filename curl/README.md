@@ -37,7 +37,7 @@ The Dockerfile also facilitates building the underlying OQS library to different
 
 For example, with this build command
 ```
-docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_USE_CPU_EXTENSIONS=OFF" -f Dockerfile -t oqs-curl-generic .
+docker build --build-arg LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic" -f Dockerfile -t oqs-curl-generic .
 ``` 
 a generic system without processor-specific runtime optimizations is built, thus ensuring execution on all computers (at the cost of maximum runtime performance).
 
