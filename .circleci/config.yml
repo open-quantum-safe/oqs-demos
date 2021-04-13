@@ -16,8 +16,8 @@ localCheckout: &localCheckout
     cp -a /tmp/_circleci_local_build_repo/.git ${PROJECT_PATH}
 
 jobs:
-  ubuntu_x64_openssl:
-    description: A template for building and pushing OQS demo Docker images on Ubuntu that depend on OQS-OpenSSL
+  ubuntu_x64_provider:
+    description: Building and pushing oqsprovider demo Docker image
     docker:
       - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
         auth:
@@ -30,53 +30,14 @@ jobs:
           name: Authenticate to Docker
           command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
       - run:
-          name: Test Provider
+          name: Build Provider
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . &&
-            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt"
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . 
           working_directory: openssl3
       - run:
-          name: Test Curl
+          name: Test Provider
           command: |
-            # The CircleCI executor offers 35 cores, but using
-            # all of them might exhaust memory
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-curl . &&
-            docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . &&
-            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh 
-          working_directory: curl
-      - run:
-          name: Test Curl with generic liboqs
-          command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic" -t oqs-curl-generic . &&
-            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl-generic perftest.sh 
-          working_directory: curl
-      - run:
-          name: Test Apache httpd
-          command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-httpd-img . &&
-            docker network create httpd-test &&
-            docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img &&
-            sleep 2 &&
-            docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433
-          working_directory: httpd
-      - run:
-          name: Test HAproxy
-          command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-haproxy-img . &&
-            docker network create haproxy-test &&
-            docker run --network haproxy-test --detach --rm --name oqs-haproxy oqs-haproxy-img &&
-            sleep 4 &&
-            docker run --network haproxy-test oqs-curl curl -k https://oqs-haproxy:4433
-          working_directory: haproxy
-      - run:
-          name: Test nginx
-          command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-nginx-img . &&
-            docker network create nginx-test &&
-            docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img &&
-            sleep 2 &&
-            docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
-          working_directory: nginx
+            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt"
       - when:
           condition:
             or:
@@ -84,22 +45,147 @@ jobs:
               - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
           steps:
             - run:
-                name: Push all images
+                name: Push oqsprovider image
+                command: |
+                  docker tag oqs-ossl3-img $TARGETNAME/oqs-ossl3:latest &&
+                  docker push $TARGETNAME/oqs-ossl3:latest 
+
+  ubuntu_x64_nginx:
+    description: Building and pushing OQS-nginx and OQS-curl generic demo Docker image
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build OQS nginx
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-nginx-img . 
+          working_directory: nginx
+      - run:
+          name: Build curl with generic liboqs
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic" -t oqs-curl-generic . 
+          working_directory: curl
+      - run:
+          name: Test Curl with generic liboqs
+          command: |
+            docker run -e TEST_TIME=5 -e KEM_ALG=sikep751 -e SIG_ALG=picnicl1full -it oqs-curl-generic perftest.sh 
+      - run:
+          name: Test nginx and curl generic 
+          command: |
+            docker network create nginx-test &&
+            docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img &&
+            sleep 2 &&
+            docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push nginx and curl generic image
                 command: |
                   docker tag oqs-curl-generic $TARGETNAME/curl:latest &&
                   docker push $TARGETNAME/curl:latest &&
+                  docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
+                  docker push $TARGETNAME/nginx:latest 
+
+  ubuntu_x64_httpd:
+    description: Building and pushing OQS-httpd and OQS-curl dev demo Docker image
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build Apache httpd
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-httpd-img . 
+          working_directory: httpd
+      - run:
+          name: Build Curl (dev)
+          command: |
+            # The CircleCI executor offers 35 cores, but using
+            # all of them might exhaust memory
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-curl . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . 
+      - run:
+          name: Test Curl (dev)
+          command: |
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh 
+      - run:
+          name: Test httpd using curl (dev)
+          command: |
+            docker network create httpd-test &&
+            docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img &&
+            sleep 2 &&
+            docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push httpd and curl dev images
+                command: |
                   docker tag oqs-curl $TARGETNAME/curl:optimized &&
                   docker push $TARGETNAME/curl:optimized &&
                   docker tag oqs-curl-dev $TARGETNAME/curl-dev &&
                   docker push $TARGETNAME/curl-dev &&
                   docker tag oqs-httpd-img $TARGETNAME/httpd:latest &&
-                  docker push $TARGETNAME/httpd:latest &&
+                  docker push $TARGETNAME/httpd:latest 
+
+  ubuntu_x64_haproxy:
+    description: Building OQS-based HAproxy docker image
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build HAproxy
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-haproxy-img . 
+          working_directory: haproxy
+      - run:
+          name: Test HAproxy using public OQS curl
+          command: |
+            docker network create haproxy-test &&
+            docker run --network haproxy-test --detach --rm --name oqs-haproxy oqs-haproxy-img &&
+            sleep 4 &&
+            docker run --network haproxy-test openquantumsafe/curl curl -k https://oqs-haproxy:4433
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push OQS HAproxy image
+                command: |
                   docker tag oqs-haproxy-img $TARGETNAME/haproxy:latest &&
-                  docker push $TARGETNAME/haproxy:latest &&
-                  docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
-                  docker push $TARGETNAME/nginx:latest &&
-                  docker tag oqs-ossl3-img $TARGETNAME/oqs-ossl3:latest &&
-                  docker push $TARGETNAME/oqs-ossl3:latest
+                  docker push $TARGETNAME/haproxy:latest 
 
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
@@ -135,9 +221,13 @@ workflows:
   version: 2.1
   build:
     jobs:
-      - ubuntu_x64_openssl:
-          name: ubuntu-openssl
+      - ubuntu_x64_provider:
+          context: openquantumsafe
+      - ubuntu_x64_nginx:
+          context: openquantumsafe
+      - ubuntu_x64_httpd:
+          context: openquantumsafe
+      - ubuntu_x64_haproxy:
           context: openquantumsafe
       - ubuntu_x64_openssh:
-          name: ubuntu-openssh
           context: openquantumsafe
