@@ -123,6 +123,7 @@ jobs:
             # all of them might exhaust memory
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-curl . &&
             docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . 
+          working_directory: curl
       - run:
           name: Test Curl (dev)
           command: |
