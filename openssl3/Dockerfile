@@ -10,7 +10,7 @@ ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 ARG MAKE_DEFINES="-j 2"
 
 # Change this at your own risk: oqs-provider & OSSL3 cannot yet properly handle OQS-sigs
-ARG SIG_ALG="rsa"
+ARG SIG_ALG="rsa:2048"
 
 FROM alpine:3.13 as intermediate
 # Take in all global args
