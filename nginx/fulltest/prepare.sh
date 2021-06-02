@@ -4,7 +4,7 @@
 NGINX_INSTALL_DIR=/opt/nginx
 
 # cleanup; not deleting root CA!
-rm -rf pki common.py *.html *.conf
+rm -rf pki common.py *.html interop.conf
 
 # Obtain current list of algorithms
 wget https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/oqs-test/common.py
