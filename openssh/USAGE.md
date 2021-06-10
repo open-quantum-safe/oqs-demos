@@ -267,4 +267,4 @@ Port at which (oqs-)sshd listens for quantum-safe ssh connections. Defined/chang
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/openssh#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/openssh#limitations-and-security).
