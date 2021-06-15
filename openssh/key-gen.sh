@@ -80,7 +80,7 @@ for IDX in "${!HOST_KEY_ALGS[@]}"; do
         printf "exists @ %-$((MAX_FILE_LEN + 6))s --> SKIPPED\n" "$HOST_FILE(.pub)"
     else
         CMD="${OQS_INSTALL_DIR}/bin/ssh-keygen  -t $ALG -f $HOST_FILE -N '' -q -h"
-        # echo $CMD
+        #echo "Generating key via: $CMD"
         eval $CMD 2> /dev/null
         if [ $? -ne 0 ]; then
             echo "FAILED"
