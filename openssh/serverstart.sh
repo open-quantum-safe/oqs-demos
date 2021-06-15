@@ -4,8 +4,8 @@
 
 OPTIONS=${OPTIONS:=""}
 
-SIG=${SIG_ALG:="p256-dilithium2"}
-KEM=${KEM_ALG:="ecdh-nistp384-kyber-1024"}
+SIG=${SIG_ALG:="ecdsa-nistp384-dilithium3"}
+KEM=${KEM_ALG:="ecdh-nistp384-kyber-768"}
 
 # Optionally set port
 # if left empty, the options defined in sshd_config will be used
@@ -16,7 +16,7 @@ fi
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/openssh#key-exchange
 # if left empty, the options defined in sshd_config will be used
 if [ "x$KEM" != "x" ]; then
-    OPTIONS="${OPTIONS} -o KexAlgorithms=${KEM}-sha384@openquantumsafe.org"
+    OPTIONS="${OPTIONS} -o KexAlgorithms=${KEM}-sha384"
 fi
 
 # Optionally set SIG to one defined in https://github.com/open-quantum-safe/openssh#digital-signature

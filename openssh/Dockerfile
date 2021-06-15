@@ -6,13 +6,13 @@ ARG INSTALL_DIR=${DEFAULT_INSTALL_DIR}
 
 # liboqs version
 # ATTENTION: Changing this could mean that further adaptions in sshd_config and ssh_config are required
-ARG LIBOQS_RELEASE="0.4.0"
+ARG LIBOQS_RELEASE="0.6.0"
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
 ARG LIBOQS_BUILD_DEFINES=
 
 # Open quantum safe OpenSSH release
-ARG OQS_OPENSSH_RELEASE="OQS-OpenSSH-snapshot-2020-08"
+ARG OQS_OPENSSH_RELEASE="OQS-v8"
 
 # openssh build defines (https://github.com/open-quantum-safe/openssh#step-2-build-the-fork)
 ARG OPENSSH_BUILD_OPTIONS=
@@ -25,7 +25,7 @@ ARG MAKE_INSTALL="install-nokeys"
 ARG OQS_USER="oqs"
 ARG OQS_PASSWORD="oqs.pw"
 
-FROM alpine:3.11 as intermediate
+FROM debian:stable-slim as intermediate
 # Take in all global args
 ARG INSTALL_DIR
 ARG LIBOQS_RELEASE
@@ -40,16 +40,16 @@ LABEL version="2"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apk update && apk upgrade
+RUN apt-get update && apt-get upgrade -y
 
 # Get all software packages required for builing all components:
 # Note: build-base cannot be used due to the fortify-headers package throwing an error
-RUN apk add gcc musl-dev linux-headers \
+RUN apt install -y gcc \
     libtool automake autoconf cmake \
     make \
-    openssl openssl-dev \
+    openssl libssl-dev \
     git docker \
-    zlib-dev
+    zlib1g-dev
 
 # get all sources
 WORKDIR /opt
@@ -77,22 +77,23 @@ CMD ["sh"]
 STOPSIGNAL SIGTERM
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:3.11 as dev
+
+FROM debian:stable-slim as dev
 # Take in all global args
 ARG DEFAULT_INSTALL_DIR
 ARG INSTALL_DIR
 ARG OQS_USER
 ARG OQS_PASSWORD
 
-RUN apk update \
-    && apk upgrade \
-    && apk add man bash nano
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt install -y man bash nano
 
 # Only retain the ${INSTALL_DIR} contents in the final image
 COPY --from=intermediate ${INSTALL_DIR} ${INSTALL_DIR}
 
 # Create a normal user to be able to log into the system via ssh
-RUN addgroup --gid 1000 --system ${OQS_USER} && adduser --uid 1000 --system ${OQS_USER} --ingroup ${OQS_USER} --shell /bin/sh && echo -e -e "${OQS_PASSWORD}\n${OQS_PASSWORD}" | passwd ${OQS_USER}
+RUN addgroup --gid 1000 --system ${OQS_USER} && adduser --uid 1000 --system ${OQS_USER} --ingroup ${OQS_USER} --shell /bin/sh && echo "${OQS_PASSWORD}\n${OQS_PASSWORD}\n" | passwd ${OQS_USER}
 
 # Set up login shell: Add ssh-binaries to path for ssh login shell, fix /etc/profile not executing /etc/profile.d/*
 RUN sed -i "s|PATH=|PATH=${INSTALL_DIR}/bin:|;s|/etc/profile.d/\*\.sh|/etc/profile.d/\*|" /etc/profile
@@ -105,10 +106,13 @@ RUN chown ${OQS_USER}:${OQS_USER} .
 ENV OQS_INSTALL_DIR=${INSTALL_DIR}
 ENV OQS_USER=$OQS_USER
 
+# Create privilege separation user
+RUN mkdir -p /var/empty && groupadd sshd && useradd -g sshd -c 'sshd privsep' -d /var/empty -s /bin/false sshd
+
 # Enable ssh deamon to start at boot (although `rc-service oqs-sshd start` still needs to be called)
 COPY oqs-sshd /etc/init.d/
 RUN sed -ri "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" /etc/init.d/oqs-sshd
-RUN apk add openrc \
+RUN apt install -y openrc openssl \
     && mkdir -p /run/openrc \
     && touch /run/openrc/softlevel \
     && rc-update add oqs-sshd \

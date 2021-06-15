@@ -22,13 +22,13 @@
 ###############################################################################
 
 # Key-exchange algorithms
-KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org
+KexAlgorithms ecdh-nistp384-kyber-768-sha384
 
 # The host key algorithms ssh accepts
-HostKeyAlgorithms ssh-p256-dilithium2
+HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3
 
 # The algorithms used for public key authentication
-PubkeyAcceptedKeyTypes ssh-p256-dilithium2
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3
 
 # Define how unknown host keys should be handled
 #StrictHostKeyChecking ask
@@ -38,51 +38,30 @@ Port 2222
 
 # All IdentityFile options, enabled ones should match PubkeyAcceptedKeyTypes
 # Uncomment line to enable corresponding algorithm
+# Also ensure corresponding algorithm is enabled in liboqs
 #IdentityFile ~/.ssh/id_rsa
 #IdentityFile ~/.ssh/id_dsa
 #IdentityFile ~/.ssh/id_ed25519
 
-#IdentityFile ~/.ssh/id_oqsdefault
-#IdentityFile ~/.ssh/id_dilithium2
-#IdentityFile ~/.ssh/id_falcon512
-#IdentityFile ~/.ssh/id_mqdss3148
-#IdentityFile ~/.ssh/id_picnicl1fs
-#IdentityFile ~/.ssh/id_picnic3l1
-#IdentityFile ~/.ssh/id_qteslapi
-#IdentityFile ~/.ssh/id_rainbowiaclassic
-#IdentityFile ~/.ssh/id_rainbowiiicclassic
-#IdentityFile ~/.ssh/id_rainbowvcclassic
-#IdentityFile ~/.ssh/id_sphincsharaka128frobust
-#IdentityFile ~/.ssh/id_sphincssha256128frobust
-#IdentityFile ~/.ssh/id_sphincsshake256128frobust
+#IdentityFile ~/.ssh/id_ssh-oqsdefault
+#IdentityFile ~/.ssh/id_ssh-dilithium2aes
+#IdentityFile ~/.ssh/id_ssh-falcon512
+#IdentityFile ~/.ssh/id_ssh-picnicL1full
+#IdentityFile ~/.ssh/id_ssh-picnicL3FS
+#IdentityFile ~/.ssh/id_ssh-sphincsharaka128fsimple
 
-#IdentityFile ~/.ssh/id_p256_oqsdefault
-IdentityFile ~/.ssh/id_p256_dilithium2
-#IdentityFile ~/.ssh/id_p256_falcon512
-#IdentityFile ~/.ssh/id_p256_mqdss3148
-#IdentityFile ~/.ssh/id_p256_picnicl1fs
-#IdentityFile ~/.ssh/id_p256_picnic3l1
-#IdentityFile ~/.ssh/id_p256_qteslapi
-#IdentityFile ~/.ssh/id_p256_rainbowiaclassic
-#IdentityFile ~/.ssh/id_p256_sphincsharaka128frobust
-#IdentityFile ~/.ssh/id_p256_sphincssha256128frobust
-#IdentityFile ~/.ssh/id_p256_sphincsshake256128frobust
+#IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-oqsdefault
+#IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-dilithium2aes
+#IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-falcon512
+#IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-picnicL1full
+IdentityFile ~/.ssh/id_ssh-ecdsa-nistp384-picnicL3FS
+#IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-sphincsharaka128fsimple
 
-#IdentityFile ~/.ssh/id_p384_rainbowiiicclassic
-
-#IdentityFile ~/.ssh/id_p521_rainbowvcclassic
-
-#IdentityFile ~/.ssh/id_rsa3072_oqsdefault
-#IdentityFile ~/.ssh/id_rsa3072_dilithium2
-#IdentityFile ~/.ssh/id_rsa3072_falcon512
-#IdentityFile ~/.ssh/id_rsa3072_mqdss3148
-#IdentityFile ~/.ssh/id_rsa3072_picnicl1fs
-#IdentityFile ~/.ssh/id_rsa3072_picnic3l1
-#IdentityFile ~/.ssh/id_rsa3072_qteslapi
-#IdentityFile ~/.ssh/id_rsa3072_rainbowiaclassic
-#IdentityFile ~/.ssh/id_rsa3072_sphincsharaka128frobust
-#IdentityFile ~/.ssh/id_rsa3072_sphincssha256128frobust
-#IdentityFile ~/.ssh/id_rsa3072_sphincsshake256128frobust
+#IdentityFile ~/.ssh/id_ssh-rsa3072-oqsdefault
+#IdentityFile ~/.ssh/id_ssh-rsa3072-dilithium2aes
+#IdentityFile ~/.ssh/id_ssh-rsa3072-falcon512
+#IdentityFile ~/.ssh/id_ssh-rsa3072-picnicL1full
+#IdentityFile ~/.ssh/id_ssh-rsa3072-sphincsharaka128fsimple
 
 ###############################################################################
 #-- Settings for CLASSICAL SSH ------------------------------------------------

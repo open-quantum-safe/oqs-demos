@@ -15,64 +15,40 @@
 ###############################################################################
 
 # Key-exchange algorithms
-KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org
+KexAlgorithms ecdh-nistp384-kyber-768-sha384
 
 # Host key algorithms, these determine the generated host keys
-HostKeyAlgorithms ssh-p256-dilithium2
+HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3
 
 # Those determine the accepted public keys for public key authentication
-PubkeyAcceptedKeyTypes ssh-p256-dilithium2
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3
 
 # The port sshd is listening on
 Port 2222
 
 # The host keys used for host authentication
 # Uncomment line to enable corresponding algorithm
+# be sure the algorithm has been enabled in liboqs
 #HostKey /opt/oqs-ssh/ssh_host_rsa_key
 #HostKey /opt/oqs-ssh/ssh_host_dsa_key
 #HostKey /opt/oqs-ssh/ssh_host_ed25519_key
 
-#HostKey /opt/oqs-ssh/ssh_host_oqsdefault_key
-#HostKey /opt/oqs-ssh/ssh_host_dilithium2_key
-#HostKey /opt/oqs-ssh/ssh_host_falcon512_key
-#HostKey /opt/oqs-ssh/ssh_host_mqdss3148_key
-#HostKey /opt/oqs-ssh/ssh_host_picnicl1fs_key
-#HostKey /opt/oqs-ssh/ssh_host_picnic3l1_key
-#HostKey /opt/oqs-ssh/ssh_host_qteslapi_key
-#HostKey /opt/oqs-ssh/ssh_host_rainbowiaclassic_key
-#HostKey /opt/oqs-ssh/ssh_host_rainbowiiicclassic_key
-#HostKey /opt/oqs-ssh/ssh_host_rainbowvcclassic_key
-#HostKey /opt/oqs-ssh/ssh_host_sphincsharaka128frobust_key
-#HostKey /opt/oqs-ssh/ssh_host_sphincssha256128frobust_key
-#HostKey /opt/oqs-ssh/ssh_host_sphincsshake256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-oqsdefault_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-dilithium2aes_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-picnicL1full_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-sphincsharaka192frobust_key
 
-#HostKey /opt/oqs-ssh/ssh_host_p256_oqsdefault_key
-HostKey /opt/oqs-ssh/ssh_host_p256_dilithium2_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_falcon512_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_mqdss3148_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_picnicl1fs_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_picnic3l1_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_qteslapi_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_rainbowiaclassic_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_sphincsharaka128frobust_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_sphincssha256128frobust_key
-#HostKey /opt/oqs-ssh/ssh_host_p256_sphincsshake256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp256-oqsdefault_key
+HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-dilithium3_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp256-falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-picnicL3FS_key
 
-#HostKey /opt/oqs-ssh/ssh_host_p384_rainbowiiicclassic_key
- 
-#HostKey /opt/oqs-ssh/ssh_host_p521_rainbowvcclassic_key
-
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_oqsdefault_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_dilithium2_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_falcon512_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_mqdss3148_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_picnicl1fs_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_picnic3l1_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_qteslapi_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_rainbowiaclassic_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincsharaka128frobust_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincssha256128frobust_key
-#HostKey /opt/oqs-ssh/ssh_host_rsa3072_sphincsshake256128frobust_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-oqsdefault_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-dilithium2aes_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-falcon512_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-picnicL1full_key
+#HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-sphincsharaka128fsimple_key
 
 
 ###############################################################################

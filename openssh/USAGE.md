@@ -175,7 +175,7 @@ docker exec -it <name-or-hash-of-container> /opt/oqs-ssh/scripts/key-gen.sh
 
 For a list of all signature and key exchange algorithms see [here](https://github.com/open-quantum-safe/openssh#supported-algorithms). Be aware that there is a limitation of what algorithms are enabled in PQS-OpenSSH per default, more information in the section **Enabling additional PQC algorithms** below. It is recommended to only use the hybrid variants to maintain established classical security. The post-quantum safe algorithms have not yet received enough confidence to be relied on as the only security mechanism.
 
-The image's default key exchange algorithm is `ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org`. For host and identity key (authentication) algorithms `ssh-p256-dilithium2` is used. Those algorithms may be changed by adjusting the files `ssh_config` and `sshd_config` respectively.
+The image's default key exchange algorithm is `ecdh-nistp384-kyber-768-sha384`. For host and identity keys (server and client authentication, respectively) algorithms `ssh-ecdsa-nistp384-dilithium3` and `ssh-ecdsa-nistp384-picnicL3FS` are used. Those algorithms may be changed by adjusting the files `ssh_config` and `sshd_config` respectively.
 
 **In `ssh_config` (client side)**
 - `KexAlgorithms`: Comma-separated list of enabled key-exchange algorithms. Priority given by order. Names according to [this KEX naming scheme](https://github.com/open-quantum-safe/openssh#key-exchange).
@@ -203,10 +203,10 @@ The generation of the host and identity keys happens via the script [key-gen.sh]
 Which keys to generate is determined using the configuration files (`ssh_config` and `sshd_config`). The need for a specific key is determined based on the following parameters:
 1. `IdentityFile` (in `ssh_config`) for **identity keys**: For every entry (there may be multiple) the corresponding identity key is generated.
    - e.g. `IdentityFile ~/.ssh/id_ed25519` or
-   - `IdentityFile ~/.ssh/id_p256_dilithium2`
+   - `IdentityFile ~/.ssh/id_ssh-ecdsa-nistp384-dilithium3`
 2. `HostKey` (in `sshd_config`) for **host keys**: For every entry (there may be multiple) the corresponding host key is generated.
-   - e.g. `HostKey /opt/oqs-ssh/ssh_host_p256_dilithium2_key` or
-   - `HostKey /opt/oqs-ssh/ssh_host_falcon512_key`
+   - e.g. `HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-dilithium3_key` or
+   - `HostKey /opt/oqs-ssh/ssh_host_ssh-falcon512_key`
 
 In order to generate the host keys and start the `sshd` the image needs to be run as the `root` user, meaning the `docker run` command shall not contain the `--user oqs` option.
 
@@ -232,11 +232,11 @@ As this is a demonstration of post-quantum cryptography, backwards compatibility
 To enable classical SSH support on client side, edit/add lines in [ssh_config]([ssh_config](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/ssh_config)) as follows: 
 
 ```
-KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org,curve25519-sha256@libssh.org
+KexAlgorithms ecdh-nistp384-kyber-768-sha384@openquantumsafe.org,curve25519-sha256@libssh.org
 
-HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519
+HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
 
-PubkeyAcceptedKeyTypes ssh-p256-dilithium2,ssh-ed25519
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
 
 IdentityFile ~/.ssh/id_ed25519
 ```
@@ -244,11 +244,11 @@ IdentityFile ~/.ssh/id_ed25519
 For adding support for classical SSH on server side, edit/add lines in [sshd_config](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/sshd_config) as follows:
 
 ```
-KexAlgorithms ecdh-nistp384-kyber-1024-sha384@openquantumsafe.org,curve25519-sha256
+KexAlgorithms ecdh-nistp384-kyber-768-sha384@openquantumsafe.org,curve25519-sha256
 
-HostKeyAlgorithms ssh-p256-dilithium2,ssh-ed25519
+HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
 
-PubkeyAcceptedKeyTypes ssh-p256-dilithium2,ssh-ed25519
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
 
 HostKey /opt/oqs-ssh/ssh_host_ed25519_key
 ```
