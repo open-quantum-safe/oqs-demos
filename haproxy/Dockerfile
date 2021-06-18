@@ -22,7 +22,7 @@ ARG HAPROXY_VERSION=2.2.6
 ARG MAKE_DEFINES=""
 
 
-FROM alpine as intermediate
+FROM alpine:3.11 as intermediate
 
 # Take in global args
 ARG INSTALLPATH
@@ -76,7 +76,7 @@ RUN set -x && \
     ${INSTALLPATH}/bin/openssl x509 -req -in pki/server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey cacert/CA.key -CAcreateserial -days 365
 
 # second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine
+FROM alpine:3.11
 # Take in global args
 ARG HAPROXY_PATH
 ARG INSTALLPATH
