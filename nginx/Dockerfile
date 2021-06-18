@@ -19,7 +19,8 @@ ARG NGINX_VERSION=1.16.1
 ARG MAKE_DEFINES="-j 2"
 
 
-FROM alpine:3.11 as intermediate
+FROM alpine:3.13 as intermediate
+# ToDo: Upgrade possible if https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2 addressed
 # Take in global args
 ARG LIBOQS_BUILD_DEFINES
 ARG OPENSSL_PATH
@@ -70,7 +71,7 @@ RUN set -x && \
     ${OPENSSL_PATH}/apps/openssl x509 -req -in server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey CA.key -CAcreateserial -days 365
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:3.11
+FROM alpine:3.13
 # Take in global args
 ARG LIBOQS_BUILD_DEFINES
 ARG OPENSSL_PATH
