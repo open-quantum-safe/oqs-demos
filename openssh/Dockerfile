@@ -106,11 +106,6 @@ RUN chown ${OQS_USER}:${OQS_USER} .
 ENV OQS_INSTALL_DIR=${INSTALL_DIR}
 ENV OQS_USER=$OQS_USER
 
-# Create privilege separation user
-#RUN mkdir -p /var/empty && groupadd sshd && useradd -g sshd -c 'sshd privsep' -d /var/empty -s /bin/false sshd
-#RUN mkdir -p /var/empty && addgroup sshd && useradd -g sshd -c 'sshd privsep' -d /var/empty -s /bin/false sshd
-#RUN mkdir -p /var/empty && adduser --ingroup sshd -D -s /bin/false sshd
-
 # Enable ssh deamon to start at boot (although `rc-service oqs-sshd start` still needs to be called)
 COPY oqs-sshd /etc/init.d/
 RUN sed -ri "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" /etc/init.d/oqs-sshd
