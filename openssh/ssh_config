@@ -43,21 +43,18 @@ Port 2222
 #IdentityFile ~/.ssh/id_dsa
 #IdentityFile ~/.ssh/id_ed25519
 
-#IdentityFile ~/.ssh/id_ssh-oqsdefault
 #IdentityFile ~/.ssh/id_ssh-dilithium2aes
 #IdentityFile ~/.ssh/id_ssh-falcon512
 #IdentityFile ~/.ssh/id_ssh-picnicL1full
 #IdentityFile ~/.ssh/id_ssh-picnicL3FS
 #IdentityFile ~/.ssh/id_ssh-sphincsharaka128fsimple
 
-#IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-oqsdefault
 #IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-dilithium2aes
 #IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-falcon512
 #IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-picnicL1full
 IdentityFile ~/.ssh/id_ssh-ecdsa-nistp384-picnicL3FS
 #IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-sphincsharaka128fsimple
 
-#IdentityFile ~/.ssh/id_ssh-rsa3072-oqsdefault
 #IdentityFile ~/.ssh/id_ssh-rsa3072-dilithium2aes
 #IdentityFile ~/.ssh/id_ssh-rsa3072-falcon512
 #IdentityFile ~/.ssh/id_ssh-rsa3072-picnicL1full
