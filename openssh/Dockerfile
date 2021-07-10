@@ -6,7 +6,7 @@ ARG INSTALL_DIR=${DEFAULT_INSTALL_DIR}
 
 # liboqs version
 # ATTENTION: Changing this could mean that further adaptions in sshd_config and ssh_config are required
-ARG LIBOQS_RELEASE="0.6.0"
+ARG LIBOQS_RELEASE="main"
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
 ARG LIBOQS_BUILD_DEFINES=
