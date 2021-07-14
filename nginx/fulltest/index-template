@@ -33,7 +33,8 @@ tr:nth-child(even) {
 <p>This nginx server supports</p>
 <ul>
 <li>the TLS1.3 specification with QSC enhancement as specified in <a href="https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-00">https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-00</a></li>
-<li>curve IDs, code-points, and OIDs as specified in <a href="https://docs.google.com/spreadsheets/d/1xk0sQICZkzAZp_pzXu9BO-tHzoqmSFU7fB3Tk1rvQqs/edit?usp=sharing">this spreadsheet</a>.</li>
+<li>Code points/curve IDs of KEM algorithms are implemented with the highest numbers available for each algorithm listed <a href="https://github.com/open-quantum-safe/openssl/blob/OQS-OpenSSL_1_1_1-stable/oqs-template/oqs-kem-info.md">here</a>. </li>
+<li>Code points/OIDs of SIG algorithms are implemented with the highest numbers available for each algorithm as listed <a href="https://github.com/open-quantum-safe/openssl/blob/OQS-OpenSSL_1_1_1-stable/oqs-template/oqs-sig-info.md">here</a>. </li>
 </ul>
 
 <p>This corresponds to the OQS release version LIBOQS_RELEASE </p>
@@ -69,7 +70,7 @@ tr:nth-child(even) {
 <li>The instructions above assume a local installation of <a href="https://www.docker.com/get-started">Docker</a>. </li>
 <li><p>Another equally valid approach would be to build all required software from source and then execute it locally. Examples for this can be found in <a href="https://github.com/open-quantum-safe/oqs-demos">the OQS Github repository</a>.</p>
 <p>In this way, you could for example verify correct operation of all components using openssl's <i>s_client</i> function by running <pre>echo "GET /" | openssl s_client -CAfile CA.crt --connect test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre> Again, values for <i>port</i> and <i>kex</i> must be suitably set.</p></li>
-<li>Using "openssl s_client" has the additional benefit that it also displays the actual algorithms utilized: <i>Server Temp Key</i> describes the key exchange algorithm and <i>Peer signature type</i> the signature algorithm actually used.</li>
+<li>Using "openssl s_client" has the additional benefit that it also displays the actual algorithms utilized: <i>Server Temp Key</i> describes the key exchange algorithm and <i>Peer signature type</i> the signature algorithm actually used.</li> 
 <li>The OQS docker hub containers also provide a ready-made QSC-openssl distribution facilitating this test: You can do this for example with this command: <pre>docker run -v `pwd`:/ca -it openquantumsafe/curl:LIBOQS_RELEASE openssl s_client --connect test.openquantumsafe.org:6000 -CAfile /ca/CA.crt </pre> Then issue the <tt>GET /</tt> command on the command line to retrieve an information page.</li>
 <li>Using any algorithm with an 'oqs...default' name would necessitate client side software built with the exact same default algorithms set by the underlying OQS software. For details see <a href="https://github.com/open-quantum-safe/openssl/wiki/Using-liboqs-algorithms-not-in-the-fork">here</a>. Therefore interoperability testing against these algorithms may fail.</li>
 <li>The OQS docker images are pre-loaded with the test CA certificate which allow simplified testing bypassing the need to first obtain the test CA certificate and mounting this into the docker image. Therefore, testing a specific algorithm can be done simply without any preparation by running <br><pre>docker run -it openquantumsafe/curl:LIBOQS_RELEASE curl --cacert /opt/oqssa/oqs-testca.pem https://test.openquantumsafe.org:<i>port</i> --curves <i>kex</i></pre></li>
