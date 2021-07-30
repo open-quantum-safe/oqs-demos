@@ -44,7 +44,7 @@ RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAK
 
 # build OpenSSL3
 WORKDIR /opt/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib" ./config shared --prefix=${INSTALLDIR} && \
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
     make ${MAKE_DEFINES} && make install;
 
 # set path to use 'new' openssl & curl. Dyn libs have been properly linked in to match
