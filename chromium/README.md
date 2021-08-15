@@ -31,7 +31,9 @@ Note: If you want to execute the resulting binaries on another machine, be sure 
 
 Note: For this to succeed, you might have to install go if not already present on your machine, e.g., by running `sudo apt install golang-go`. If _any_ error occurs in this step, Chromium will build fine, just without support for quantum-safe crypto, i.e., only the final testing steps below will fail.
 
-6. Finally, navigate back to <CHROMIUM_ROOT> and follow the instructions [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install-additional-build-dependencies) from the "Install additional build dependencies" section onwards to build Chromium.
+6. Finally, navigate back to <CHROMIUM_ROOT> and follow the instructions [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install-additional-build-dependencies) from the "Install additional build dependencies" section onwards to build Chromium. 
+
+Note: If you have already built another chromium source tree (version), you may have to execute `gclient sync --force` to ensure all dependencies are properly updated.
 
 Note: It is *strongly* advisable to set certain build options to obtain a size-and-performance optimized chromium variant, also saving on build time. Do this by executing `gn args out/Default` and adding the following variables to the configuration file opened in your editor:
 ```
@@ -43,14 +45,14 @@ blink_symbol_level=0
 ```
 
 
-To verify that Chromium can perform a TLS 1.3 handshake using a post-quantum key exchange:
+If the build completes successfully, i.e., the executable `chrome` has been created, one can verify that Chromium can perform a TLS 1.3 handshake using a post-quantum key exchange by executing these steps:
 
 0. Navigate to `<CHROMIUM_ROOT>`, and start Chromium by executing `./out/Default/chrome`
 1. Navigate again to the `<CHROMIUM_ROOT>/third_party/boringssl/src` folder, and build OQS-BoringSSL as a standalone project by running `mkdir build && cd build && cmake -GNinja ..`.
 2. Then, in the `build` directory, run `./tool/bssl server -accept 4433 -www -loop -curves <KEX>`, where `<KEX>` can be any key-exchange algorithm named [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms) that is supported by default by Chromium. The [kDefaultGroups array](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375) lists all such algorithms\*.
 3. Load `https://localhost:4433` in Chromium.
 
-An alternative test consists of using the newly built Chromium to access the OQS test server at [https://test.openquantumsafe.org](https://test.openquantumsafe.org) and clicking on any of the algorithm combinations [supported by Chromium](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375), e.g., `p256_kyber512` (running at [port 6071](https://test.openquantumsafe.org:6071) ).
+An alternative test consists of using the newly built Chromium to access the OQS test server at [https://test.openquantumsafe.org](https://test.openquantumsafe.org) and clicking on any of the algorithm combinations [supported by Chromium](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375), e.g., `p256_kyber90s512`).
 
 Note: In order to avoid certificate warnings, you need to [download the test site certificate](https://test.openquantumsafe.org/CA.crt) using the newly-built chromium. Then click the "..." Control extensions button in the top-right window corner of your newly built Chromium browser, select "Settings", click on "Privacy and Security" in the newly opened window on the left, click on "Security" in the window pane on the right, scroll down and click on "Manage certificates", click on the "Certificates" tab in the newly opened screen, click on "Import" near the top of the newly opened pane and click on the "Downloads" folder on the file selector window that opens. Then double-click on "CA.crt" and check the box next to "Trust this certificate for identifying websites" and finally click "OK".
 
