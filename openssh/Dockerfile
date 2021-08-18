@@ -23,9 +23,9 @@ ARG MAKE_INSTALL="install-nokeys"
 
 # Define the username of the normal user
 ARG OQS_USER="oqs"
-ARG OQS_PASSWORD="oqs.pw"
+ARG OQS_PASSWORD="Pa55W0rd"
 
-FROM debian:stable-slim as intermediate
+FROM alpine:3.13 as intermediate
 # Take in all global args
 ARG INSTALL_DIR
 ARG LIBOQS_RELEASE
@@ -40,16 +40,16 @@ LABEL version="2"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get upgrade -y
+RUN apk update && apk upgrade
 
 # Get all software packages required for builing all components:
 # Note: build-base cannot be used due to the fortify-headers package throwing an error
-RUN apt install -y gcc \
+RUN apk add gcc musl-dev linux-headers \
     libtool automake autoconf cmake \
     make \
-    openssl libssl-dev \
+    openssl openssl-dev \
     git docker \
-    zlib1g-dev
+    zlib-dev
 
 # get all sources
 WORKDIR /opt
@@ -78,22 +78,22 @@ STOPSIGNAL SIGTERM
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 
-FROM debian:stable-slim as dev
+FROM alpine:3.13 as dev
 # Take in all global args
 ARG DEFAULT_INSTALL_DIR
 ARG INSTALL_DIR
 ARG OQS_USER
 ARG OQS_PASSWORD
 
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt install -y man bash nano
+RUN apk update \
+    && apk upgrade \
+    && apk add bash nano
 
 # Only retain the ${INSTALL_DIR} contents in the final image
 COPY --from=intermediate ${INSTALL_DIR} ${INSTALL_DIR}
 
 # Create a normal user to be able to log into the system via ssh
-RUN addgroup --gid 1000 --system ${OQS_USER} && adduser --uid 1000 --system ${OQS_USER} --ingroup ${OQS_USER} --shell /bin/sh && echo "${OQS_PASSWORD}\n${OQS_PASSWORD}\n" | passwd ${OQS_USER}
+RUN addgroup --gid 1000 --system ${OQS_USER} && adduser --uid 1000 --system ${OQS_USER} --ingroup ${OQS_USER} --shell /bin/sh && echo -e -e "${OQS_PASSWORD}\n${OQS_PASSWORD}\n" | passwd ${OQS_USER}
 
 # Set up login shell: Add ssh-binaries to path for ssh login shell, fix /etc/profile not executing /etc/profile.d/*
 RUN sed -i "s|PATH=|PATH=${INSTALL_DIR}/bin:|;s|/etc/profile.d/\*\.sh|/etc/profile.d/\*|" /etc/profile
@@ -106,13 +106,10 @@ RUN chown ${OQS_USER}:${OQS_USER} .
 ENV OQS_INSTALL_DIR=${INSTALL_DIR}
 ENV OQS_USER=$OQS_USER
 
-# Create privilege separation user
-RUN mkdir -p /var/empty && groupadd sshd && useradd -g sshd -c 'sshd privsep' -d /var/empty -s /bin/false sshd
-
 # Enable ssh deamon to start at boot (although `rc-service oqs-sshd start` still needs to be called)
 COPY oqs-sshd /etc/init.d/
 RUN sed -ri "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" /etc/init.d/oqs-sshd
-RUN apt install -y openrc openssl \
+RUN apk add openrc openssl \
     && mkdir -p /run/openrc \
     && touch /run/openrc/softlevel \
     && rc-update add oqs-sshd \
