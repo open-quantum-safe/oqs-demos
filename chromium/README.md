@@ -49,7 +49,7 @@ If the build completes successfully, i.e., the executable `chrome` has been crea
 
 0. Navigate to `<CHROMIUM_ROOT>`, and start Chromium by executing `./out/Default/chrome`
 1. Navigate again to the `<CHROMIUM_ROOT>/third_party/boringssl/src` folder, and build OQS-BoringSSL as a standalone project by running `mkdir build && cd build && cmake -GNinja ..`.
-2. Then, in the `build` directory, run `./tool/bssl server -accept 4433 -www -loop -curves <KEX>`, where `<KEX>` can be any key-exchange algorithm named [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms) that is supported by default by Chromium. The [kDefaultGroups array](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375) lists all such algorithms\*.
+2. Then, in the `build` directory, run `./tool/bssl server -accept 4433 -www -loop -curves <KEX>`, where `<KEX>` can be any key-exchange algorithm named [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms) that is supported by default by Chromium. The [kDefaultGroups array](https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes) lists all such algorithms\*.
 3. Load `https://localhost:4433` in Chromium.
 
 An alternative test consists of using the newly built Chromium to access the OQS test server at [https://test.openquantumsafe.org](https://test.openquantumsafe.org) and clicking on any of the algorithm combinations [supported by Chromium](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375), e.g., `p256_kyber90s512`).
