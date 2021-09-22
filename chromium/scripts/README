@@ -4,7 +4,8 @@ They have been tested on Ubuntu 20.04 .
 How to use :
 
 1. Please set the PROJECT environment variable. This is the location where you
-would like your Chromium build to be stored. For example, using bash :
+would like your Chromium build to be stored. It must be an absolute path.
+For example, using bash :
 export PROJECT=/home/madbrain/pqc_chromium
 
 2. Make sure your user has sudo permissions, as this will be needed to install
