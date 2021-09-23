@@ -17,13 +17,12 @@ sudo visudo
 Then change the timeout value. For example :
 Defaults        timestamp_timeout=360
 
-4. Review getpqc.sh and apply_patch.sh to make sure the Chromium tag and
-corresponding OQS patch are current. If not, please update the files. The
-following lines may need to be updated.
+4. Review set_env.sh to make sure the CHROMIUM_TAG and CHROMIUM_PATCH
+variables are set correctly. If you may either edit the values in the script,
+or set the values in your shell. The current are in README.md
+in the oqs-demos/chromium directory, ie. at
+https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium#readme, in
+steps 2 and 5 respectively.
 
-git checkout 94.0.4602.0
-wget https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/chromium94.patch
-git apply ./chromium94.patch
-
-5. Run master.sh to start the build . You will immediately be asked for sudo
+5. Run master.sh to start the build. You will immediately be asked for sudo
 authentication. Be prepared to wait several hours for the build to complete.
