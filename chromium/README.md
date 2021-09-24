@@ -63,3 +63,8 @@ Note: In order to avoid certificate warnings, you need to [download the test sit
 ### Shipping binary
 
 If all steps outlined above have been successfully executed, one can extract a standalone binary distribution by running `tar czvf chromium-binary.tgz *` within the directory `<CHROMIUM_ROOT>/out/Default` and moving the resulting `tgz` archive to a suitable machine with all UI components for execution. In order to not transfer too many unnecessary files, passing the options `--exclude='obj/*' --exclude='gen/*' --exclude=v8_context_snapshot_generator --exclude=mksnapshot --exclude=make_top_domain_list_variables --exclude=toolchain.ninja --exclude='*__pycache__*' ` to the `tar` command eliminates many files that are not essential for correct operation of a binary Chromium (v94) release.
+
+### Automated build scripts
+As the instructions above are complex and hard to get right the first time, a set of build scripts is included in the 
+scripts subdirectory. Please read scripts/README for more information on how to use them.
+
