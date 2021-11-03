@@ -1,0 +1,60 @@
+Only in wireshark-wolfpq: build
+diff -ru wireshark-3.4.9/epan/dissectors/packet-pkcs1.c wireshark-wolfpq/epan/dissectors/packet-pkcs1.c
+--- wireshark-3.4.9/epan/dissectors/packet-pkcs1.c	2021-10-29 14:27:32.412276355 -0400
++++ wireshark-wolfpq/epan/dissectors/packet-pkcs1.c	2021-10-29 14:21:57.667229741 -0400
+@@ -738,5 +738,7 @@
+ 	oid_add_from_string("sha512", "2.16.840.1.101.3.4.2.3");
+ 	oid_add_from_string("sha224", "2.16.840.1.101.3.4.2.4");
+ 
++	oid_add_from_string("falcon_level1", "1.3.9999.3.1");
++	oid_add_from_string("falcon_level5", "1.3.9999.3.4");
+ }
+ 
+diff -ru wireshark-3.4.9/epan/dissectors/packet-tls-utils.c wireshark-wolfpq/epan/dissectors/packet-tls-utils.c
+--- wireshark-3.4.9/epan/dissectors/packet-tls-utils.c	2021-10-29 14:27:32.624279561 -0400
++++ wireshark-wolfpq/epan/dissectors/packet-tls-utils.c	2021-10-29 12:45:13.540321572 -0400
+@@ -453,9 +453,35 @@
+     { 258, "ffdhe4096" }, /* RFC 7919 */
+     { 259, "ffdhe6144" }, /* RFC 7919 */
+     { 260, "ffdhe8192" }, /* RFC 7919 */
++    { 532, "ntru_hps_level1" }, /* wolfssl */
++    { 533, "ntru_hps_level3" }, /* wolfssl */
++    { 534, "ntru_hps_level5" }, /* wolfssl */
++    { 535, "ntru_hrss_level3" }, /* wolfssl */
++    { 536, "saber_level1" }, /* wolfssl */
++    { 537, "saber_level3" }, /* wolfssl */
++    { 538, "saber_level5" }, /* wolfssl */
++    { 570, "kyber_level1" }, /* wolfssl */
++    { 572, "kyber_level3" }, /* wolfssl */
++    { 573, "kyber_level5" }, /* wolfssl */
++    { 574, "kyber_90s_level1" }, /* wolfssl */
++    { 575, "kyber_90s_level3" }, /* wolfssl */
++    { 576, "kyber_90s_level5" }, /* wolfssl */
+     { 2570, "Reserved (GREASE)" }, /* RFC 8701 */
+     { 6682, "Reserved (GREASE)" }, /* RFC 8701 */
+     { 10794, "Reserved (GREASE)" }, /* RFC 8701 */
++    { 12052, "p256_ntru_hps_level1" }, /* wolfssl */
++    { 12053, "p384_ntru_hps_level3" }, /* wolfssl */
++    { 12054, "p521_ntru_hps_level5" }, /* wolfssl */
++    { 12055, "p384_ntru_hrss_level3" }, /* wolfssl */
++    { 12056, "p256_saber_level1" }, /* wolfssl */
++    { 12057, "p384_saber_level3" }, /* wolfssl */
++    { 12058, "p521_saber_level5" }, /* wolfssl */
++    { 12090, "p256_kyber_level1" }, /* wolfssl */
++    { 12092, "p384_kyber_level3" }, /* wolfssl */
++    { 12093, "p521_kyber_level5" }, /* wolfssl */
++    { 12094, "p256_kyber_90s_level1" }, /* wolfssl */
++    { 12095, "p384_kyber_90s_level3" }, /* wolfssl */
++    { 12096, "p521_kyber_90s_level5" }, /* wolfssl */
+     { 14906, "Reserved (GREASE)" }, /* RFC 8701 */
+     { 19018, "Reserved (GREASE)" }, /* RFC 8701 */
+     { 23130, "Reserved (GREASE)" }, /* RFC 8701 */
+@@ -1254,6 +1280,8 @@
+     { 0x0809, "rsa_pss_pss_sha256" },
+     { 0x080a, "rsa_pss_pss_sha384" },
+     { 0x080b, "rsa_pss_pss_sha512" },
++    { 0xfe0b, "falcon_level1" },
++    { 0xfe0e, "falcon_level5" },
+     { 0, NULL }
+ };
+ 
