@@ -37,6 +37,7 @@ cd wireshark-${WIRESHARK_VERSION}
 
 # TBC: Obtain OQS-specific code; currently at https://github.com/open-quantum-safe/openssl/tree/mb-wiresharkregistry/oqs-scripts
 cd epan/dissectors && \
+   rm packet-pkcs1.c packet-tls-utils.c && \
    wget https://raw.githubusercontent.com/open-quantum-safe/openssl/mb-wiresharkregistry/oqs-scripts/packet-pkcs1.c && \
    wget https://raw.githubusercontent.com/open-quantum-safe/openssl/mb-wiresharkregistry/oqs-scripts/packet-tls-utils.c && \
    cd ../..
