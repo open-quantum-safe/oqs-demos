@@ -35,12 +35,15 @@ rm -rf wireshark-${WIRESHARK_VERSION}
 tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
 cd wireshark-${WIRESHARK_VERSION} 
 
-# TBC: Obtain OQS-specific code; currently at https://github.com/open-quantum-safe/openssl/tree/mb-wiresharkregistry/oqs-scripts
+# Obtain OQS-specific ids; currently at https://github.com/open-quantum-safe/openssl/tree/mb-wiresharkregistry: TBC
+# and patch into wireshark code base
 cd epan/dissectors && \
-   rm packet-pkcs1.c packet-tls-utils.c && \
-   wget https://raw.githubusercontent.com/open-quantum-safe/openssl/mb-wiresharkregistry/oqs-scripts/packet-pkcs1.c && \
-   wget https://raw.githubusercontent.com/open-quantum-safe/openssl/mb-wiresharkregistry/oqs-scripts/packet-tls-utils.c && \
-   cd ../..
+   wget https://raw.githubusercontent.com/open-quantum-safe/openssl/mb-wiresharkregistry/qsc.h && \
+   cd ../.. && \
+   sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-pkcs1.c && \
+   sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-tls-utils.c && \
+   sed -i "s/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");\nQSC_SIGS/g" epan/dissectors/packet-pkcs1.c && \
+   sed -i "s/    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\//    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\/\nQSC_KEMS/g" epan/dissectors/packet-tls-utils.c
  
 # Build wireshark
 mkdir -p build && cd build && cmake -GNinja .. && ninja 
