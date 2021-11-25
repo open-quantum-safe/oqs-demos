@@ -1,15 +1,14 @@
 # Define the wireshark version to be baked in.
 ARG WIRESHARK_VERSION=3.4.9
 
-# Define the degree of parallelism when building the image.
-ARG MAKE_DEFINES="-j 4"
+# Define the SSL naming convention: One of "wolfssl" and "oqs"
+ARG QSC_SSL_FLAVOR="oqs"
 
 FROM ubuntu as intermediate
 ENV DEBIAN_FRONTEND noninteractive
 
-
 ARG WIRESHARK_VERSION
-ARG MAKE_DEFINES
+ARG QSC_SSL_FLAVOR
 
 RUN apt update && apt upgrade -y
 
@@ -37,17 +36,24 @@ RUN apt install -y gcc g++ \
 
 # Get the source and unpack it.
 WORKDIR /opt
-RUN curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/wireshark-${WIRESHARK_VERSION}.tar.xz
-RUN rm -rf wireshark-${WIRESHARK_VERSION}
-RUN tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
+RUN curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/wireshark-${WIRESHARK_VERSION}.tar.xz && tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
 
 WORKDIR /opt/wireshark-${WIRESHARK_VERSION} 
 
-# Obtain OQS-specific ids; currently at https://github.com/open-quantum-safe/openssl/tree/mb-wiresharkregistry: TBC
-# and patch into wireshark code base
-RUN cd epan/dissectors && \
-   wget https://raw.githubusercontent.com/open-quantum-safe/openssl/mb-wiresharkregistry/qsc.h && \
-   cd ../.. && \
+COPY wolfssl-qsc.h wolfssl-qsc.h
+
+# Decide on QSC naming/ID mapping
+RUN if [ "x$QSC_SSL_FLAVOR" = "xoqs" ] ; then \
+   wget https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/qsc.h; \
+elif [ "x$QSC_SSL_FLAVOR" = "xwolfssl" ]; then \
+   mv wolfssl-qsc.h qsc.h; \
+else \
+   echo "Unknown naming convention in QSC_SSL_FLAVOR ($QSC_SSL_FLAVOR). Exiting."; \
+   exit 1; \
+fi
+
+# Patch QSC-specific ids into wireshark code base
+RUN cp qsc.h epan/dissectors && \
    sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-pkcs1.c && \
    sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-tls-utils.c && \
    sed -i "s/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");\nQSC_SIGS/g" epan/dissectors/packet-pkcs1.c && \

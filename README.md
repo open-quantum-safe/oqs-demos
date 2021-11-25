@@ -43,6 +43,7 @@ The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.st
     Goutam Tamvada (University of Waterloo)
     Michael Baentsch (baentsch.ch)
     ISE @ FHNW (Fachhochschule Nordwestschweiz)
+    Anthony Hu (wolfSSL)
 
 ## Acknowledgments
 
