@@ -12,9 +12,10 @@ Execute this command to open the wireshark window on your host:
 
     docker run --net=host --privileged --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" openquantumsafe/wireshark
 
-*Note:* Select a network interface to monitor.
+Then proceed [using wireshark as usual](https://www.wireshark.org/docs/), e.g., by selecting a network interface to monitor/dissect.
 
-You may need to grant permissions for Docker to access the X display:
+*Note*: You may need to grant permissions for Docker to access the X display:
+
     xhost +si:localuser:$USER
 
 ## Suggested test

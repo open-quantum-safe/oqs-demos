@@ -35,10 +35,10 @@ RUN apt install -y gcc g++ \
             libssh-dev
 
 # Get the source and unpack it.
-WORKDIR /opt
+WORKDIR /tmp
 RUN curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/wireshark-${WIRESHARK_VERSION}.tar.xz && tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
 
-WORKDIR /opt/wireshark-${WIRESHARK_VERSION} 
+WORKDIR /tmp/wireshark-${WIRESHARK_VERSION} 
 
 COPY wolfssl-qsc.h wolfssl-qsc.h
 
@@ -60,6 +60,15 @@ RUN cp qsc.h epan/dissectors && \
    sed -i "s/    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\//    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\/\nQSC_KEMS/g" epan/dissectors/packet-tls-utils.c
 
 # Build wireshark
-RUN mkdir -p build && cd build && cmake -GNinja .. && ninja && ninja install
+RUN mkdir -p build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/wireshark .. && ninja && ninja install
 
-CMD wireshark
+FROM ubuntu
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt update && apt upgrade -y && apt install -y qt5-default libc-ares2 libqt5multimedia5 pcaputils libssh-dev
+
+# Only retain the ${INSTALLDIR} contents in the final image
+COPY --from=intermediate /opt/wireshark /opt/wireshark
+
+
+CMD /opt/wireshark/bin/wireshark
