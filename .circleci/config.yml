@@ -35,7 +35,7 @@ jobs:
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . 
           working_directory: openssl3
       - run:
-          name: (Spot-)Test Provider: One baseline and one hybrid QSC alg
+          name: Spot-test Provider -- One baseline and one hybrid QSC alg
           command: |
             docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt" &&
             docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "KEM_ALG=p521_frodo1344aes /opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/oqssa/bin/CA.crt"
