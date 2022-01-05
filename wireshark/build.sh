@@ -40,7 +40,7 @@ sudo apt install -y gcc \
             libssh-dev
 
 # Get the source and unpack it.
-curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/wireshark-${WIRESHARK_VERSION}.tar.xz
+curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/all-versions/wireshark-${WIRESHARK_VERSION}.tar.xz
 rm -rf wireshark-${WIRESHARK_VERSION}
 tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
 

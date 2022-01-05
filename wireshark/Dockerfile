@@ -36,7 +36,7 @@ RUN apt install -y gcc g++ \
 
 # Get the source and unpack it.
 WORKDIR /tmp
-RUN curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/wireshark-${WIRESHARK_VERSION}.tar.xz && tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
+RUN curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/all-versions/wireshark-${WIRESHARK_VERSION}.tar.xz && tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
 
 WORKDIR /tmp/wireshark-${WIRESHARK_VERSION} 
 
