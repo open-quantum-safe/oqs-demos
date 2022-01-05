@@ -16,7 +16,7 @@ If you built the docker image yourself following the instructions [here](https:/
 
         docker exec --user oqs -it oqs-openssh-server ssh oqs@localhost
 
-3. Accept the host key and authenticate with the default password `oqs.pw`
+3. Accept the host key and authenticate with the default password `Pa55W0rd`
 
 4. To clean up, exit the ssh session with `exit` and run
 
@@ -48,7 +48,7 @@ To easily connect from one container to another, we can make use of the docker's
         
         docker run --rm -it --net oqs-openssh-net openquantumsafe/openssh ssh oqs@oqs-openssh-server
 
-   type `yes` to add the host to the `known_hosts` and authenticate the user `oqs` with its default password `oqs.pw`.
+   type `yes` to add the host to the `known_hosts` and authenticate the user `oqs` with its default password `Pa55W0rd`.
 
 Congratulations, you just connected from one docker container to another in a quantum safe manner! To use this in a more practical setting, see how to use docker to quantum safely connect to a remote host in section **Using oqs-ssh for quantum safe remote access with minimal intrusion** down below.
 
