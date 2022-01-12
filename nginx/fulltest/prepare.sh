@@ -19,6 +19,6 @@ rm -rf ${NGINX_INSTALL_DIR}/pki
 cp -R pki ${NGINX_INSTALL_DIR}
 cp root/CA.crt ${NGINX_INSTALL_DIR}/html
 cp interop.conf ${NGINX_INSTALL_DIR}
-cp index-base.html ${NGINX_INSTALL_DIR}/html
+cp *.html ${NGINX_INSTALL_DIR}/html
 cp success.htm ${NGINX_INSTALL_DIR}/html/success.html
 echo "start up nginx with 'nginx -c interop.conf'"

@@ -8,6 +8,7 @@ import json
 
 # This is where the explanation HTML code is
 TEMPLATE_FILE="index-template"
+CHROMIUM_TEMPLATE_FILE="chromium-template"
 
 # This is where nginx is (to be) installed
 BASEPATH="/opt/nginx/"
@@ -34,6 +35,8 @@ CAROOTDIR="root"
 # This is the file containing the SIG/KEM/port assignments
 ASSIGNMENT_FILE="assignments.json"
 
+# The list of chromium-supported KEMs:
+chromium_algs = ["p256_bikel1", "p256_frodo640aes", "p256_kyber90s512", "p256_ntru_hps2048509", "p256_lightsaber", "p256_sidhp434", "p256_sikep434"]
 
 ############# Functions starting here
 
@@ -80,7 +83,7 @@ def gen_cert(sig_alg):
                                   '-extensions', 'v3_req',
                                   '-days', '365'])
 
-def write_nginx_config(f, i, port, sig, k):
+def write_nginx_config(f, i, cf, port, sig, k):
            f.write("server {\n")
            f.write("    listen              0.0.0.0:"+str(port)+" ssl;\n\n")
            f.write("    server_name         "+TESTFQDN+";\n")
@@ -98,22 +101,32 @@ def write_nginx_config(f, i, port, sig, k):
            f.write("            root   html;\n")
            f.write("            index  success.html;\n")
            f.write("    }\n\n")
+
+           f.write("}\n\n")
            # activate for more boring links-only display:
            #i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
+           #if k in chromium_algs:
+           #   cf.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
 
            # deactivate if you don't like tables:
            i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
+           if k in chromium_algs:
+               cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
-           f.write("}\n\n")
 
 # generates nginx config
-def gen_conf(filename, indexbasefilename):
+def gen_conf(filename, indexbasefilename, chromiumfilename):
    port = STARTPORT
    assignments={}
    i = open(indexbasefilename, "w")
+   cf = open(chromiumfilename, "w")
+   # copy baseline templates
    with open(TEMPLATE_FILE, "r") as tf:
      for line in tf:
        i.write(line)
+   with open(CHROMIUM_TEMPLATE_FILE, "r") as ctf:
+     for line in ctf:
+       cf.write(line)
 
    with open(filename, "w") as f:
      # baseline config
@@ -155,20 +168,22 @@ def gen_conf(filename, indexbasefilename):
      for sig in common.signatures:
         assignments[sig]={}
         assignments[sig]["*"]=port
-        write_nginx_config(f, i, port, sig, "*")
+        write_nginx_config(f, i, cf, port, sig, "*")
         port = port+1
         for kex in common.key_exchanges:
            # replace oqs_kem_default with X25519:
            k = "X25519" if kex=='oqs_kem_default' else kex
-           write_nginx_config(f, i, port, sig, k)
+           write_nginx_config(f, i, cf, port, sig, k)
            assignments[sig][k]=port
            port = port+1
      f.write("}\n")
    # deactivate if you don't like tables:
    i.write("</table>\n")
-
    i.write("</body></html>\n")
    i.close()
+   cf.write("</table>\n")
+   cf.write("</body></html>\n")
+   cf.close()
    with open(ASSIGNMENT_FILE, 'w') as outfile:
       json.dump(assignments, outfile)
 
@@ -176,7 +191,7 @@ def main():
    # first generate certs for all supported sig algs:
    for sig in common.signatures:
       gen_cert(sig)
-   # now do conf and index-base file
-   gen_conf("interop.conf", "index-base.html")
+   # now do conf and HTML files
+   gen_conf("interop.conf", "index-base.html", "chromium-base.html")
 
 main()
