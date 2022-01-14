@@ -48,7 +48,7 @@ tr:nth-child(even) {
 <ol>
 <li>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/openssl#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</li>
 
-<li>When using the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium">OQS-enabled Chromium build</a> to access this web site, be aware of the limitations concerning supported algorithms as documented <a href="https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes">here</a>. Therefore, only the following hybrid algorithms will work: P256_BIKEL1, P256_FRODO640AES, P256_KYBER90S512, P256_NTRU_HPS2048509, P256_LIGHTSABER, P256_SIDHP434, P256_SIKEP434.</li>
+<li>When using the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium">OQS-enabled Chromium build</a> to access this web site, be aware of the limitations concerning supported algorithms as documented <a href="https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes">here</a>. Therefore, only the following hybrid algorithms will work: P256_BIKEL1, P256_FRODO640AES, P256_KYBER90S512, P256_NTRU_HPS2048509, P256_LIGHTSABER, P256_SIDHP434, P256_SIKEP434. Using the browser's search function ("CTRL-F") for these algorithm names on this page provides quick access to the ports running these algorithms. Alternatively, use the <a href="chromium-base.html">OQS-Chromium algorithm list page</a> to access these algorithms.</li>
 </ol>
 
 <h2> Certificates </h2>
@@ -77,7 +77,7 @@ tr:nth-child(even) {
 
 <h2> List of all supported QSC Signature / Key Exchange algorithms </h2>
 
-<p>The list below provides links to the entry points of all OQS signature / key exchange algorithm combinations supported. The port for each combination is also displayed explicitly in brackets.</p>
+<p>The list below provides links to the entry points of all OQS signature / key exchange algorithm combinations supported.</p>
 
 <p>For automated testing, a JSON file encoding all available SIG/KEM combinations and the respective ports where they can be found is <a href="assignments.json">available for download here</a>. <i>We explicitly want to warn that algorithm/port combinations are subject to change. Be sure to download the most current JSON file before testing.</i></p>
 

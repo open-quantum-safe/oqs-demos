@@ -13,7 +13,7 @@ ARG NGINX_PATH=/opt/nginx
 ARG SIG_ALG="dilithium3"
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.16.1
+ARG NGINX_VERSION=1.21.5
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 2"
