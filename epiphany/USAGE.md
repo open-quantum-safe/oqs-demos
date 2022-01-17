@@ -22,7 +22,7 @@ Execute this command to open the epiphany browser window on your host:
 
 Go to https://test.openquantumsafe.org where most quantum-safe algorithms that are still part of the NIST PQC competition are available for TLS interoperability testing.
 
-*Note:* By default, only the algorithms "p521_kyber1024:firesaber:p384_sikep610" are supported by the configuration built into this Docker image. This list can be arbitrarly extended by passing a colon-delimited list of all KEM algorithms supported by [OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange):
+*Note:* By default, only the algorithms "p521_kyber1024:firesaber:p384_sikep610" are supported by the configuration built into this Docker image. This list can be arbitrarly extended by passing a colon-delimited list of any of the KEM algorithms supported by [OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange):
 
     docker run --net=host --privileged --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" openquantumsafe/epiphany frodo640aes:sntrup761
 
