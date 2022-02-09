@@ -9,7 +9,7 @@ This fork: **OQS-OpenSSL-QUIC**, is in turn a fork of OQS-OpenSSL, which adds QU
 
 A demo for merging OQS-OpenSSL and quictls was originally manually built and [published](https://www.linkedin.com/pulse/quic-protocol-quantum-safe-cryptography-presenting-future-igor/) by [Igor Barshteyn](https://www.linkedin.com/in/igorbarshteyn/).
 
-It was then improved upon by Michael Baentsch of the Open Quantum Safe team to automate the build process (see the merge-oqs-openssl-quic.sh shell script in this fork) and to enable further testing of quantum-safe algorithms with the QUIC protocol, resulting in the present fork.
+It was then improved upon by Michael Baentsch of the Open Quantum Safe team to automate the build process (see the **merge-oqs-openssl-quic.sh** shell script in this folder) and to enable further testing of quantum-safe algorithms with the QUIC protocol, resulting in the present fork.
 
 Please [see the original README](https://github.com/open-quantum-safe/openssl#readme) for OQS-OpenSSL for additional information about using and configuring OQS-OpenSSL.
 
