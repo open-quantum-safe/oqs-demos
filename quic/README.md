@@ -13,7 +13,7 @@ It was then improved upon by Michael Baentsch of the Open Quantum Safe team to a
 
 Please [see the original README](https://github.com/open-quantum-safe/openssl#readme) for OQS-OpenSSL for additional information about using and configuring OQS-OpenSSL.
 
-Work to further experiment with the quantum-safe algorithms using the QUIC protocol is ongoing. Please use the "Issues" section for discussion. Questions, comments, corrections, improvements, and other contributions are welcome.
+Work to further experiment with the quantum-safe algorithms using the QUIC protocol is ongoing. Questions, comments, corrections, improvements, and other contributions are welcome.
 
 Thanks,
 
