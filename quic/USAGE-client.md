@@ -8,7 +8,7 @@ To limit the size of the docker image (and the amount of functionality to be tes
 
 ## Suggested use
 
-In order to interact with the [companion QSC-QUIC nginx image](https://hub.docker.com/repository/docker/openquantumsafe/nginxquic) the client shall be started within the same docker network:
+In order to interact with the [companion QSC-QUIC nginx image](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic) the client shall be started within the same docker network:
 
 ```
 docker run --network oqs-quic -it openquantumsafe/msquic-reach bash
