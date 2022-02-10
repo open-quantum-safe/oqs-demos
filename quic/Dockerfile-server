@@ -1,0 +1,56 @@
+FROM ubuntu:focal as builder
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+# All build prerequisites for the various software packages:
+RUN apt update && apt full-upgrade -y 
+RUN apt install build-essential iputils-ping vim git mercurial cmake gcc libtool libssl-dev make ninja-build unzip xsltproc doxygen python3-yaml libpcre3-dev libpcre3 zlib1g-dev locate net-tools python3-pip -y && pip3 install psutil
+
+WORKDIR /opt
+COPY merge-oqs-openssl-quic.sh /opt
+RUN /opt/merge-oqs-openssl-quic.sh mergeonly
+
+WORKDIR /opt
+#RUN git clone https://github.com/open-quantum-safe/liboqs.git && git clone https://github.com/igorbarshteyn/oqs-openssl-quic.git && hg clone -b quic https://hg.nginx.org/nginx-quic && cd nginx-quic
+RUN git clone https://github.com/open-quantum-safe/liboqs.git && hg clone -b quic https://hg.nginx.org/nginx-quic && cd nginx-quic
+
+# Make sure library runs on all CPUs:
+RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DOQS_DIST_BUILD=ON -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
+
+WORKDIR /opt
+RUN cd oqs-openssl-quic && ./Configure '-Wl,--enable-new-dtags,-rpath,$(LIBRPATH)' no-shared linux-x86_64 -lm && make -j 2 && make install_sw 
+
+WORKDIR /opt
+
+# only change required for nginx: insert liboqs as link library:
+RUN cd nginx-quic && ./auto/configure --with-debug --with-http_v3_module --with-openssl=/opt/oqs-openssl-quic  && sed -i "s/-ldl -lpthread -lz/\/opt\/oqs-openssl-quic\/.openssl\/lib\/liboqs.a -ldl -lpthread -lz/g" objs/Makefile && make && make install && cp /opt/oqs-openssl-quic/apps/openssl.cnf /opt/oqs-openssl-quic/.openssl
+
+COPY ext-csr.conf /opt
+COPY genconfig.py /opt
+#COPY common.py /opt
+RUN cp /opt/oqs-openssl-quic/oqs-test/common.py /opt
+
+# generate root and all server certs
+WORKDIR /opt
+RUN mkdir certs && python3 genconfig.py && mkdir /usr/local/nginx/certs && cp certs/* /usr/local/nginx/certs && cp oqs-nginx.conf /usr/local/nginx/conf && cp assignments.json /usr/local/nginx/html && cp root/CA.crt /usr/local/nginx/html
+
+FROM ubuntu:focal 
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && apt install -y python3 python3-psutil
+
+COPY --from=builder /opt/oqs-openssl-quic/.openssl /opt/oqs-openssl-quic/.openssl
+COPY --from=builder /usr/local/nginx /usr/local/nginx
+COPY --from=builder /opt/root/CA.crt /opt/root/CA.crt 
+COPY --from=builder /opt/assignments.json /opt/assignments.json 
+COPY --from=builder /opt/common.py /opt/common.py
+COPY recert.sh /opt
+COPY serverstart.sh /opt
+COPY ext-csr.conf /opt
+COPY genconfig.py /opt
+
+
+CMD ["/opt/serverstart.sh"]

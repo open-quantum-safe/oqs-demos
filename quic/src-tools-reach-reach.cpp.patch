@@ -1,0 +1,70 @@
+diff --git a/src/tools/reach/reach.cpp b/src/tools/reach/reach.cpp
+index 2522c0d7..81dabe73 100644
+--- a/src/tools/reach/reach.cpp
++++ b/src/tools/reach/reach.cpp
+@@ -30,6 +30,9 @@ HQUIC Registration;
+ struct ConnectionContext {
+     bool GotConnected;
+     uint32_t QuicVersion;
++    uint32_t HandshakeInitialFlight;
++    uint32_t HandshakeFlight;
++    uint32_t HandshakeBytes;
+     CXPLAT_EVENT Complete;
+ };
+ 
+@@ -47,6 +50,19 @@ ConnectionHandler(
+     switch (Event->Type) {
+     case QUIC_CONNECTION_EVENT_CONNECTED: {
+         Context->GotConnected = true;
++        QUIC_STATISTICS value = {};
++        uint32_t valueSize = sizeof(value);
++        QUIC_STATUS Status =
++            MsQuic->GetParam(
++                Connection,
++                QUIC_PARAM_CONN_STATISTICS_PLAT,
++                &valueSize,
++                &value);
++        if (!QUIC_FAILED(Status)) {
++            Context->HandshakeInitialFlight = value.Timing.InitialFlightEnd - value.Timing.Start;
++            Context->HandshakeFlight = value.Timing.HandshakeFlightEnd - value.Timing.Start;
++           Context->HandshakeBytes = value.Handshake.ClientFlight1Bytes;
++        }
+         MsQuic->ConnectionShutdown(Connection, QUIC_CONNECTION_SHUTDOWN_FLAG_NONE, 0);
+         uint32_t Size = sizeof(Context->QuicVersion);
+         MsQuic->GetParam(Connection, QUIC_PARAM_CONN_QUIC_VERSION, &Size, &Context->QuicVersion);
+@@ -89,7 +105,7 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
+ 
+     QUIC_CREDENTIAL_CONFIG CredConfig;
+     CxPlatZeroMemory(&CredConfig, sizeof(CredConfig));
+-    CredConfig.Flags = QUIC_CREDENTIAL_FLAG_CLIENT; // TODO - Disable certificate validation?
++    CredConfig.Flags = QUIC_CREDENTIAL_FLAG_CLIENT | QUIC_CREDENTIAL_FLAG_USE_TLS_BUILTIN_CERTIFICATE_VALIDATION; // rely on OpenSSL default cert validation
+ 
+     if (QUIC_FAILED(MsQuic->ConfigurationLoadCredential(Configuration, &CredConfig))) {
+         printf("ConfigurationOpen failed.\n");
+@@ -121,6 +137,9 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
+ 
+     if (Context.GotConnected) {
+         printf("  0x%08x %12s    reachable\n", Context.QuicVersion, (char*)_Alpn);
++        printf("QUIC_STATISTICS InitialFlight: %d\n", Context.HandshakeInitialFlight);
++        printf("QUIC_STATISTICS HandshakeFlight: %d\n", Context.HandshakeFlight);
++       printf("QUIC_STATISTICS Handshake Bytes: %d\n", Context.HandshakeBytes);
+     } else {
+         printf("             %12s  unreachable\n", (char*)_Alpn);
+     }
+@@ -221,6 +240,14 @@ main(int argc, char **argv)
+         CxPlatThreadDelete(&Thread);
+     }
+ 
++    uint64_t Counters[QUIC_PERF_COUNTER_MAX];
++    uint32_t BufferLength = sizeof(Counters);
++    MsQuic->GetParam( NULL, QUIC_PARAM_GLOBAL_PERF_COUNTERS, &BufferLength, Counters);
++    printf("QUIC_PERF_COUNTER_UDP_RECV: %ld\n", Counters[QUIC_PERF_COUNTER_UDP_RECV]);
++    printf("QUIC_PERF_COUNTER_UDP_SEND: %ld\n", Counters[QUIC_PERF_COUNTER_UDP_SEND]);
++    printf("QUIC_PERF_COUNTER_UDP_RECV_BYTES: %ld\n", Counters[QUIC_PERF_COUNTER_UDP_RECV_BYTES]);
++    printf("QUIC_PERF_COUNTER_UDP_SEND_BYTES: %ld\n", Counters[QUIC_PERF_COUNTER_UDP_SEND_BYTES]);
++
+     MsQuic->RegistrationClose(Registration);
+ 
+     MsQuicClose(MsQuic);
+
+
