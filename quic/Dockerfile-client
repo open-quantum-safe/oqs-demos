@@ -38,7 +38,7 @@ RUN patch /root/msquic/src/inc/CMakeLists.txt < /root/msquic/src-inc-CMakeLists.
 COPY src-tools-reach-reach.cpp.patch /root/msquic
 RUN patch /root/msquic/src/tools/reach/reach.cpp < /root/msquic/src-tools-reach-reach.cpp.patch
 
-# patch to allow external setting of client groups via SSL_DEFAULT_GROUPS env var:
+# patch to allow external setting of client groups via TLS_DEFAULT_GROUPS env var:
 COPY src-platform-tls_openssl.c.patch /root/msquic
 RUN patch /root/msquic/src/platform/tls_openssl.c < /root/msquic/src-platform-tls_openssl.c.patch
 
@@ -49,7 +49,7 @@ RUN pwsh /root/msquic/scripts/build.ps1 -Config Debug -Arch x64 -Tls openssl
 #RUN pwsh /root/msquic/scripts/test.ps1
 
 # Do a baseline handshake against quic.nginx.org
-RUN /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:quic.nginx.org -alpn:h3
+RUN /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:quic.nginx.org -alpn:h3 -errorexitonunreachability:1
 
 
 # Just install the bare minimum to run reachability test
@@ -67,10 +67,10 @@ COPY --from=builder /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach
 COPY reach.sh /root/reach.sh
 COPY testrun.py /root/testrun.py
 COPY fulltest.sh /root/fulltest.sh
-#
+
 RUN echo "export PATH=/root/msquic/artifacts/bin/linux/x64_Debug_openssl/:$PATH" >> /root/.bashrc
 
-# set SSL_DEFAULT_GROUPS env var to OQS group to be tested; default/unset: classic groups
+# set TLS_DEFAULT_GROUPS env var to OQS group to be tested; default/unset: classic groups
 # be sure to match OQS_PORT env var (default: 8443)
 CMD /root/reach.sh
 

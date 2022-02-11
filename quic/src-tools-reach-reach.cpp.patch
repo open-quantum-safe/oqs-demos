@@ -1,8 +1,16 @@
 diff --git a/src/tools/reach/reach.cpp b/src/tools/reach/reach.cpp
-index 2522c0d7..81dabe73 100644
+index 2522c0d7..55f35709 100644
 --- a/src/tools/reach/reach.cpp
 +++ b/src/tools/reach/reach.cpp
-@@ -30,6 +30,9 @@ HQUIC Registration;
+@@ -23,6 +23,7 @@ QUIC_ADDR ServerAddress = {0};
+ std::vector<const char*> ALPNs({ "h3", "h3-29", "hq-interop", "hq-29", "smb" });
+ const char* InputAlpn = nullptr;
+ uint32_t InputVersion = 0;
++uint32_t ErrorExitOnUnreachability = 0;
+ 
+ const QUIC_API_TABLE* MsQuic;
+ HQUIC Registration;
+@@ -30,6 +31,9 @@ HQUIC Registration;
  struct ConnectionContext {
      bool GotConnected;
      uint32_t QuicVersion;
@@ -12,7 +20,7 @@ index 2522c0d7..81dabe73 100644
      CXPLAT_EVENT Complete;
  };
  
-@@ -47,6 +50,19 @@ ConnectionHandler(
+@@ -47,6 +51,19 @@ ConnectionHandler(
      switch (Event->Type) {
      case QUIC_CONNECTION_EVENT_CONNECTED: {
          Context->GotConnected = true;
@@ -32,7 +40,7 @@ index 2522c0d7..81dabe73 100644
          MsQuic->ConnectionShutdown(Connection, QUIC_CONNECTION_SHUTDOWN_FLAG_NONE, 0);
          uint32_t Size = sizeof(Context->QuicVersion);
          MsQuic->GetParam(Connection, QUIC_PARAM_CONN_QUIC_VERSION, &Size, &Context->QuicVersion);
-@@ -89,7 +105,7 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
+@@ -89,7 +106,7 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
  
      QUIC_CREDENTIAL_CONFIG CredConfig;
      CxPlatZeroMemory(&CredConfig, sizeof(CredConfig));
@@ -41,7 +49,7 @@ index 2522c0d7..81dabe73 100644
  
      if (QUIC_FAILED(MsQuic->ConfigurationLoadCredential(Configuration, &CredConfig))) {
          printf("ConfigurationOpen failed.\n");
-@@ -121,6 +137,9 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
+@@ -121,8 +138,12 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
  
      if (Context.GotConnected) {
          printf("  0x%08x %12s    reachable\n", Context.QuicVersion, (char*)_Alpn);
@@ -50,8 +58,28 @@ index 2522c0d7..81dabe73 100644
 +       printf("QUIC_STATISTICS Handshake Bytes: %d\n", Context.HandshakeBytes);
      } else {
          printf("             %12s  unreachable\n", (char*)_Alpn);
++       if (ErrorExitOnUnreachability) exit(ErrorExitOnUnreachability);
      }
-@@ -221,6 +240,14 @@ main(int argc, char **argv)
+ 
+     CXPLAT_THREAD_RETURN(0);
+@@ -140,7 +161,7 @@ main(int argc, char **argv)
+             !strcmp(argv[1], "/?") ||
+             !strcmp(argv[1], "help")
+         )) {
+-        printf("Usage: quicreach.exe [-server:<name>] [-ip:<ip>] [-port:<number>] [-alpn:<alpn>] [-version:<quic_version>]\n");
++        printf("Usage: quicreach.exe [-server:<name>] [-ip:<ip>] [-port:<number>] [-alpn:<alpn>] [-version:<quic_version>] [-errorexitonunreachability:<exitvalue>]\n");
+         exit(1);
+     }
+ 
+@@ -149,6 +170,7 @@ main(int argc, char **argv)
+     TryGetValue(argc, argv, "port", &Port);
+     TryGetValue(argc, argv, "alpn", &InputAlpn);
+     TryGetValue(argc, argv, "version", &InputVersion);
++    TryGetValue(argc, argv, "errorexitonunreachability", &ErrorExitOnUnreachability);
+ 
+     CxPlatSystemLoad();
+     CxPlatInitialize();
+@@ -221,6 +243,14 @@ main(int argc, char **argv)
          CxPlatThreadDelete(&Thread);
      }
  

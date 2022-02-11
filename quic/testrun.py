@@ -22,7 +22,7 @@ for sig in assignments:
        cmd = "./reach.sh"
        env = os.environ.copy()
        env["OQS_QUIC_PORT"] = str(assignments[sig][kem])
-       env["SSL_DEFAULT_GROUPS"] = kem
+       env["TLS_DEFAULT_GROUPS"] = kem
        run = subprocess.run(cmd.split(" "),env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
        outstr = run.stdout.decode()
        #print(outstr)
