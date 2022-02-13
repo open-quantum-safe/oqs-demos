@@ -41,7 +41,7 @@ tr:nth-child(even) {
 
 <p>These specifications should not be taken as a standard, de facto and otherwise, and are subject to change at any time.</p>
 
-<p>Use the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium">OQS-enabled Chromium build</a> to access this web page. As per the limitations concerning supported algorithms as documented <a href="https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes">here</a>, only the algorithm combinations listed below will function (P256_BIKEL1, P256_FRODO640AES, P256_KYBER90S512, P256_NTRU_HPS2048509, P256_LIGHTSABER, P256_SIDHP434, P256_SIKEP434).
+<p>Use the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium">OQS-enabled Chromium build</a> to access this web page. As per the limitations concerning supported algorithms as documented <a href="https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes">here</a>, only the KEM algorithm combinations listed below will function (P256_BIKEL1, P256_FRODO640AES, P256_KYBER90S512, P256_NTRU_HPS2048509, P256_LIGHTSABER, P256_SIDHP434, P256_SIKEP434) and no hybrid signature algorithms are supported.
 
 <p>More details are available at <a href="https://github.com/open-quantum-safe/openssl/wiki/Integrating-PQC-into-TLS-1.3">Github</a>.</p>
 
