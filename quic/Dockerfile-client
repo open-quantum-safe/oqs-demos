@@ -38,10 +38,6 @@ RUN patch /root/msquic/src/inc/CMakeLists.txt < /root/msquic/src-inc-CMakeLists.
 COPY src-tools-reach-reach.cpp.patch /root/msquic
 RUN patch /root/msquic/src/tools/reach/reach.cpp < /root/msquic/src-tools-reach-reach.cpp.patch
 
-# patch to allow external setting of client groups via TLS_DEFAULT_GROUPS env var:
-COPY src-platform-tls_openssl.c.patch /root/msquic
-RUN patch /root/msquic/src/platform/tls_openssl.c < /root/msquic/src-platform-tls_openssl.c.patch
-
 # so, let's build using powershell:
 RUN pwsh /root/msquic/scripts/build.ps1 -Config Debug -Arch x64 -Tls openssl
 
