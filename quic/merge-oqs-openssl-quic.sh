@@ -22,8 +22,10 @@ TARGETDIR=`pwd`
 # define known-good OSSL111 tags that may be merged: Change this only when you have
 # confirmed both OpenSSL forks, quictls and oqs-openssl have integrated a specific
 # upstream tag (1.1.1m in this case):
-OQS_OPENSSL_TAG=OQS-OpenSSL-1_1_1-stable-snapshot-2022-01
 QUIC_OPENSSL_TAG=OpenSSL_1_1_1m+quic
+# known to work: OQS_OPENSSL_TAG=OQS-OpenSSL-1_1_1-stable-snapshot-2022-01
+# use "master" to get latest code:
+OQS_OPENSSL_TAG=OQS-OpenSSL_1_1_1-stable
 
 
 # Clone required repositories: OQS-OpenSSL, liboqs and quictls-OpenSSL
