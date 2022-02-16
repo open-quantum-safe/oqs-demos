@@ -27,7 +27,7 @@ Note: You might have to install `ninja` if not already done, e.g., by running `s
 
 Note: If you want to execute the resulting binaries on another machine, be sure to also pass [-DOQS_DIST_BUILD=ON](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs#oqs_dist_build) to the `cmake` command above to obtain code running on all machines of the same architecture type.
 
-5. After successfully installing liboqs as per the above, navigate to `<CHROMIUM_ROOT>` and apply the `chromium100.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `third_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
+5. After successfully installing liboqs as per the above, navigate to `<CHROMIUM_ROOT>` and apply the `oqs-changes.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `third_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
 
 Note: For this to succeed, you might have to install go if not already present on your machine, e.g., by running `sudo apt install golang-go`. If _any_ error occurs in this step, Chromium will build fine, just without support for quantum-safe crypto, i.e., only the final testing steps below will fail.
 
