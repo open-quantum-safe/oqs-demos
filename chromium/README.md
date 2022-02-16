@@ -6,7 +6,7 @@ Further be aware that both cloning the source code as well as building Chromium 
 
 1. To obtain the source code, follow the instructions in the "Install depot_tools" and "Get the code" sections [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install). Note: Do *not* set `--no-history` to save time as you need git history in the next step.
 
-2. Navigate to the root directory of the source code, which we will refer to hereafter as `<CHROMIMUM_ROOT>`, and run `git checkout 94.0.4602.0`, which is the latest tag for which we have verified the build instructions. Then, to ensure that all of chromium's third party dependencies are compatible with this tag, run `gclient sync`.
+2. Navigate to the root directory of the source code, which we will refer to hereafter as `<CHROMIMUM_ROOT>`, and run `git checkout 100.0.4856.2`, which is the latest tag for which we have verified the build instructions. Then, to ensure that all of chromium's third party dependencies are compatible with this tag, run `gclient sync`.
 
 *Note*: Depending on the OS version installed, you may have to install python2, e.g., using `sudo apt install -y python2`, and ensure it's set as the system default, e.g., via `sudo ln -s /usr/bin/python2 /usr/bin/python`.
 
@@ -27,7 +27,7 @@ Note: You might have to install `ninja` if not already done, e.g., by running `s
 
 Note: If you want to execute the resulting binaries on another machine, be sure to also pass [-DOQS_DIST_BUILD=ON](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs#oqs_dist_build) to the `cmake` command above to obtain code running on all machines of the same architecture type.
 
-5. After successfully installing liboqs as per the above, navigate to `<CHROMIUM_ROOT>` and apply the `chromium94.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `third_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
+5. After successfully installing liboqs as per the above, navigate to `<CHROMIUM_ROOT>` and apply the `oqs-changes.patch` file provided here by running `git apply <PATH_TO_PATCH_FILE>`. Then, navigate to `third_party/boringssl`, and run `python src/util/generate_build_files.py gn`.
 
 Note: For this to succeed, you might have to install go if not already present on your machine, e.g., by running `sudo apt install golang-go`. If _any_ error occurs in this step, Chromium will build fine, just without support for quantum-safe crypto, i.e., only the final testing steps below will fail.
 
