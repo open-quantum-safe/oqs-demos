@@ -1,8 +1,8 @@
 diff --git a/src/tools/reach/reach.cpp b/src/tools/reach/reach.cpp
-index 2522c0d7..55f35709 100644
+index 178eeea5..054004c1 100644
 --- a/src/tools/reach/reach.cpp
 +++ b/src/tools/reach/reach.cpp
-@@ -23,6 +23,7 @@ QUIC_ADDR ServerAddress = {0};
+@@ -25,6 +25,7 @@ QUIC_ADDR ServerAddress = {0};
  std::vector<const char*> ALPNs({ "h3", "h3-29", "hq-interop", "hq-29", "smb" });
  const char* InputAlpn = nullptr;
  uint32_t InputVersion = 0;
@@ -10,7 +10,7 @@ index 2522c0d7..55f35709 100644
  
  const QUIC_API_TABLE* MsQuic;
  HQUIC Registration;
-@@ -30,6 +31,9 @@ HQUIC Registration;
+@@ -32,6 +33,9 @@ HQUIC Registration;
  struct ConnectionContext {
      bool GotConnected;
      uint32_t QuicVersion;
@@ -20,7 +20,7 @@ index 2522c0d7..55f35709 100644
      CXPLAT_EVENT Complete;
  };
  
-@@ -47,6 +51,19 @@ ConnectionHandler(
+@@ -49,6 +53,20 @@ ConnectionHandler(
      switch (Event->Type) {
      case QUIC_CONNECTION_EVENT_CONNECTED: {
          Context->GotConnected = true;
@@ -29,6 +29,7 @@ index 2522c0d7..55f35709 100644
 +        QUIC_STATUS Status =
 +            MsQuic->GetParam(
 +                Connection,
++               QUIC_PARAM_LEVEL_CONNECTION,
 +                QUIC_PARAM_CONN_STATISTICS_PLAT,
 +                &valueSize,
 +                &value);
@@ -39,8 +40,8 @@ index 2522c0d7..55f35709 100644
 +        }
          MsQuic->ConnectionShutdown(Connection, QUIC_CONNECTION_SHUTDOWN_FLAG_NONE, 0);
          uint32_t Size = sizeof(Context->QuicVersion);
-         MsQuic->GetParam(Connection, QUIC_PARAM_CONN_QUIC_VERSION, &Size, &Context->QuicVersion);
-@@ -89,7 +106,7 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
+         MsQuic->GetParam(Connection, QUIC_PARAM_LEVEL_CONNECTION, QUIC_PARAM_CONN_QUIC_VERSION, &Size, &Context->QuicVersion);
+@@ -91,7 +109,7 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
  
      QUIC_CREDENTIAL_CONFIG CredConfig;
      CxPlatZeroMemory(&CredConfig, sizeof(CredConfig));
@@ -49,7 +50,7 @@ index 2522c0d7..55f35709 100644
  
      if (QUIC_FAILED(MsQuic->ConfigurationLoadCredential(Configuration, &CredConfig))) {
          printf("ConfigurationOpen failed.\n");
-@@ -121,8 +138,12 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
+@@ -123,8 +141,12 @@ CXPLAT_THREAD_CALLBACK(TestReachability, _Alpn)
  
      if (Context.GotConnected) {
          printf("  0x%08x %12s    reachable\n", Context.QuicVersion, (char*)_Alpn);
@@ -62,7 +63,7 @@ index 2522c0d7..55f35709 100644
      }
  
      CXPLAT_THREAD_RETURN(0);
-@@ -140,7 +161,7 @@ main(int argc, char **argv)
+@@ -214,7 +236,7 @@ main(int argc, char **argv)
              !strcmp(argv[1], "/?") ||
              !strcmp(argv[1], "help")
          )) {
@@ -71,7 +72,7 @@ index 2522c0d7..55f35709 100644
          exit(1);
      }
  
-@@ -149,6 +170,7 @@ main(int argc, char **argv)
+@@ -223,6 +245,7 @@ main(int argc, char **argv)
      TryGetValue(argc, argv, "port", &Port);
      TryGetValue(argc, argv, "alpn", &InputAlpn);
      TryGetValue(argc, argv, "version", &InputVersion);
@@ -79,13 +80,13 @@ index 2522c0d7..55f35709 100644
  
      CxPlatSystemLoad();
      CxPlatInitialize();
-@@ -221,6 +243,14 @@ main(int argc, char **argv)
+@@ -302,6 +325,14 @@ main(int argc, char **argv)
          CxPlatThreadDelete(&Thread);
      }
  
 +    uint64_t Counters[QUIC_PERF_COUNTER_MAX];
 +    uint32_t BufferLength = sizeof(Counters);
-+    MsQuic->GetParam( NULL, QUIC_PARAM_GLOBAL_PERF_COUNTERS, &BufferLength, Counters);
++    MsQuic->GetParam( NULL, QUIC_PARAM_LEVEL_GLOBAL, QUIC_PARAM_GLOBAL_PERF_COUNTERS, &BufferLength, Counters);
 +    printf("QUIC_PERF_COUNTER_UDP_RECV: %ld\n", Counters[QUIC_PERF_COUNTER_UDP_RECV]);
 +    printf("QUIC_PERF_COUNTER_UDP_SEND: %ld\n", Counters[QUIC_PERF_COUNTER_UDP_SEND]);
 +    printf("QUIC_PERF_COUNTER_UDP_RECV_BYTES: %ld\n", Counters[QUIC_PERF_COUNTER_UDP_RECV_BYTES]);
@@ -94,5 +95,4 @@ index 2522c0d7..55f35709 100644
      MsQuic->RegistrationClose(Registration);
  
      MsQuicClose(MsQuic);
-
 
