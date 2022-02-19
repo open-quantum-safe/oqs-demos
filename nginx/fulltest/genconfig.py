@@ -110,7 +110,7 @@ def write_nginx_config(f, i, cf, port, sig, k):
 
            # deactivate if you don't like tables:
            i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
-           if k in chromium_algs:
+           if k in chromium_algs and not ("_" in sig and (sig.startswith("p") or (sig.startswith("rsa")))):
                cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
 
