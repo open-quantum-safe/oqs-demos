@@ -24,7 +24,7 @@ Due to the large number of ports opened the server should be started this way in
 
 ```
    docker network create oqs-quic
-   docker run --ulimit nofile=5000:5000 --rm --network oqs-quic --name nginx -it openquantumsafe/nginxquic
+   docker run --ulimit nofile=5000:5000 --rm --network oqs-quic --name nginx -it openquantumsafe/nginx
 ```
 
 
@@ -33,7 +33,7 @@ Due to the large number of ports opened the server should be started this way in
 If the server is to be started on a host with the FQDN "quictest.sample.org" and exposing all QUIC ports, it should be started like this:
 
 ```
-   docker run --ulimit nofile=5000:5000 -e SERVER_FQDN=quictest.sample.org --rm --network=host -it openquantumsafe/nginxquic
+   docker run --ulimit nofile=5000:5000 -e SERVER_FQDN=quictest.sample.org --rm --network=host -it openquantumsafe/nginx
 ```
 
 As many certificates for the given SERVER_FQDN and thousands of ports are created, some time should be given to the server to become fully operational before accessing it with a client, e.g., the below:
