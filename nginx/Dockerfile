@@ -16,7 +16,7 @@ ARG SIG_ALG="dilithium3"
 ARG NGINX_VERSION=1.21.5
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j 2"
+ARG MAKE_DEFINES="-j 18"
 
 
 FROM alpine:3.13 as intermediate
@@ -54,7 +54,7 @@ RUN ./configure --prefix=${NGINX_PATH} \
                 --with-http_ssl_module --with-openssl=${OPENSSL_PATH} \
                 --without-http_gzip_module \
                 --with-cc-opt=-I${OPENSSL_PATH}/oqs/include \
-                --with-ld-opt="-L${OPENSSL_PATH}/oqs/lib" && \
+                --with-ld-opt="-L${OPENSSL_PATH}/oqs/lib64" && \
     sed -i 's/libcrypto.a/libcrypto.a -loqs/g' objs/Makefile && \
     make ${MAKE_DEFINES} && make install;
 
