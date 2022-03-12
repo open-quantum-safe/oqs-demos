@@ -74,9 +74,6 @@ RUN ./configure --prefix=${HTTPD_PATH} \
 # prepare to run httpd
 ARG OPENSSL_CNF=/opt/ossl-src/apps/openssl.cnf
 
-# Set a default QSC signature algorithm from the list at https://github.com/open-quantum-safe/openssl#authentication
-ARG SIG_ALG=dilithium2
-
 WORKDIR ${HTTPD_PATH}
     # generate CA key and cert
     # generate server CSR
