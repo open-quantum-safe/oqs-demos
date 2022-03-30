@@ -22,8 +22,15 @@ docker run -v $OQS_DATA:/etc/openvpn --rm kylemanna/openvpn sh -c "ovpn_genconfi
 ##docker run -v $OQS_DATA:/etc/openvpn -d -p 1194:1194/udp --cap-add=NET_ADMIN kylemanna/openvpn
 
 # OQS server & test client:
+if [ -z "$1" ]; then
+# use default TLS_GROUPS
 docker run --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN oqs-openvpn 
 docker run --rm --name $OQS_CLIENT --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn --cap-add=NET_ADMIN -d oqs-openvpn clientstart.sh
+else
+# assume the first parameter to be (a list of) TLS_GROUPS to be utilized:
+docker run -e TLS_GROUPS=$1 --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN oqs-openvpn 
+docker run -e TLS_GROUPS=$1 --rm --name $OQS_CLIENT --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn --cap-add=NET_ADMIN -d oqs-openvpn clientstart.sh
+fi
 
 # Check that initialization went OK for both server and client:
 docker logs $OQS_SERVER | grep "Initialization Sequence Completed"

@@ -7,10 +7,10 @@ ARG INSTALLDIR=/opt/oqssa
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j 3"
+ARG MAKE_DEFINES="-j 4"
 
 # Default KEM algorithms to be utilized
-ARG KEM_ALGLIST="kyber512:kyber768"
+ARG KEM_ALGLIST="kyber768:p384_kyber768"
 
 FROM debian as intermediate
 # Take in all global args
@@ -60,10 +60,6 @@ RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_T
 # build openvpn based on OpenSSL3
 
 ENV OPENSSL3_DIR=${INSTALLDIR}
-
-# until https://github.com/OpenVPN/openvpn/pull/170 lands:
-COPY ssl_openssl.c.patch /opt/openvpn/src/openvpn/ssl_openssl.c.patch
-RUN patch /opt/openvpn/src/openvpn/ssl_openssl.c < /opt/openvpn/src/openvpn/ssl_openssl.c.patch
 
 WORKDIR /opt/openvpn
 

@@ -53,10 +53,16 @@ The last three commands clean up all data structures established.
 
 ## Advanced usage options
 
-The docker image has been pre-configured to use the quantum-safe crypto (QSC) algorithm family "Kyber" for key establishment but any plain or hybrid QSC algorithm [supported -- see list here](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange) can be selected. To do so, edit the file(s) `/opt/oqssa/bin/serverstart.sh` and `/opt/oqssa/bin/clientstart.sh` suitably as per the comments in those files. Alternatively, change the value for "Groups" in the OpenSSL configuration file `/opt/oqssa/ssl/openssl.cnf` to reflect the QSC KEM algorithm list to be used.
+The docker image has been pre-configured to use the quantum-safe crypto (QSC) algorithm family "Kyber" for key establishment but any plain or hybrid QSC algorithm [supported -- see list here](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange) can be selected. 
+
+### TLS_GROUPS
+
+In order to change the list of algorithms, simply set the environment variable "TLS_GROUPS" to a list of desired algorithms, e.g.:
+
+    docker run -e TLS_GROUPS=p384_frodo976aes:sikep610 --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN openquantumsafe/openvpn
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
 
 Most notably, the CA key is not protected by a password and thus accessible to anyone with access to the docker volume.

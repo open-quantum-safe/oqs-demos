@@ -237,6 +237,41 @@ jobs:
                   docker tag oqs-haproxy-img $TARGETNAME/haproxy:latest &&
                   docker push $TARGETNAME/haproxy:latest 
 
+  ubuntu_x64_openvpn:
+    description: Building OQS-based OpenVPN docker image
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build OpenVPN
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-openvpn . 
+          working_directory: openvpn
+      - run:
+          name: Test OpenVPN using local docker network
+          command: |
+            ./test.sh p521_ntru_hrss1373
+          working_directory: openvpn
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push OQS OpenVPN image
+                command: |
+                  docker tag oqs-openvpn $TARGETNAME/openvpn:latest &&
+                  docker push $TARGETNAME/openvpn:latest 
+
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
     docker:
@@ -280,6 +315,8 @@ workflows:
       - ubuntu_x64_httpd:
           context: openquantumsafe
       - ubuntu_x64_haproxy:
+          context: openquantumsafe
+      - ubuntu_x64_openvpn:
           context: openquantumsafe
       - ubuntu_x64_openssh:
           context: openquantumsafe
