@@ -38,4 +38,4 @@ The default is conservative and known not to overload normal machines. If one ha
 
 Defines the list of QSC KEM algorithms to be supported by default. This value is colon separated and inserted into the system-wide `openssl.cnf` configuration file defining the behaviour of the OpenSSL3 library embedded into the OpenVPN code base.
 
-The default value is "kyber512:kyber768". Any algorithm name(s) [supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange) can be chosen instead.
+The default value is "kyber768:p384_kyber768". Any algorithm name(s) [supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange) can be chosen instead.
