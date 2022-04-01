@@ -7,8 +7,11 @@
 ARG SOURCE_PATH="/usr/local/src"
 ARG OPENSSL_LIB_PATH="/usr/local/ssl"
 
-# define the QSC key exchange algorithm
-ARG KEM_ALG="kyber512"
+# liboqs build type variant; maximum portability of image:
+ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
+
+# openssl build defines (https://github.com/open-quantum-safe/openssl#build-options)
+ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=kyber512:X25519:p384_kyber768"
 
 # define the QSC signature algorithm used for the certificates
 ARG SIG_ALG="dilithium2"
@@ -33,13 +36,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG SOURCE_PATH
 ARG OPENSSL_LIB_PATH
-ARG KEM_ALG
-
-# Copy files from the local storage to a destination in the Docker image
-WORKDIR /
-RUN mkdir test
-ADD kem_list.txt /test
-RUN chmod 777 /test/* && sed -i 's/\r//' /test/*
+ARG LIBOQS_BUILD_DEFINES
+ARG OPENSSL_BUILD_DEFINES
 
 # Update image and install all prerequisites
 RUN apt update && apt install build-essential vim cmake gcc libtool libssl-dev make ninja-build git doxygen \
@@ -52,21 +50,18 @@ RUN git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/ope
 # Get and build liboqs, then install it into a subdirectory inside the OQS-OpenSSL folder
 RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git liboqs && \
     cd liboqs && mkdir build && cd build && \
-    cmake -GNinja -DCMAKE_INSTALL_PREFIX=$SOURCE_PATH/OQS-OpenSSL/oqs .. && \
+    cmake -GNinja $LIBOQS_BUILD_DEFINES -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$SOURCE_PATH/OQS-OpenSSL/oqs .. && \
     ninja && ninja install && echo "liboqs installed successfully" || exit 1
 
 # Build and install OQS-OpenSSL_1_1_1-stable
 WORKDIR $SOURCE_PATH/OQS-OpenSSL
 ## OS type: x86_64, aarch64
 RUN ./Configure shared linux-x86_64 -lm --prefix=$OPENSSL_LIB_PATH/ \
-        --openssldir=$OPENSSL_LIB_PATH/ -DOQS_DEFAULT_GROUPS=\"$KEM_ALG\"
+        --openssldir=$OPENSSL_LIB_PATH/ $OPENSSL_BUILD_DEFINES && \
+        make -j$(nproc) && make install && echo "OQS-OpenSSL installed successfully" || exit 1
 # RUN ./Configure shared no-asm linux-aarch64 -lm --prefix=$OPENSSL_LIB_PATH/ \
-#         --openssldir=$OPENSSL_LIB_PATH/ -DOQS_DEFAULT_GROUPS=\"$KEM_ALG\"
-
-# Let Mosquitto Client to support KEM algorithm
-RUN CP=`grep "\/\* $KEM_ALG \*\/" /test/kem_list.txt | awk '{print $1}'` && \
-    sed -i '/static const uint16_t eccurves_default/a\    '$CP'                      \/\* '$KEM_ALG' \*\/' ssl/t1_lib.c && \
-    make -j$(nproc) && make install && echo "OQS-OpenSSL installed successfully" || exit 1
+#         --openssldir=$OPENSSL_LIB_PATH/ $OPENSSL_BUILD_DEFINES && \
+#         make -j$(nproc) && make install && echo "OQS-OpenSSL installed successfully" || exit 1
 
 # Build and install Mosquitto
 WORKDIR $SOURCE_PATH
@@ -91,6 +86,9 @@ ENV SUB_IP=${SUB_IP}
 ARG EXAMPLE
 ENV EXAMPLE=${EXAMPLE}
 
+# Set the TLS_DEFAULT_GROUPS environment variable to permit selection of QSC KEMs(https://github.com/open-quantum-safe/openssl#build-options)
+ENV TLS_DEFAULT_GROUPS="kyber512"
+
 # Copy files from the local storage to a destination in the Docker image
 WORKDIR /
 RUN mkdir test
@@ -114,6 +112,9 @@ ENV LD_LIBRARY_PATH=$OPENSSL_LIB_PATH/lib
 
 # Set path 
 ENV PATH="/usr/local/bin:/usr/local/sbin:$OPENSSL_LIB_PATH/bin:$PATH"
+
+# Generate the CA key and the cert(default algorithm: dilithium5)
+RUN openssl req -x509 -new -newkey dilithium5 -keyout /test/CA.key -out /test/CA.crt -nodes -subj "/O=test-ca" -days 3650
 
 # MQTTS port 
 EXPOSE 8883

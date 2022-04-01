@@ -8,6 +8,18 @@ Thanks,
 
 --Chia-Chin Chung
 
+## Background
+
+[Eclipse Mosquitto](https://mosquitto.org) is an open source (EPL/EDL licensed) message broker that implements the MQTT protocol versions 5.0, 3.1.1 and 3.1. Mosquitto is lightweight and is suitable for use on all devices from low power single board computers to full servers.
+
+The MQTT protocol provides a lightweight method of carrying out messaging using a publish/subscribe model. This makes it suitable for Internet of Things messaging such as with low power sensors or mobile devices such as phones, embedded computers or microcontrollers.
+
+The following provides some introduction to Mosquitto:
+
+- Introduction: [Beginners Guide To The MQTT Protocol](http://www.steves-internet-guide.com/mqtt/)
+- Usage: [Mosquitto MQTT Broker](http://www.steves-internet-guide.com/mosquitto-broker/), [Using The Mosquitto_pub and Mosquitto_sub MQTT Client Tools- Examples](http://www.steves-internet-guide.com/mosquitto_pub-sub-clients/)
+- Man pages: [Mosquitto Man Pages](https://mosquitto.org/documentation/) 
+
 ## Getting started
 
 [Install Docker](https://docs.docker.com/install) and run the following simplified commands in this directory:
@@ -15,7 +27,7 @@ Thanks,
 1. `docker build -t oqs-mosquitto-img .` This will generate the image with a default QSC algorithm (key exchange: kyber512, authentication: dilithium2 -- see Dockerfile to change).
 2. `docker run -it --rm --name oqs-mosquitto -p 8883:8883 oqs-mosquitto-img`
 
-This will start a docker container that has mosquitto listening for TLS 1.3 connections on port 8883.
+This will start a docker container that has mosquitto MQTT broker listening for TLS 1.3 connections on port 8883.
 
 ## Usage
 
@@ -36,6 +48,18 @@ By default this is '/usr/local/src'.
 This defines the resultant location of the OQS-OpenSSL library installatiion.
 
 By default this is '/usr/local/ssl'.
+
+### LIBOQS_BUILD_DEFINES
+
+This permits changing the build options for the underlying library with the quantum safe algorithms. All possible options are documented [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).
+
+By default, the image is built such as to have maximum portability regardless of CPU type and optimizations available, i.e. to run on the widest possible range of cloud machines.
+
+### OPENSSL_BUILD_DEFINES
+
+This permits changing the build options for the underlying openssl library containing the quantum safe algorithms. 
+
+The default setting defines a range of default algorithms suggested for key exchange. For more information see [the documentation](https://github.com/open-quantum-safe/openssl#default-algorithms-announced).
 
 ### KEM_ALG
 

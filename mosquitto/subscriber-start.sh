@@ -15,7 +15,7 @@ openssl x509 -req -in /test/cert/subscriber.csr -out /test/cert/subscriber.crt -
 # modify file permissions
 chmod 777 cert/*
  
-# Execute the mosquitto MQTT subscriber
+# execute the mosquitto MQTT subscriber
 mosquitto_sub -h $BROKER_IP -t test/sensor1 -q 0 -i "Client_sub" -d -v \
 --tls-version tlsv1.3 --cafile /test/cert/CA.crt \
 --cert /test/cert/subscriber.crt --key /test/cert/subscriber.key
