@@ -32,7 +32,7 @@ docker run --network mosquitto-test --ip 172.18.0.4 -it --rm --name oqs-mosquitt
 
 According to these steps, we can do a simple MQTT test including a broker, a subscriber, and a publisher. If you want to do more experiments, you can use other options below.
 
-By the way, the docker image has already generated a CA certificate and a CA key at build time(default algorithm: 'dilithium5'). You can create the CA certificate and CA key yourself.
+By the way, the docker image has already generated a CA certificate and a CA key at build time. You can create the CA certificate and CA key yourself.
 
 ## Other usage options
 

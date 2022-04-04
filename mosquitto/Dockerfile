@@ -113,8 +113,8 @@ ENV LD_LIBRARY_PATH=$OPENSSL_LIB_PATH/lib
 # Set path 
 ENV PATH="/usr/local/bin:/usr/local/sbin:$OPENSSL_LIB_PATH/bin:$PATH"
 
-# Generate the CA key and the cert(default algorithm: dilithium5)
-RUN openssl req -x509 -new -newkey dilithium5 -keyout /test/CA.key -out /test/CA.crt -nodes -subj "/O=test-ca" -days 3650
+# Generate the CA key and the cert
+RUN openssl req -x509 -new -newkey $SIG_ALG -keyout /test/CA.key -out /test/CA.crt -nodes -subj "/O=test-ca" -days 3650
 
 # MQTTS port 
 EXPOSE 8883

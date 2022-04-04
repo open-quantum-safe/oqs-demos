@@ -22,6 +22,7 @@ Currently supported packages:
 | **Wireshark**    | [Github: oqs-demos/wireshark](wireshark)   | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                       |
 | **Epiphany**     | [Github: oqs-demos/epiphany](epiphany)   | [Dockerhub: openquantumsafe/epiphany](https://hub.docker.com/repository/docker/openquantumsafe/epiphany)                       |
 | **QUIC**         | [Github: oqs-demos/quic](quic)       | Dockerhub: [Server: openquantumsafe/nginx-quic](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic), [Client: openquantumsafe/msquic](https://hub.docker.com/repository/docker/openquantumsafe/msquic-reach)                       |
+| **Mosquitto**         | [Github: oqs-demos/mosquitto](mosquitto)       | Dockerhub: |
 
 You can use the openssl (s_client), curl, Chromium and GNOME Web/epiphany clients with the Open Quantum Safe test server at https://test.openquantumsafe.org/.
 
@@ -47,6 +48,7 @@ The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.st
     ISE @ FHNW (Fachhochschule Nordwestschweiz)
     Anthony Hu (wolfSSL)
     Igor Barshteyn
+    Chia-Chin Chung
 
 ## Acknowledgments
 
