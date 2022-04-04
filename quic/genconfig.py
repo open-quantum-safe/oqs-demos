@@ -1,42 +1,34 @@
 import common
 import os
 import json
-
-# Script assumes nginx to have been built for this platform using build-ubuntu.sh
+import sys
 
 ############# Configuration section starting here
 
-# This is where the explanation HTML code is
-TEMPLATE_FILE="index-template"
-CHROMIUM_TEMPLATE_FILE="chromium-template"
-
 # This is where nginx is (to be) installed
-BASEPATH="/opt/nginx/"
+BASEPATH="/usr/local/nginx/"
 
 # This is the (relative to BASEPATH) path of all certificates
-PKIPATH="pki"
+PKIPATH="certs"
 
 # This is the port where all algorithms start to be present(ed)
 STARTPORT=6000
 
 # This is the local location of the OQS-enabled OpenSSL
-OPENSSL="/tmp/opt/openssl/apps/openssl"
+OPENSSL="/opt/oqs-openssl-quic/.openssl/bin/openssl"
 
 # This is the local OQS-OpenSSL config file
-OPENSSL_CNF="/tmp/opt/openssl/apps/openssl.cnf"
+OPENSSL_CNF="/opt/oqs-openssl-quic/.openssl/openssl.cnf"
 
 # This is the fully-qualified domain name of the server to be set up
 # Ensure this is in sync with contents of ext-csr.conf file
-TESTFQDN="test.openquantumsafe.org"
+TESTFQDN="nginx"
 
 # This is the local folder where the root CA (key and cert) resides
 CAROOTDIR="root"
 
-# This is the file containing the SIG/KEM/port assignments
-ASSIGNMENT_FILE="assignments.json"
-
-# The list of chromium-supported KEMs:
-chromium_algs = ["p256_bikel1", "p256_frodo640aes", "p256_kyber90s512", "p256_ntru_hps2048509", "p256_lightsaber", "p256_sidhp434", "p256_sikep434"]
+# This contains all algorithm/port assignments
+ASSIGNMENT_FILE = "assignments.json"
 
 ############# Functions starting here
 
@@ -47,7 +39,7 @@ def gen_cert(sig_alg):
    if not os.path.exists(CAROOTDIR):
            os.mkdir(CAROOTDIR)
            common.run_subprocess([OPENSSL, 'req', '-x509', '-new',
-                                     '-newkey', "rsa:4096",
+                                     '-newkey', "rsa:3072",
                                      '-keyout', os.path.join(CAROOTDIR, "CA.key"),
                                      '-out', os.path.join(CAROOTDIR, "CA.crt"),
                                      '-nodes',
@@ -83,9 +75,9 @@ def gen_cert(sig_alg):
                                   '-extensions', 'v3_req',
                                   '-days', '365'])
 
-def write_nginx_config(f, i, cf, port, sig, k):
+def write_nginx_config(f, port, sig, k):
            f.write("server {\n")
-           f.write("    listen              0.0.0.0:"+str(port)+" ssl;\n\n")
+           f.write("    listen              0.0.0.0:"+str(port)+" http3 reuseport;\n\n")
            f.write("    server_name         "+TESTFQDN+";\n")
            f.write("    access_log          "+BASEPATH+"logs/"+sig+"-access.log;\n")
            f.write("    error_log           "+BASEPATH+"logs/"+sig+"-error.log;\n\n")
@@ -94,104 +86,65 @@ def write_nginx_config(f, i, cf, port, sig, k):
            f.write("    ssl_protocols       TLSv1.3;\n")
            if k!="*" :  
               f.write("    ssl_ecdh_curve      "+k+";\n")
-           f.write("    location / {\n")
-           f.write("            ssi    on;\n")
-           if k!="*" :  
-              f.write("            set    $oqs_alg_name \""+sig+"-"+k+"\";\n")
-           f.write("            root   html;\n")
-           f.write("            index  success.html;\n")
-           f.write("    }\n\n")
-
            f.write("}\n\n")
-           # activate for more boring links-only display:
-           #i.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
-           #if k in chromium_algs:
-           #   cf.write("<li><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+" ("+str(port)+")</a></li>\n")
-
-           # deactivate if you don't like tables:
-           i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
-           if k in chromium_algs and not ("_" in sig and (sig.startswith("p") or (sig.startswith("rsa")))):
-               cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
 
 # generates nginx config
-def gen_conf(filename, indexbasefilename, chromiumfilename):
+def gen_conf(filename):
    port = STARTPORT
    assignments={}
-   i = open(indexbasefilename, "w")
-   cf = open(chromiumfilename, "w")
-   # copy baseline templates
-   with open(TEMPLATE_FILE, "r") as tf:
-     for line in tf:
-       i.write(line)
-   with open(CHROMIUM_TEMPLATE_FILE, "r") as ctf:
-     for line in ctf:
-       cf.write(line)
 
    with open(filename, "w") as f:
      # baseline config
-     f.write("worker_processes  auto;\n")
-     f.write("worker_rlimit_nofile  10000;\n")
+     f.write("worker_processes  1;\n")
+     f.write("worker_rlimit_nofile  5000;\n")
      f.write("events {\n")
      f.write("    worker_connections  32000;\n")
      f.write("}\n")
      f.write("\n")
      f.write("http {\n")
-     f.write("    include       conf/mime.types;\n");
-     f.write("    default_type  application/octet-stream;\n")
-     f.write("    keepalive_timeout  65;\n\n")
-     # plain server for base information
+     f.write("        log_format quic '$remote_addr - $remote_user [$time_local] '\n")
+     f.write("                   '\"$request\" $status $body_bytes_sent '\n")
+     f.write("                   '\"$http_referer\" \"$http_user_agent\" \"$http3\"';\n")
      f.write("server {\n")
-     f.write("    listen      80;\n")
+     f.write("    listen 5999 default_server;\n")
+     f.write("    listen [::]:5999 default_server;\n")
+     f.write("    root /usr/local/nginx/html;\n")
+     f.write("    index index.html;\n")
      f.write("    server_name "+TESTFQDN+";\n")
-     f.write("    access_log  /opt/nginx/logs/80-access.log;\n")
-     f.write("    error_log   /opt/nginx/logs/80-error.log;\n\n")
      f.write("    location / {\n")
-     f.write("            root   html;\n")
-     f.write("            index  "+indexbasefilename+";\n")
+     f.write("       try_files $uri $uri/ =404;\n")
      f.write("    }\n")
-     f.write("}\n")
-     f.write("server {\n")
-     f.write("    listen      443 ssl;\n")
-     f.write("    server_name "+TESTFQDN+";\n")
-     f.write("    access_log  /opt/nginx/logs/443-access.log;\n")
-     f.write("    error_log   /opt/nginx/logs/443-error.log;\n\n")
-     f.write("    ssl_certificate     /etc/letsencrypt/live/"+TESTFQDN+"/fullchain.pem;\n")
-     f.write("    ssl_certificate_key /etc/letsencrypt/live/"+TESTFQDN+"/privkey.pem;\n\n")
-     f.write("    location / {\n")
-     f.write("            root   html;\n")
-     f.write("            index  "+indexbasefilename+";\n")
-     f.write("    }\n")
-     f.write("}\n")
+     f.write("}\n\n")
+
 
      f.write("\n")
      for sig in common.signatures:
         assignments[sig]={}
         assignments[sig]["*"]=port
-        write_nginx_config(f, i, cf, port, sig, "*")
+        write_nginx_config(f, port, sig, "*")
         port = port+1
         for kex in common.key_exchanges:
            # replace oqs_kem_default with X25519:
            k = "X25519" if kex=='oqs_kem_default' else kex
-           write_nginx_config(f, i, cf, port, sig, k)
+           write_nginx_config(f, port, sig, k)
            assignments[sig][k]=port
            port = port+1
      f.write("}\n")
-   # deactivate if you don't like tables:
-   i.write("</table>\n")
-   i.write("</body></html>\n")
-   i.close()
-   cf.write("</table>\n")
-   cf.write("</body></html>\n")
-   cf.close()
    with open(ASSIGNMENT_FILE, 'w') as outfile:
       json.dump(assignments, outfile)
 
+
 def main():
+   global TESTFQDN
+   # if a parameter is given, it's the FQDN for the server
+   if len(sys.argv)>1:
+      TESTFQDN = sys.argv[1]
+   print("Generating for FQDN %s" % (TESTFQDN))
    # first generate certs for all supported sig algs:
    for sig in common.signatures:
       gen_cert(sig)
    # now do conf and HTML files
-   gen_conf("interop.conf", "index-base.html", "chromium-base.html")
+   gen_conf("oqs-nginx.conf")
 
 main()

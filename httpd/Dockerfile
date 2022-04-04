@@ -19,7 +19,9 @@ ARG HTTPD_VERSION=2.4.43
 ARG MAKE_DEFINES="-j 2"
 
 
-FROM alpine as intermediate
+FROM alpine:3.13 as intermediate
+# ToDo: Upgrade possible if https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2 addressed
+
 # Take in global args
 ARG LIBOQS_BUILD_DEFINES
 ARG OPENSSL_PATH
@@ -72,9 +74,6 @@ RUN ./configure --prefix=${HTTPD_PATH} \
 # prepare to run httpd
 ARG OPENSSL_CNF=/opt/ossl-src/apps/openssl.cnf
 
-# Set a default QSC signature algorithm from the list at https://github.com/open-quantum-safe/openssl#authentication
-ARG SIG_ALG=dilithium2
-
 WORKDIR ${HTTPD_PATH}
     # generate CA key and cert
     # generate server CSR
@@ -90,7 +89,7 @@ RUN set -x && \
 RUN rm -rf ${HTTPD_PATH}/bin/ab
 
 # second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine
+FROM alpine:3.13
 # Take in global args
 ARG HTTPD_PATH
 ARG OPENSSL_PATH

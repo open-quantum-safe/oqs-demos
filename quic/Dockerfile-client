@@ -1,0 +1,72 @@
+FROM ubuntu:focal as builder
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /root
+# Update image and apt software
+RUN apt update && apt install software-properties-common apt-utils -y
+
+# Install all prerequisites
+RUN apt-add-repository ppa:lttng/stable-2.12 -y && apt update && apt install wget build-essential cmake liblttng-ust-dev lttng-tools git ninja-build libssl-dev -y
+
+# Install powershell as testing requires it:
+RUN wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb && apt-get update && add-apt-repository universe && apt-get install -y powershell
+
+# activate this to only build plain msquic:
+#RUN git clone https://github.com/microsoft/msquic && cd msquic && git submodule init && git submodule update --recursive
+
+COPY merge-oqs-openssl-quic.sh /tmp/merge/merge-oqs-openssl-quic.sh
+WORKDIR /tmp/merge
+RUN ./merge-oqs-openssl-quic.sh mergeonly
+
+WORKDIR /root
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git && git clone https://github.com/microsoft/msquic && cd msquic && git submodule deinit -f -- submodules/openssl && rm -rf .git/modules/submodules/openssl && git rm -f submodules/openssl && git submodule add /tmp/merge/oqs-openssl-quic submodules/openssl && git submodule update --init submodules/googletest && cd ..
+
+# until oqs-openssl builds liboqs as submodule, need to do it manually:
+# also copy oqs-includes into a location that the quic-openssl out-of-tree-build will find:
+RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/root/msquic/submodules/openssl/oqs .. && ninja && ninja install && cp -R /root/msquic/submodules/openssl/oqs/include/oqs /root/msquic/submodules/openssl/include
+
+# builds but test would fail b/o powershell dependency of tests:
+# RUN cd /root/msquic && mkdir build && cd build && cmake -G 'Unix Makefiles' ..  && cmake --build .
+
+# patch cmake file to find liboqs.a:
+COPY src-inc-CMakeLists.txt.patch /root/msquic
+RUN patch /root/msquic/src/inc/CMakeLists.txt < /root/msquic/src-inc-CMakeLists.txt.patch
+
+# patch to make reach a bit more verbose:
+COPY src-tools-reach-reach.cpp.patch /root/msquic
+RUN patch /root/msquic/src/tools/reach/reach.cpp < /root/msquic/src-tools-reach-reach.cpp.patch
+
+# so, let's build using powershell:
+RUN pwsh /root/msquic/scripts/build.ps1 -Config Debug -Arch x64 -Tls openssl
+
+# Note: ipv6 must be enabled for tests to succeed
+#RUN pwsh /root/msquic/scripts/test.ps1
+
+# Do a baseline handshake against quic.nginx.org
+RUN /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:quic.nginx.org -alpn:h3 -errorexitonunreachability:1
+
+
+# Just install the bare minimum to run reachability test
+FROM ubuntu:focal
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /root
+RUN apt update && apt install software-properties-common wget -y
+
+COPY --from=builder /root/msquic/artifacts/bin/linux/x64_Debug_openssl/libmsquic.so.2 /root/msquic/artifacts/bin/linux/x64_Debug_openssl/libmsquic.so.2
+COPY --from=builder /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach
+
+COPY reach.sh /root/reach.sh
+COPY testrun.py /root/testrun.py
+COPY fulltest.sh /root/fulltest.sh
+
+RUN echo "export PATH=/root/msquic/artifacts/bin/linux/x64_Debug_openssl/:$PATH" >> /root/.bashrc
+
+# set TLS_DEFAULT_GROUPS env var to OQS group to be tested; default/unset: classic groups
+# be sure to match OQS_PORT env var (default: 8443)
+CMD /root/reach.sh
+

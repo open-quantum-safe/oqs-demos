@@ -24,9 +24,8 @@ index e4259ee6eb39..511b5fb48cd2 100644
    // Unexpected key type.
    return false;
  }
- 
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index b435499f459b..0493ba2ec628 100644
+index 23c167f11787..a38adb880261 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
 @@ -13,7 +13,7 @@ import("BUILD.generated_tests.gni")
@@ -38,7 +37,7 @@ index b435499f459b..0493ba2ec628 100644
    if (is_component_build) {
      defines = [ "BORINGSSL_SHARED_LIBRARY" ]
    }
-@@ -45,7 +45,7 @@ config("no_asm_config") {
+@@ -39,7 +39,7 @@ config("no_asm_config") {
  }
  
  all_sources = crypto_sources + ssl_sources
@@ -47,7 +46,7 @@ index b435499f459b..0493ba2ec628 100644
  
  # Windows' assembly is built with NASM. The other platforms use the platform
  # assembler. Exclude Windows ARM64 because NASM targets x86 and x64 only.
-@@ -111,6 +111,7 @@ component("boringssl") {
+@@ -109,6 +109,7 @@ component("boringssl") {
    sources = all_sources
    public = all_headers
    friend = [ ":*" ]

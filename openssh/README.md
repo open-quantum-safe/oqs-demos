@@ -20,7 +20,7 @@ This directory contains a [Dockerfile](Dockerfile) that builds the [OQS OpenSSH 
 
         docker exec --user oqs -it oqs-openssh-server ssh oqs@localhost
 
-4. Accept the host key and authenticate with the default password `oqs.pw`
+4. Accept the host key and authenticate with the default password `Pa55W0rd`
 
 5. To clean up, exit the ssh session with `exit` and run
 
@@ -46,7 +46,7 @@ The first command adds user `<user>` (yourself) to the group `docker`, and the s
 The Dockerfile 
 - obtains all source code required for building the quantum safe cryptography (QSC) algorithms and the [QSC-enabled version of OpenSSH (7.9-2020-08_p1)](https://github.com/open-quantum-safe/openssh/releases/tag/OQS-OpenSSH-snapshot-2020-08)
 - builds all libraries and applications
-- creates a second user `oqs` with the default password `oqs.pw`
+- creates a second user `oqs` with the default password `Pa55W0rd`
 - by default starts the openssh daemon\*
 - by default creates host keys based on the config file `sshd_config`\*
 - by default creates identity keys based on the config file `ssh_config`\*
@@ -113,7 +113,7 @@ Defaults to `oqs`. The docker file creates a non-root user during build. The pur
 
 ## OQS_PASSWORD
 
-Defaults to `oqs.pw`. This is the password for the `OQS_USER`. A password is needed to enable the authentication method 'password' for ssh.
+Defaults to `Pa55W0rd`. This is the password for the `OQS_USER`. A password is needed to enable the authentication method 'password' for ssh.
 
 # Authors
 

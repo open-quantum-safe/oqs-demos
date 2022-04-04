@@ -35,9 +35,10 @@ jobs:
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . 
           working_directory: openssl3
       - run:
-          name: Test Provider
+          name: Spot-test Provider -- One baseline and one hybrid QSC alg
           command: |
-            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt"
+            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt" &&
+            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "KEM_ALG=p521_frodo1344aes /opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/oqssa/bin/CA.crt"
       - when:
           condition:
             or:
@@ -97,6 +98,54 @@ jobs:
                   docker push $TARGETNAME/curl:latest &&
                   docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
                   docker push $TARGETNAME/nginx:latest 
+
+  ubuntu_x64_quic:
+    description: Building and pushing OQS-QUIC-nginx and OQS-msquic demo Docker images
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build OQS QUIC nginx
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -f Dockerfile-server -t oqs-quic-nginx-img .
+          working_directory: quic
+      - run:
+          name: Build msquic with liboqs
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" -f Dockerfile-client -t oqs-msquic .
+          working_directory: quic
+      - run:
+          name: Test oqs-msquic against baseline QUIC test server
+          command: |
+            docker run -it oqs-msquic bash -c "/root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:quic.nginx.org -alpn:h3 -errorexitonunreachability:1"
+      - run:
+          name: Test oqs-nginx-quic and oqs-msquic
+          command: |
+            docker network create quic-test &&
+            docker run --network quic-test --detach --rm --name nginx oqs-quic-nginx-img &&
+            sleep 200 &&
+            docker run --network quic-test -it oqs-msquic bash -c "cd /root && wget nginx:5999/CA.crt && TLS_DEFAULT_GROUPS=frodo640aes SSL_CERT_FILE=/root/CA.crt /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:nginx -port:6001 -alpn:h3 -errorexitonunreachability:1"
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push nginx-quic and msquic images
+                command: |
+                  docker tag oqs-msquic $TARGETNAME/msquic-reach:latest &&
+                  docker push $TARGETNAME/msquic-reach:latest &&
+                  docker tag oqs-quic-nginx-img $TARGETNAME/nginx-quic:latest &&
+                  docker push $TARGETNAME/nginx-quic:latest
 
   ubuntu_x64_httpd:
     description: Building and pushing OQS-httpd and OQS-curl dev demo Docker image
@@ -226,9 +275,12 @@ workflows:
           context: openquantumsafe
       - ubuntu_x64_nginx:
           context: openquantumsafe
+      - ubuntu_x64_quic:
+          context: openquantumsafe
       - ubuntu_x64_httpd:
           context: openquantumsafe
       - ubuntu_x64_haproxy:
           context: openquantumsafe
       - ubuntu_x64_openssh:
           context: openquantumsafe
+

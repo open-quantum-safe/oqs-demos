@@ -1,0 +1,28 @@
+These scripts help facilitate a build of PQC-enabled Chromium.
+They have been tested on Ubuntu 20.04 .
+
+How to use :
+
+1. Please set the PROJECT environment variable. This is the location where you
+would like your Chromium build to be stored. It must be an absolute path.
+For example, using bash :
+export PROJECT=/home/madbrain/pqc_chromium
+
+2. Make sure your user has sudo permissions, as this will be needed to install
+optional packages.
+
+3. If you want the script to run unattended, you may need to increase the
+default sudo timeout. Use 
+sudo visudo
+Then change the timeout value. For example :
+Defaults        timestamp_timeout=360
+
+4. Review set_env.sh to make sure the CHROMIUM_TAG and CHROMIUM_PATCH
+variables are set correctly. If you may either edit the values in the script,
+or set the values in your shell. The current are in README.md
+in the oqs-demos/chromium directory, ie. at
+https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium#readme, in
+steps 2 and 5 respectively.
+
+5. Run master.sh to start the build. You will immediately be asked for sudo
+authentication. Be prepared to wait several hours for the build to complete.
