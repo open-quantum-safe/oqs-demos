@@ -277,7 +277,7 @@ jobs:
     description: Building OQS-based Mosquitto docker image
     docker:
       - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
-         auth:
+        auth:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
     steps:
