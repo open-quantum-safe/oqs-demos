@@ -281,9 +281,8 @@ jobs:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
     steps:
-      - *localCheckout # checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
-      - setup_remote_docker:
-          version: 20.10.2
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
       - run:
           name: Authenticate to Docker
           command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
