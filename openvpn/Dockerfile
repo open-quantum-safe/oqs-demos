@@ -1,0 +1,91 @@
+# Multi-stage build: First the full builder image:
+
+# Default location where all binaries wind up:
+ARG INSTALLDIR=/opt/oqssa
+
+# liboqs build type variant; maximum portability of image:
+ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
+
+# Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
+ARG MAKE_DEFINES="-j 4"
+
+# Default KEM algorithms to be utilized
+ARG KEM_ALGLIST="kyber768:p384_kyber768"
+
+FROM debian as intermediate
+# Take in all global args
+ARG INSTALLDIR
+ARG LIBOQS_BUILD_DEFINES
+ARG MAKE_DEFINES
+ARG KEM_ALGLIST
+
+LABEL version="1"
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt update && apt -y upgrade
+
+# Get all software packages required for builing all components:
+RUN apt install -y  \
+            libtool automake autoconf cmake ninja-build \
+            make \
+            openssl libssl-dev \
+            git docker wget \
+            liblzo2-dev libpam0g-dev python3-docutils
+
+# get all sources
+WORKDIR /opt
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
+    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
+    git clone https://github.com/OpenVPN/openvpn.git
+
+# build liboqs
+WORKDIR /opt/liboqs
+RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
+
+# build OpenSSL3
+WORKDIR /opt/openssl
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
+    make ${MAKE_DEFINES} && make install_sw install_ssldirs;
+
+# set path to use 'new' openssl. Dyn libs have been properly linked in to match
+ENV PATH="${INSTALLDIR}/bin:${PATH}"
+
+# build & install provider (and activate by default)
+WORKDIR /opt/oqs-provider
+RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && cmake --build _build  && cp _build/oqsprov/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = ${KEM_ALGLIST}\n/g" /opt/oqssa/ssl/openssl.cnf
+
+
+# build openvpn based on OpenSSL3
+
+ENV OPENSSL3_DIR=${INSTALLDIR}
+
+WORKDIR /opt/openvpn
+
+RUN libtoolize --force && aclocal && autoheader && automake --force-missing --add-missing && autoconf && \
+    CFLAGS="-I$OPENSSL3_DIR/include -Wl,-rpath=$OPENSSL3_DIR/lib64 -L$OPENSSL3_DIR/lib64" ./configure --prefix=${INSTALLDIR} --disable-lz4 && make -j 2 && make check && make install
+
+## second stage: Only create minimal image without build tooling and intermediate build results generated above:
+FROM debian:stable-slim
+# Take in all global args
+ARG INSTALLDIR
+
+RUN apt update && apt upgrade -y && apt install -y liblzo2-2 
+# Only retain the ${INSTALLDIR} contents in the final image
+COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
+
+# set path to use 'new' openssl. Dyn libs have been properly linked in to match
+ENV PATH="${INSTALLDIR}/bin:${INSTALLDIR}/sbin:${PATH}"
+
+COPY serverstart.sh ${INSTALLDIR}/bin
+COPY clientstart.sh ${INSTALLDIR}/bin
+
+WORKDIR ${INSTALLDIR}
+
+# Activate to limit access to normal user rights
+#RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs 
+#USER oqs
+
+CMD ["serverstart.sh"]
+STOPSIGNAL SIGTERM
