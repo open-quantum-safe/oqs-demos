@@ -273,6 +273,47 @@ jobs:
                   docker tag oqs-openvpn $TARGETNAME/openvpn:latest &&
                   docker push $TARGETNAME/openvpn:latest 
 
+  ubuntu_x64_mosquitto:
+    description: Building OQS-based Mosquitto docker image
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build Mosquitto
+          command: |
+            docker build -t oqs-mosquitto . 
+          working_directory: mosquitto
+      - run:
+          name: Test Mosquitto using local docker network
+          command: |
+            docker network create --subnet=172.18.0.0/16 mosquitto-test &&
+            docker run --network mosquitto-test --ip 172.18.0.2 -it --rm --name oqs-mosquitto-broker -e "BROKER_IP=172.18.0.2" -e "EXAMPLE=broker-start.sh" -d oqs-mosquitto &&
+            docker run --network mosquitto-test --ip 172.18.0.3 -it --rm --name oqs-mosquitto-subscriber -e "BROKER_IP=172.18.0.2" -e "SUB_IP=172.18.0.3" -e "EXAMPLE=subscriber-start.sh" -d oqs-mosquitto &&
+            docker run --network mosquitto-test --ip 172.18.0.4 -it --rm --name oqs-mosquitto-publisher -e "BROKER_IP=172.18.0.2" -e "PUB_IP=172.18.0.4" -e "EXAMPLE=publisher-start.sh" -d oqs-mosquitto &&
+            sleep 2 &&
+            docker logs oqs-mosquitto-publisher | grep "Client_pub sending PUBLISH" &&
+            docker logs oqs-mosquitto-subscriber | grep "Hello world"
+          working_directory: mosquitto
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push OQS Mosquitto image
+                command: |
+                  docker tag oqs-mosquitto $TARGETNAME/mosquitto:latest &&
+                  docker push $TARGETNAME/mosquitto:latest 
+
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
     docker:
@@ -318,6 +359,8 @@ workflows:
       - ubuntu_x64_haproxy:
           context: openquantumsafe
       - ubuntu_x64_openvpn:
+          context: openquantumsafe
+      - ubuntu_x64_mosquitto:
           context: openquantumsafe
       - ubuntu_x64_openssh:
           context: openquantumsafe
