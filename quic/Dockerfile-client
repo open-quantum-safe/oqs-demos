@@ -21,31 +21,32 @@ WORKDIR /tmp/merge
 RUN ./merge-oqs-openssl-quic.sh mergeonly
 
 WORKDIR /root
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git && git clone https://github.com/microsoft/msquic && cd msquic && git checkout a2a71bda0726bee9f0d7c599d7450c6681a9fa7e && git submodule deinit -f -- submodules/openssl && rm -rf .git/modules/submodules/openssl && git rm -f submodules/openssl && git submodule add /tmp/merge/oqs-openssl-quic submodules/openssl && git submodule update --init submodules/googletest && cd ..
+
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git && git clone --recursive https://github.com/microsoft/quicreach && cd quicreach/msquic && git submodule deinit -f -- submodules/openssl && rm -rf ../.git/modules/msquic/modules/submodules/openssl && git rm -f submodules/openssl && git submodule add /tmp/merge/oqs-openssl-quic submodules/openssl && git submodule update --init submodules/googletest && cd ../..
 
 # until oqs-openssl builds liboqs as submodule, need to do it manually:
 # also copy oqs-includes into a location that the quic-openssl out-of-tree-build will find:
-RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/root/msquic/submodules/openssl/oqs .. && ninja && ninja install && cp -R /root/msquic/submodules/openssl/oqs/include/oqs /root/msquic/submodules/openssl/include
+RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/root/quicreach/msquic/submodules/openssl/oqs .. && ninja && ninja install && cp -R /root/quicreach/msquic/submodules/openssl/oqs/include/oqs /root/quicreach/msquic/submodules/openssl/include
 
 # builds but test would fail b/o powershell dependency of tests:
 # RUN cd /root/msquic && mkdir build && cd build && cmake -G 'Unix Makefiles' ..  && cmake --build .
 
 # patch cmake file to find liboqs.a:
-COPY src-inc-CMakeLists.txt.patch /root/msquic
-RUN patch /root/msquic/src/inc/CMakeLists.txt < /root/msquic/src-inc-CMakeLists.txt.patch
+COPY src-inc-CMakeLists.txt.patch /root/quicreach/msquic
+RUN patch /root/quicreach/msquic/src/inc/CMakeLists.txt < /root/quicreach/msquic/src-inc-CMakeLists.txt.patch
 
-# patch to make reach a bit more verbose:
-COPY src-tools-reach-reach.cpp.patch /root/msquic
-RUN patch /root/msquic/src/tools/reach/reach.cpp < /root/msquic/src-tools-reach-reach.cpp.patch
+# build using powershell if testing is desired:
+#RUN pwsh /root/msquic/scripts/build.ps1 -Config Debug -Arch x64 -Tls openssl
 
-# so, let's build using powershell:
-RUN pwsh /root/msquic/scripts/build.ps1 -Config Debug -Arch x64 -Tls openssl
+# otherwise, just use standard tooling:
+WORKDIR /root/quicreach
+RUN mkdir build && cd build && cmake -G 'Unix Makefiles' .. && cmake --build .
 
 # Note: ipv6 must be enabled for tests to succeed
 #RUN pwsh /root/msquic/scripts/test.ps1
 
 # Do a baseline handshake against quic.nginx.org
-RUN /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:quic.nginx.org -alpn:h3 -errorexitonunreachability:1
+RUN /root/quicreach/build/src/quicreach quic.nginx.org
 
 
 # Just install the bare minimum to run reachability test
@@ -57,16 +58,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /root
 RUN apt update && apt install software-properties-common wget -y
 
-COPY --from=builder /root/msquic/artifacts/bin/linux/x64_Debug_openssl/libmsquic.so.2 /root/msquic/artifacts/bin/linux/x64_Debug_openssl/libmsquic.so.2
-COPY --from=builder /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach
+COPY --from=builder /root/quicreach/build/msquic/bin/Release/libmsquic.so.2 /root/quicreach/build/msquic/bin/Release/libmsquic.so.2
+COPY --from=builder /root/quicreach/build/src/quicreach /usr/bin/quicreach
+
 
 COPY reach.sh /root/reach.sh
 COPY testrun.py /root/testrun.py
 COPY fulltest.sh /root/fulltest.sh
 
-RUN echo "export PATH=/root/msquic/artifacts/bin/linux/x64_Debug_openssl/:$PATH" >> /root/.bashrc
+RUN echo "export PATH=/root/quicreach/build/src:$PATH" >> /root/.bashrc
 
 # set TLS_DEFAULT_GROUPS env var to OQS group to be tested; default/unset: classic groups
-# be sure to match OQS_PORT env var (default: 8443)
+# be sure to match OQS_QUIC_PORT env var (default: 8443)
 CMD /root/reach.sh
 

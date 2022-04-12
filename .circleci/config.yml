@@ -125,7 +125,7 @@ jobs:
       - run:
           name: Test oqs-msquic against baseline QUIC test server
           command: |
-            docker run -it oqs-msquic bash -c "/root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:quic.nginx.org -alpn:h3 -errorexitonunreachability:1"
+            docker run -it oqs-msquic bash -c "quicreach quic.nginx.org"
       - run:
           name: Test oqs-nginx-quic and oqs-msquic
           command: |
