@@ -14,11 +14,11 @@ In order to interact with the [companion QSC-QUIC nginx image](https://hub.docke
 docker run --network oqs-quic -it openquantumsafe/msquic-reach bash
 ```
 
-Within the resulting shell, various tests for QUIC functionality can be performed:
+Within the resulting shell, tests for QUIC functionality can be performed.
 
 As a baseline, to ascertain proper QUIC interoperability, it is recommended to contact the [nginx QUIC test server](https://quic.nginx.org) via `quicreach quic.nginx.org --stats`. This should output correct reachability (completion of TLS handshake) and some connection (quality) statistics.
 
-### Test of all algorithm combinations 
+### Test of all QSC algorithm combinations 
 
 The latter information also is output for each of the QSC signature and KEM algorithms when running the full matrix test via the command
 

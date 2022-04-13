@@ -66,8 +66,6 @@ COPY reach.sh /root/reach.sh
 COPY testrun.py /root/testrun.py
 COPY fulltest.sh /root/fulltest.sh
 
-RUN echo "export PATH=/root/quicreach/build/src:$PATH" >> /root/.bashrc
-
 # set TLS_DEFAULT_GROUPS env var to OQS group to be tested; default/unset: classic groups
 # be sure to match OQS_QUIC_PORT env var (default: 8443)
 CMD /root/reach.sh

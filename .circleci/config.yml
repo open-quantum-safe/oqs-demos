@@ -131,8 +131,8 @@ jobs:
           command: |
             docker network create quic-test &&
             docker run --network quic-test --detach --rm --name nginx oqs-quic-nginx-img &&
-            sleep 200 &&
-            docker run --network quic-test -it oqs-msquic bash -c "cd /root && wget nginx:5999/CA.crt && TLS_DEFAULT_GROUPS=frodo640aes SSL_CERT_FILE=/root/CA.crt /root/msquic/artifacts/bin/linux/x64_Debug_openssl/quicreach -server:nginx -port:6001 -alpn:h3 -errorexitonunreachability:1"
+            sleep 100 &&
+            docker run --network quic-test -it oqs-msquic bash -c "cd /root && wget nginx:5999/CA.crt && TLS_DEFAULT_GROUPS=frodo640aes SSL_CERT_FILE=/root/CA.crt quicreach nginx --port 6001"
       - when:
           condition:
             or:
