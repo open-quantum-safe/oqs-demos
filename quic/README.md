@@ -53,7 +53,7 @@ Documentation for using the client docker image is contained in the separate [US
 
 The build process first merges the two OpenSSL forks, [OQS-OpenSSL](https://github.com/open-quantum-safe/openssl) and [quictls](https://github.com/quictls/openssl) into one OQS-QUIC-OpenSSL code repository. It then proceeds to build msquic using this OpenSSL code base incl. the base OQS library, [liboqs](https://github.com/open-quantum-safe/liboqs). Some patches to the `msquic` code base are applied to enable the build and experimentation with different OQS algorithms. In the second stage of the build process all build artifacts not required for running the baseline QUIC reachability test are dropped and scripts are added to permit a full test of all OQS-algorithm combinations as afforded by the server.
 
-The client is meant for basic QUIC reachability tests by way of completing TLS handshakes. All further QUIC support programs have been eliminated in the second docker build stage, but --as all components are built in the first stage-- could easily be added as the need arises.
+The client is meant for basic QUIC reachability tests by way of completing TLS handshakesn only. For further details about the client [see its documentation](https://github.com/microsoft/quicreach).
 
 ## License
 
