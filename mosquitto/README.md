@@ -8,6 +8,9 @@ Thanks,
 
 --Chia-Chin Chung
 
+NOTE: Further modifications have been made to accomodate the algorithms which
+      are supported by wolfMQTT.
+
 ## Background
 
 [Eclipse Mosquitto](https://mosquitto.org) is an open source (EPL/EDL licensed) message broker that implements the MQTT protocol versions 5.0, 3.1.1 and 3.1. Mosquitto is lightweight and is suitable for use on all devices from low power single board computers to full servers.
@@ -24,7 +27,7 @@ The following provides some introduction to Mosquitto:
 
 [Install Docker](https://docs.docker.com/install) and run the following simplified commands in this directory:
 
-1. `docker build -t oqs-mosquitto-img .` This will generate the image with a default QSC algorithm (key exchange: kyber512, authentication: dilithium2 -- see Dockerfile to change).
+1. `docker build -t oqs-mosquitto-img .` This will generate the image with a default QSC algorithm (key exchange: kyber512, authentication: falcon512 -- these match what is supported by wolfMQTT.
 2. `docker run -it --rm --name oqs-mosquitto -p 8883:8883 oqs-mosquitto-img`
 
 This will start a docker container that has mosquitto MQTT broker listening for TLS 1.3 connections on port 8883.
@@ -65,13 +68,13 @@ The default setting defines a range of default algorithms suggested for key exch
 
 This defines the quantum-safe cryptographic key exchange algorithm.
 
-The default value is 'kyber512', but this value can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#key-exchange).
+The default value is 'kyber512' which matches what is supported by wolfMQTT.
 
 ### SIG_ALG
 
 This defines the quantum-safe cryptographic signature algorithm for the internally generated server and client certificates.
 
-The default value is 'dilithium2' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
+The default value is 'falcon512' which matches what is supported by wolfMQTT.
 
 ### BROKER_IP
 

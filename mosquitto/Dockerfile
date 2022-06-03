@@ -7,14 +7,16 @@
 ARG SOURCE_PATH="/usr/local/src"
 ARG OPENSSL_LIB_PATH="/usr/local/ssl"
 
-# liboqs build type variant; maximum portability of image:
-ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
+# liboqs build type variant; limit to algorithms that are supported by wolfMQTT
+ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON  -DOQS_MINIMAL_BUILD=OQS_ENABLE_KEM_kyber_512;OQS_ENABLE_SIG_falcon_512 "
 
 # openssl build defines (https://github.com/open-quantum-safe/openssl#build-options)
-ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=kyber512:X25519:p384_kyber768"
+# limit to groups supported by wolfMQTT
+ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=kyber512:p256_kyber512"
 
 # define the QSC signature algorithm used for the certificates
-ARG SIG_ALG="dilithium2"
+# limit to signature algorithm supported by wolfMQTT
+ARG SIG_ALG="falcon512"
 
 # define IP addresses or Domain Name
 ARG BROKER_IP=localhost
@@ -43,13 +45,14 @@ ARG OPENSSL_BUILD_DEFINES
 RUN apt update && apt install build-essential vim cmake gcc libtool libssl-dev make ninja-build git doxygen \
         libcjson1 libcjson-dev uthash-dev libcunit1-dev libsqlite3-dev xsltproc docbook-xsl -y && apt clean
 
-# Get the fork of OQS-OpenSSL_1_1_1-stable
+# Get the fork of OQS-OpenSSL_1_1_1-stable-snapshot-2021-08
 WORKDIR $SOURCE_PATH
-RUN git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl.git OQS-OpenSSL
+RUN git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable-snapshot-2021-08 https://github.com/open-quantum-safe/openssl.git OQS-OpenSSL
 
 # Get and build liboqs, then install it into a subdirectory inside the OQS-OpenSSL folder
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git liboqs && \
-    cd liboqs && mkdir build && cd build && \
+# Use the commit that is supported by wolfSSL
+RUN git clone --single-branch --branch main https://github.com/open-quantum-safe/liboqs.git liboqs && \
+    cd liboqs && git checkout ba5b61a779a0db364f0e691a0a0bc8ac42e73f1b && mkdir build && cd build && \
     cmake -GNinja $LIBOQS_BUILD_DEFINES -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$SOURCE_PATH/OQS-OpenSSL/oqs .. && \
     ninja && ninja install && echo "liboqs installed successfully" || exit 1
 
