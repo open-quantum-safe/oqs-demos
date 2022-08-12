@@ -29,7 +29,7 @@ RUN apt update && apt -y upgrade
 RUN apt install -y  \
             libtool automake autoconf cmake ninja-build \
             make \
-            openssl libssl-dev \
+            openssl libssl-dev pkg-config libcap-ng-dev \
             git docker wget \
             liblzo2-dev libpam0g-dev python3-docutils
 
