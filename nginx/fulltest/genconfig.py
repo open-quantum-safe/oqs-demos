@@ -56,6 +56,10 @@ def gen_cert(sig_alg):
                                      '-config', OPENSSL_CNF])
            print("New root cert residing in %s." % (os.path.join(CAROOTDIR, "CA.crt")))
 
+   # first check whether we already have a PKI dir; if not create it
+   if not os.path.exists(PKIPATH):
+           os.mkdir(PKIPATH)
+
    # now generate suitable server keys signed by that root; adapt algorithm names to std ossl 
    if sig_alg == 'rsa3072':
        ossl_sig_alg_arg = 'rsa:3072'
