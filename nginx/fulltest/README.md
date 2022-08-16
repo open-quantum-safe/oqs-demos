@@ -4,6 +4,7 @@ This folder contains all scripts to [build a QSC-enabled nginx server running on
 
 *Note*: These scripts assume 
 - coherent definition of test server FQDN as TESTFQDN in `genconfig.py` and `ext-csr.conf` files: By default "test.openquantumsafe.org" is set.
+- presence of oqs-openssl common definitions file `common.py` (as stored at https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/oqs-test/common.py).
 - presence on the build machine of a writable folder `/opt/nginx` for test-build (and local testing)
 - presence on the target deploy server (i.e., at the machine designated at TESTFQDN) of a properly deployed [LetsEncrypt server certificate](https://letsencrypt.org/getting-started).
 
