@@ -39,7 +39,7 @@ Leave away the `install` option to first do a test-build, e.g., if executed on a
 
 #### First-time execution
 
-`python3 genconfig.py` generates all required QSC certificates. Execute this at the first installation and/or if/when algorithms supported by liboqs have changed since the last installation. **This script overwrites an existing installation's configuration files. Use with care on a live server.**
+`python3 genconfig.py` generates all required QSC certificates. Execute this at the first installation and/or if/when algorithms supported by liboqs have changed since the last installation. **This script overwrites an existing installation's configuration files. Use with care on a live server.** Be sure to have the directory `pki` available/created: For example environmental setup, see e.g., [package.sh](package.sh).
 
 #### Activation
 
