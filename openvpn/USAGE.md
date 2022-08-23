@@ -59,7 +59,7 @@ The docker image has been pre-configured to use the quantum-safe crypto (QSC) al
 
 In order to change the list of algorithms, simply set the environment variable "TLS_GROUPS" to a list of desired algorithms, e.g.:
 
-    docker run -e TLS_GROUPS=p384_frodo976aes:sikep610 --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN openquantumsafe/openvpn
+    docker run -e TLS_GROUPS=p384_frodo976aes:kyber768 --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN openquantumsafe/openvpn
 
 ## Disclaimer
 
