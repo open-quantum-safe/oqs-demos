@@ -4,7 +4,7 @@
 NGINX_INSTALL_DIR=/opt/nginx
 
 # Set this to document support of specific version. Be sure to keep this in sync with what is specified in build-ubuntu.sh.
-LIBOQS_RELEASE=0.7.1
+LIBOQS_RELEASE=0.7.2
 
 # cleanup: retaining root CA!
 rm -rf *.tgz pki common.py *.html interop.conf assignments.json

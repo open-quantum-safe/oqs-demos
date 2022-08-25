@@ -7,10 +7,10 @@ export NGINX_PATH=/opt/nginx
 export NGINX_VERSION=1.21.5
 
 # define the OQS releases to use; unset to deploy main branch
-export LIBOQS_RELEASE=0.7.1
+export LIBOQS_RELEASE=0.7.2
 
 # defines the OQS-OpenSSL version to use; be sure to match with liboqs version
-export OPENSSL_RELEASE=OQS-OpenSSL-1_1_1-stable-snapshot-2022-01
+export OPENSSL_RELEASE=OQS-OpenSSL-1_1_1-stable-snapshot-2022-08
 
 # Temporary openssl build path; keep in synch with genconfig.py
 export OPENSSL_PATH=/tmp/opt/openssl
