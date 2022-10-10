@@ -162,6 +162,7 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
      f.write("    error_log   /opt/nginx/logs/443-error.log;\n\n")
      f.write("    ssl_certificate     /etc/letsencrypt/live/"+TESTFQDN+"/fullchain.pem;\n")
      f.write("    ssl_certificate_key /etc/letsencrypt/live/"+TESTFQDN+"/privkey.pem;\n\n")
+     f.write("    ssl_protocols       TLSv1.2 TLSv1.3;\n")
      f.write("    location / {\n")
      f.write("            root   html;\n")
      f.write("            index  "+indexbasefilename+";\n")
