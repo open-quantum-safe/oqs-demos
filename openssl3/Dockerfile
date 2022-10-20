@@ -9,7 +9,8 @@ ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 2"
 
-# Change this at your own risk: oqs-provider & OSSL3 cannot yet properly handle OQS-sigs
+# Change this at your own risk: OSSL3 can handle OQS-sigs only
+# after https://github.com/openssl/openssl/pull/19312 lands
 ARG SIG_ALG="rsa:2048"
 
 FROM alpine:3.13 as intermediate
