@@ -22,7 +22,7 @@ RUN ./merge-oqs-openssl-quic.sh mergeonly
 
 WORKDIR /root
 
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git && git clone --recursive https://github.com/microsoft/quicreach && cd quicreach/msquic && git submodule deinit -f -- submodules/openssl && rm -rf ../.git/modules/msquic/modules/submodules/openssl && git rm -f submodules/openssl && git submodule add /tmp/merge/oqs-openssl-quic submodules/openssl && git submodule update --init submodules/googletest && cd ../..
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git && git clone --recursive https://github.com/microsoft/quicreach && cd quicreach/msquic && git submodule deinit -f -- submodules/openssl && rm -rf ../.git/modules/msquic/modules/submodules/openssl && git rm -f submodules/openssl && GIT_ALLOW_PROTOCOL=file git submodule add /tmp/merge/oqs-openssl-quic submodules/openssl && git submodule update --init submodules/googletest && cd ../..
 
 # until oqs-openssl builds liboqs as submodule, need to do it manually:
 # also copy oqs-includes into a location that the quic-openssl out-of-tree-build will find:
