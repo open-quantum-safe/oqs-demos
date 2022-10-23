@@ -1,0 +1,28 @@
+diff --git a/src/inc/CMakeLists.txt b/src/inc/CMakeLists.txt
+index 6eb9193b..0222d1d0 100644
+--- a/src/inc/CMakeLists.txt
++++ b/src/inc/CMakeLists.txt
+@@ -31,6 +31,12 @@ if (NOT MSVC AND NOT APPLE AND NOT ANDROID)
+     else()
+         message(STATUS "libatomic not found. If build fails, install libatomic")
+     endif()
++    find_library(LIBOQS NAMES oqs PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../../submodules/openssl/oqs/lib)
++    if (LIBOQS)
++           message(STATUS "Found liboqs: ${LIBOQS}")
++    else()
++           message(STATUS "liboqs not found at ${CMAKE_CURRENT_SOURCE_DIR}/../../submodules/openssl/oqs/lib. If build fails, install liboqs")
++    endif()
+ endif()
+ 
+ set(THREADS_PREFER_PTHREAD_FLAG ON)
+@@ -40,6 +46,9 @@ target_link_libraries(base_link INTERFACE Threads::Threads ${CMAKE_DL_LIBS})
+ if (ATOMIC)
+     target_link_libraries(base_link INTERFACE ${ATOMIC})
+ endif()
++if (LIBOQS)
++       target_link_libraries(base_link INTERFACE ${LIBOQS})
++endif()
+ 
+ if(WIN32)
+     if(QUIC_UWP_BUILD)
+

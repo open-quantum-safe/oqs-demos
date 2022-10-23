@@ -1,0 +1,57 @@
+FROM ubuntu:focal 
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update image and apt software 
+RUN apt update && apt install software-properties-common -y
+
+RUN apt install net-tools -y 
+
+# All build prerequisites for the various software packages:
+RUN apt install git pkg-config  autoconf automake autotools-dev libtool cmake libev-dev -y
+RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt install -y g++-11 -y
+RUN apt-add-repository ppa:lttng/stable-2.12 -y && apt update && apt install wget build-essential cmake liblttng-ust-dev lttng-tools git ninja-build libssl-dev -y
+
+
+WORKDIR /opt
+COPY merge-oqs-openssl-quic.sh /opt
+RUN ./merge-oqs-openssl-quic.sh mergeonly
+
+
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git
+
+
+# until oqs-openssl builds liboqs as submodule, need to do it manually:
+# also copy oqs-includes into a location that the quic-openssl out-of-tree-build will find:
+RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
+
+# build openssl
+RUN cd oqs-openssl-quic && ./config enable-tls1_3 --prefix=$PWD/build && make -j$(nproc) && make install_sw
+
+# build nghttp3
+RUN git clone https://github.com/ngtcp2/nghttp3 && cd nghttp3 && autoreconf -i && ./configure --prefix=$PWD/build --enable-lib-only && make -j$(nproc) check && make install
+
+# build ngtcp2
+RUN git clone https://github.com/ngtcp2/ngtcp2 && cd ngtcp2 && autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig LDFLAGS="-Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib"  CXX=g++-11 && make -j$(nproc) check
+
+
+# Copy executable to usr/local/bin
+RUN cp ngtcp2/examples/client /usr/local/bin/ 
+
+# quicreach
+RUN git config --global protocol.file.allow always
+RUN git clone --recursive https://github.com/microsoft/quicreach && cd quicreach/msquic && git submodule deinit -f -- submodules/openssl && rm -rf ../.git/modules/msquic/modules/submodules/openssl && git rm -f submodules/openssl && git submodule add /opt/oqs-openssl-quic submodules/openssl && git submodule update --init submodules/googletest && cd ../..
+
+
+RUN cd liboqs && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/quicreach/msquic/submodules/openssl/oqs .. && ninja && ninja install && cp -R /opt/quicreach/msquic/submodules/openssl/oqs/include/oqs /opt/quicreach/msquic/submodules/openssl/include
+
+COPY src-inc-CMakeLists.txt.patch /opt/quicreach/msquic
+RUN patch /opt/quicreach/msquic/src/inc/CMakeLists.txt < /opt/quicreach/msquic/src-inc-CMakeLists.txt.patch
+
+WORKDIR /opt/quicreach
+RUN mkdir build && cd build && cmake -G 'Unix Makefiles' .. && cmake --build .
+
+RUN cp /opt/quicreach/build/src/quicreach /usr/local/bin
+
+WORKDIR /root/
