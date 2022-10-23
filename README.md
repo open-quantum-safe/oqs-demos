@@ -24,6 +24,7 @@ Currently supported packages:
 | **QUIC**         | [Github: oqs-demos/quic](quic)       | Dockerhub: [Server: openquantumsafe/nginx-quic](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic), [Client: openquantumsafe/msquic](https://hub.docker.com/repository/docker/openquantumsafe/msquic-reach)                       |
 | **Mosquitto**         | [Github: oqs-demos/mosquitto](mosquitto)       | [Dockerhub: openquantumsafe/mosquitto](https://hub.docker.com/repository/docker/openquantumsafe/mosquitto)               |
 | **OpenVPN**      | [Github: oqs-demos/openvpn](openvpn)   | [Dockerhub: openquantumsafe/openvpn](https://hub.docker.com/repository/docker/openquantumsafe/openvpn)                       |
+| **ngtcp2**         | [Github: oqs-demos/ngtcp2](ngtcp2)       | Dockerhub: [Server: openquantumsafe/ngtcp2-server](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-server), [Client: openquantumsafe/ngtcp2-client](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-client)                       |
 
 You can use the openssl (s_client), curl, Chromium and GNOME Web/epiphany clients with the Open Quantum Safe test server at https://test.openquantumsafe.org/.
 
@@ -50,6 +51,7 @@ The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.st
     Anthony Hu (wolfSSL)
     Igor Barshteyn
     Chia-Chin Chung
+    Keelan Cannoo (University of Mauritius / Cyberstorm.mu)
 
 ## Acknowledgments
 
