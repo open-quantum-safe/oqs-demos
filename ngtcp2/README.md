@@ -1,8 +1,7 @@
 ## Purpose 
-This directory contains Dockerfiles that build [ngtcp2](https://github.com/ngtcp2/ngtcp2) server and client with  [OQS-OpenSSL-QUIC](https://github.com/open-quantum-safe/oqs-demos/tree/main/quic), which allows ngtcp2 to negotiate quantum-safe keys in TLS 1.3. 
+This directory contains Dockerfiles that build the [ngtcp2](https://github.com/ngtcp2/ngtcp2) server, the ngtcp2 client and quicreach with  [OQS-OpenSSL-QUIC](https://github.com/open-quantum-safe/oqs-demos/tree/main/quic), which allows ngtcp2 to negotiate quantum-safe keys in TLS 1.3. 
 
 
-The client also comes with the [quicreach](https://github.com/microsoft/quicreach) tool, based on a modified version of  [msquic](https://github.com/microsoft/msquic/)  for QSC algorithms.
 
 ## Quick start
 
