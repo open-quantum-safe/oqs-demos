@@ -21,7 +21,7 @@ To interact with the ngtcp2 server, run
 client <address> <port>
 ```
 
-For example, `client 172.17.0.10 6000`
+For example, `client ngtcp2server 6000`
 
 By default the ngtcp2 client supports X25519, P-256, P-384 and P-521 for key exchange but any plain or hybrid QSC (Quantum-Safe Cryptography) algorithm can be selected. [See list of supported key exchange algorithms here](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange).
 
@@ -43,12 +43,13 @@ The CA certificate should first be downloaded from the server with
 wget <address>/CA.crt
 ```
 
-For example, `wget 172.17.0.10/CA.crt`
+For example, `wget ngtcp2server/CA.crt`
 
 To interact with the ngtcp2 server, run 
 ```
 SSL_CERT_FILE=CA.crt quicreach <address> --port <port> --stats
 ```
+For example, `SSL_CERT_FILE=CA.crt quicreach ngtcp2server --port 6000 --stats`
 
 The environment variable SSL_CERT_FILE should point to the location of the downloaded CA.crt.
 The address and port should correspond to those of the ngtcp2 server.

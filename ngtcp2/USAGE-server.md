@@ -26,6 +26,7 @@ server <address> <port>  CA.key CA.crt
 Replace address with the address you noted earlier and port with an available port number of your choice.
 For example `server 172.17.0.10 6000  CA.key CA.crt`
 
+Alternatively, you can just run `server "*" 6000  CA.key CA.crt`
 
 By default the ngtcp2 server supports X25519, P-256, P-384 and P-521 for key exchange but any plain or hybrid QSC (Quantum-Safe Cryptography) algorithm can be selected. [See list of supported key exchange algorithms here](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange).
 
