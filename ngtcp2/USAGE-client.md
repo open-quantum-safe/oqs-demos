@@ -9,7 +9,7 @@ The client also comes with the [quicreach](https://github.com/microsoft/quicreac
 Assuming Docker is [installed](https://docs.docker.com/install) the following command
 
 ```
-docker run --network ngtcp2-test -it openquantumsafe/ngtcp2-client bash
+docker run --network ngtcp2-test --name ngtcp2client -it openquantumsafe/ngtcp2-client bash
 ```
 
 will run the container for the quantum-safe crypto (QSC) protected ngtcp2 client on the docker network called ngtcp2-test (assuming it has already been created. If not, run `docker network create ngtcp2-test

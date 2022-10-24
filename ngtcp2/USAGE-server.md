@@ -8,7 +8,7 @@ Assuming Docker is [installed](https://docs.docker.com/install) the following co
 
 ```
 docker network create ngtcp2-test
-docker run --network ngtcp2-test -it openquantumsafe/ngtcp2-server bash
+docker run --network ngtcp2-test --name ngtcp2server -it openquantumsafe/ngtcp2-server bash
 ```
 
 will run the container for the quantum-safe crypto (QSC) protected ngtcp2 server on the docker network called ngtcp2-test.
