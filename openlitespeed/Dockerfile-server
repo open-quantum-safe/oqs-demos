@@ -1,0 +1,71 @@
+
+FROM ubuntu:focal as builder
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update apt software 
+RUN apt update
+
+# Install prerequisites
+RUN apt install git libz-dev libevent-dev cmake gcc ninja-build libunwind-dev pkg-config python3 python3-psutil golang-go -y
+
+WORKDIR /opt
+
+# Download openlitespeed repository
+RUN git clone https://github.com/litespeedtech/openlitespeed.git 
+
+COPY build.sh.patch /opt/
+COPY build_bssl.sh.patch /opt/
+
+# Apply patch to build.sh
+RUN cd openlitespeed && git apply --reject --whitespace=fix /opt/build.sh.patch 
+
+
+# Build and install openlitespeed
+# The webadmin password is set to password
+RUN cd openlitespeed && ./build.sh &&  sed 's/#OPENLSWS_PASSWORD=/OPENLSWS_PASSWORD=password/' ols.conf  -i && ./install.sh
+
+WORKDIR /root/
+# Generate keys and certificates
+RUN openssl req -x509 \
+-new -newkey rsa:3072 \
+-keyout CA.key \
+-out CA.crt \
+-nodes -subj '/CN=oqstest_CA' -days 500
+
+RUN openssl req \
+-new -newkey rsa:3072 \
+-keyout srv.key \
+-out srv.csr \
+-nodes \
+-subj '/CN= openlitespeed'
+
+RUN openssl x509 -req \
+-in srv.csr \
+-out srv.crt \
+-CA CA.crt \
+-CAkey CA.key \
+-CAcreateserial \
+-extensions v3_req \
+-days 365
+
+# Configuring the server to expose CA.crt on port 80 and to enable QUIC on port 443
+COPY httpd_config.conf /usr/local/lsws/conf/
+RUN mkdir -p /var/www/html && cp CA.crt /usr/local/lsws/Example/html/
+
+
+FROM ubuntu:focal 
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY --from=builder /root/CA.*  /root/
+COPY --from=builder /root/srv.* /root/
+COPY --from=builder /usr/local/lsws/ /usr/local/lsws
+COPY --from=builder /usr/local/lib/liboqs.* /usr/local/lib
+
+RUN ldconfig
+
+RUN apt update && apt install net-tools
+WORKDIR /root/
