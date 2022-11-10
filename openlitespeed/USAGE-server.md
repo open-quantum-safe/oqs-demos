@@ -13,15 +13,15 @@ docker run --network lsws-test --name lsws -it openquantumsafe/lsws bash
 
 will run the container for the quantum-safe crypto (QSC) protected OpenLiteSpeed server on the docker network called lsws-test.
 
-To start the server, run `/usr/local/lsws/bin/lswsctrl start`
-For more commands, run `/usr/local/lsws/bin/lswsctrl help`
+To start the server, run `/usr/local/lsws/bin/lswsctrl start`. For more commands, run `/usr/local/lsws/bin/lswsctrl help`
 
 The document root is  `/usr/local/lsws/Example/html/` 
 
 The CA.crt file is hosted on port 80 and QUIC is enabled on port 443.
 
 ### What is WebAdmin Console? 
-It is a GUI interface which makes OpenLiteSpeed configuration so much easier.
+It is a GUI interface which makes OpenLiteSpeed configuration so much easier. It uses port 7080.
+
 The WebAdmin Console can be accessed through `your-server-ip:7080`
 For example `172.17.0.2:7080`
 Run `ifconfig` to find your IP address.
