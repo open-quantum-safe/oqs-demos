@@ -32,7 +32,7 @@ The QUIC client from https://github.com/open-quantum-safe/oqs-demos/tree/main/qu
 The following command
 
 ```
-docker run --network lsws-test --name lsws-client -it openquantumsafe/msquic-reach bash
+docker run --network lsws-test --name client -it openquantumsafe/msquic-reach bash
 ```
 
 runs the container for the QSC-enabled QUIC client on the same network as the server.
