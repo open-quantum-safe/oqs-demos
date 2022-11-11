@@ -27,45 +27,21 @@ RUN cd openlitespeed && git apply --reject --whitespace=fix /opt/build.sh.patch
 RUN cd openlitespeed && ./build.sh &&  sed 's/#OPENLSWS_PASSWORD=/OPENLSWS_PASSWORD=password/' ols.conf  -i && ./install.sh
 
 WORKDIR /root/
-# Generate keys and certificates
-RUN openssl req -x509 \
--new -newkey rsa:3072 \
--keyout CA.key \
--out CA.crt \
--nodes -subj '/CN=oqstest_CA' -days 500
-
-RUN openssl req \
--new -newkey rsa:3072 \
--keyout srv.key \
--out srv.csr \
--nodes \
--subj '/CN= openlitespeed'
-
-RUN openssl x509 -req \
--in srv.csr \
--out srv.crt \
--CA CA.crt \
--CAkey CA.key \
--CAcreateserial \
--extensions v3_req \
--days 365
 
 # Configuring the server to expose CA.crt on port 80 and to enable QUIC on port 443
 COPY httpd_config.conf /usr/local/lsws/conf/
-RUN mkdir -p /var/www/html && cp CA.crt /usr/local/lsws/Example/html/
-
 
 FROM ubuntu:focal 
 
 ENV TZ=Europe/Zurich
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY --from=builder /root/CA.*  /root/
-COPY --from=builder /root/srv.* /root/
 COPY --from=builder /usr/local/lsws/ /usr/local/lsws
 COPY --from=builder /usr/local/lib/liboqs.* /usr/local/lib
 
 RUN ldconfig
 
-RUN apt update && apt install net-tools
+RUN apt update && apt install -y openssl net-tools
 WORKDIR /root/
+
+COPY serverstart.sh .
