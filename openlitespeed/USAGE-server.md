@@ -13,6 +13,8 @@ docker run --network lsws-test --name lsws -it openquantumsafe/lsws bash
 
 will run the container for the quantum-safe crypto (QSC) protected OpenLiteSpeed server on the docker network called lsws-test.
 
+Run the serverstart.sh script, `/root/serverstart.sh`, to generate certificate and key files and to start the server.
+
 To start the server, run `/usr/local/lsws/bin/lswsctrl start`. For more commands, run `/usr/local/lsws/bin/lswsctrl help`
 
 The document root is  `/usr/local/lsws/Example/html/` 
@@ -26,8 +28,7 @@ The WebAdmin Console can be accessed through `your-server-ip:7080`
 For example `172.17.0.2:7080`
 Run `ifconfig` to find your IP address.
 
-The username is `admin` and the password is `password`
-
+To get your WebAdmin Console username and password, run `cat /usr/local/lsws/adminpasswd`
 To reset your WebAdmin Console credentials, run `/usr/local/lsws/admin/misc/admpass.sh`
 
 
