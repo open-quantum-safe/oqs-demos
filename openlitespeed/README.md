@@ -23,7 +23,7 @@ docker run --network lsws-test --name lsws -it lsws bash
 will run the container for the quantum-safe crypto (QSC) protected OpenLiteSpeed server on the docker network called lsws-test.
 
 ### Usage
-Documentation for using the server docker image is contained in the separate [USAGE-server.md](https://github.com/open-quantum-safe/oqs-demos/blob/main/openlitespeed/USAGE-server.md) file.
+Documentation for using the server docker image is contained in the separate [USAGE-server.md](USAGE-server.md) file.
 
 ## Client
 
@@ -37,7 +37,7 @@ docker run --network lsws-test --name client -it openquantumsafe/msquic-reach ba
 
 runs the container for the QSC-enabled QUIC client on the same network as the server.
 ### Usage
-Documentation for using the client docker image is contained in the separate [USAGE-client.md](https://github.com/open-quantum-safe/oqs-demos/blob/main/openlitespeed/USAGE-client.md) file.
+Documentation for using the client docker image is contained in the separate [USAGE-client.md](USAGE-client.md) file.
 
 
 ## Disclaimer
