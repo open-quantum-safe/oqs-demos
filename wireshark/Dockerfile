@@ -24,7 +24,7 @@ RUN apt install -y gcc g++ \
             perl \
             flex \
             bison \
-            python \
+            2to3 python2-minimal python2 dh-python python-is-python3 \
             python3 \
             libssl-dev \
             libgcrypt-dev \
@@ -65,7 +65,7 @@ RUN mkdir -p build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/wire
 FROM ubuntu
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update && apt upgrade -y && apt install -y qt5-default libc-ares2 libqt5multimedia5 pcaputils libssh-dev
+RUN apt update && apt upgrade -y && apt install -y qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools libc-ares2 libqt5multimedia5 pcaputils libssh-dev
 
 # Only retain the ${INSTALLDIR} contents in the final image
 COPY --from=intermediate /opt/wireshark /opt/wireshark
