@@ -23,8 +23,7 @@ RUN cd openlitespeed && git apply --reject --whitespace=fix /opt/build.sh.patch
 
 
 # Build and install openlitespeed
-# The webadmin password is set to password
-RUN cd openlitespeed && ./build.sh &&  sed 's/#OPENLSWS_PASSWORD=/OPENLSWS_PASSWORD=password/' ols.conf  -i && ./install.sh
+RUN cd openlitespeed && ./build.sh &&  ./install.sh
 
 WORKDIR /root/
 
