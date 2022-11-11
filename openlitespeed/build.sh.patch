@@ -1,0 +1,23 @@
+diff --git a/build.sh b/build.sh
+index fee6cefb..1e72204f 100755
+--- a/build.sh
++++ b/build.sh
+@@ -514,7 +514,7 @@ if [ ! -d third-party ]; then
+     if [ "${ISLINUX}" != "yes" ] || [ "${ARCH}" != "x86_64" ] ; then
+         sed -i -e "s/psol/ /g"  ./build_ols.sh
+     fi
+-
++    git apply  --reject --whitespace=fix ../../build_bssl.sh.patch
+     ./build_ols.sh
+ 
+ fi
+@@ -549,6 +549,9 @@ if [ ! -d build ]; then
+ fi
+ cd build
+ cmake -DCMAKE_BUILD_TYPE=$BUILD ..
++# Add -loqs in link.txt
++sed -i ' 1 s/.*/&-loqs/' src/CMakeFiles/openlitespeed.dir/link.txt
++
+ jobs=$(nproc)
+ make -j${jobs}
+ cd ..
