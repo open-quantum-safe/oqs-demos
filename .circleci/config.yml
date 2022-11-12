@@ -100,6 +100,43 @@ jobs:
                   docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
                   docker push $TARGETNAME/nginx:latest 
 
+  ubuntu_x64_openlitespeed:
+    description: Building and pushing OQS-openlitespeed demo Docker images
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build openlitespeed with liboqs
+          command: |
+            docker build -f Dockerfile-server -t oqs-openlitespeed .
+          working_directory: openlitespeed
+      - run:
+          name: Test oqs-openlitespeed using public oqs-msquic
+          command: |
+            docker network create oqsls-test &&
+            docker run --network oqsls-test --detach --rm --name lsws oqs-openlitespeed bash -c "/root/serverstart.sh && /usr/local/lsws/bin/lswsctrl start && sleep 100" &&
+            sleep 10 &&
+            docker run --rm --network oqsls-test -it openquantumsafe/msquic-reach bash -c "wget lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_firesaber quicreach lsws --port 443 --stats"
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push openlitespeed image
+                command: |
+                  docker tag oqs-openlitespeed $TARGETNAME/openlitespeed:latest &&
+                  docker push $TARGETNAME/openlitespeed:latest
+
   ubuntu_x64_quic:
     description: Building and pushing OQS-QUIC-nginx and OQS-msquic demo Docker images
     docker:
@@ -146,7 +183,7 @@ jobs:
                   docker tag oqs-msquic $TARGETNAME/msquic-reach:latest &&
                   docker push $TARGETNAME/msquic-reach:latest &&
                   docker tag oqs-quic-nginx-img $TARGETNAME/nginx-quic:latest &&
-                  docker push $TARGETNAME/nginx-quic:latest
+                  docker push $TARGETNAME/nginx-quic:latest 
 
   ubuntu_x64_httpd:
     description: Building and pushing OQS-httpd and OQS-curl dev demo Docker image
@@ -411,5 +448,7 @@ workflows:
       - ubuntu_x64_ngtcp2:
           context: openquantumsafe
       - ubuntu_x64_openssh:
+          context: openquantumsafe
+      - ubuntu_x64_openlitespeed:
           context: openquantumsafe
 
