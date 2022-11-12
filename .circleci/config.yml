@@ -100,7 +100,7 @@ jobs:
                   docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
                   docker push $TARGETNAME/nginx:latest 
 
-  ubuntu_x64_litespeed:
+  ubuntu_x64_openlitespeed:
     description: Building and pushing OQS-openlitespeed demo Docker images
     docker:
       - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
