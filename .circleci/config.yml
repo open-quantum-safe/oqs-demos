@@ -134,6 +134,18 @@ jobs:
             docker run --network quic-test --detach --rm --name nginx oqs-quic-nginx-img &&
             sleep 100 &&
             docker run --network quic-test -it oqs-msquic bash -c "cd /root && wget nginx:5999/CA.crt && TLS_DEFAULT_GROUPS=frodo640aes SSL_CERT_FILE=/root/CA.crt quicreach nginx --port 6001"
+      - run:
+          name: Build openlitespeed with liboqs
+          command: |
+            docker build -f Dockerfile-server -t oqs-openlitespeed .
+          working_directory: openlitespeed
+      - run:
+          name: Test oqs-openlitespeed and oqs-msquic
+          command: |
+            docker network create oqsls-test &&
+            docker run --network oqsls-test --detach --rm --name lsws oqs-openlitespeed bash -c "/root/serverstart.sh && /usr/local/lsws/bin/lswsctrl start && sleep 100" &&
+            sleep 10 &&
+            docker run --rm --network oqsls-test -it oqs-msquic bash -c "wget lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_firesaber quicreach lsws --port 443 --stats"
       - when:
           condition:
             or:
@@ -141,12 +153,14 @@ jobs:
               - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
           steps:
             - run:
-                name: Push nginx-quic and msquic images
+                name: Push nginx-quic, openlitespeed and msquic images
                 command: |
                   docker tag oqs-msquic $TARGETNAME/msquic-reach:latest &&
                   docker push $TARGETNAME/msquic-reach:latest &&
                   docker tag oqs-quic-nginx-img $TARGETNAME/nginx-quic:latest &&
-                  docker push $TARGETNAME/nginx-quic:latest
+                  docker push $TARGETNAME/nginx-quic:latest &&
+                  docker tag oqs-openlitespeed $TARGETNAME/openlitespeed:latest &&
+                  docker push $TARGETNAME/openlitespeed:latest
 
   ubuntu_x64_httpd:
     description: Building and pushing OQS-httpd and OQS-curl dev demo Docker image
