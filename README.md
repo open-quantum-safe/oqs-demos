@@ -26,6 +26,7 @@ Currently supported packages:
 | **OpenVPN**      | [Github: oqs-demos/openvpn](openvpn)   | [Dockerhub: openquantumsafe/openvpn](https://hub.docker.com/repository/docker/openquantumsafe/openvpn)                       |
 | **ngtcp2**         | [Github: oqs-demos/ngtcp2](ngtcp2)       | Dockerhub: [Server: openquantumsafe/ngtcp2-server](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-server), [Client: openquantumsafe/ngtcp2-client](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-client)                       |
 | **OpenLiteSpeed**         | [Github: oqs-demos/openlitespeed](openlitespeed)       | [ Dockerhub: openquantumsafe/openlitespeed](https://hub.docker.com/repository/docker/openquantumsafe/openlitespeed)                       |
+| **Unbound**         | [Github: oqs-demos/unbound](unbound)       | [ Dockerhub: openquantumsafe/unbound](https://hub.docker.com/repository/docker/openquantumsafe/unbound)                       |
 
 You can use the openssl (s_client), curl, Chromium and GNOME Web/epiphany clients with the Open Quantum Safe test server at https://test.openquantumsafe.org/.
 
@@ -53,6 +54,7 @@ The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.st
     Igor Barshteyn
     Chia-Chin Chung
     Keelan Cannoo (University of Mauritius / Cyberstorm.mu)
+    Dindyal Jeevesh Rishi (University of Mauritius / cyberstorm.mu)
 
 ## Acknowledgments
 
