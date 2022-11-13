@@ -68,12 +68,5 @@ RUN set -x && \
 COPY unbound.sh /opt
 RUN chmod 777 /opt/unbound.sh
 
-COPY unbound_dns.crt /opt/unbound/etc/unbound/
-COPY dnsPrivate.key /opt/unbound/etc/unbound/
-
-RUN /bin/bash /opt/unbound.sh
-
 EXPOSE 853/tcp
-
-CMD /opt/unbound/sbin/unbound -vv
-#CMD ["/opt/unbound.sh"]
+CMD ["/opt/unbound.sh"]
