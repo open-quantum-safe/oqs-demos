@@ -19,7 +19,7 @@ the DNS server will ask for a pass pem. The pass pem is:
 ```bash
     cyberstorm
 ```
-In the file [unbound.sh](https://github.com/ryndia/oqs-demos/blob/main/unbound/unbound-docker/unbound.sh#L47) the environment variable  TLS_DEFAULT_GROUPS is set "p384_kyber768:X25519" to force for p384_kyber768 key exchange. Other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). 
+In the file [unbound.sh](unbound/unbound-docker/unbound.sh#L47) the environment variable  TLS_DEFAULT_GROUPS is set "p384_kyber768:X25519" to force for p384_kyber768 key exchange. Other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). 
 
 ```bash
     exec export TLS_DEFAULT_GROUPS="p384_kyber768:X25519"
