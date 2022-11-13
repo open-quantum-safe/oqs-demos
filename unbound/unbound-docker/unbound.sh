@@ -1,6 +1,11 @@
 #!/bin/bash
 set -x
 
+openssl genrsa -des3 -out /opt/unbound/etc/unbound/dnsPrivate.key 2048
+openssl req -key /opt/unbound/etc/unbound/dnsPrivate.key -new -out /opt/unbound/etc/unbound/domain.csr
+openssl x509 -signkey /opt/unbound/etc/unbound/dnsPrivate.key -in /opt/unbound/etc/unbound/domain.csr -req -days 365 -out /opt/unbound/etc/unbound/unbound_dns.crt
+
+
 cat <<EOT >> /opt/unbound/etc/unbound/unbound.conf
 server:
   directory: "/opt/unbound/etc/unbound"
@@ -36,13 +41,11 @@ server:
   # tls-ciphersuites: "bikel1"
 EOT
 
-ldd /opt/unbound/sbin/unbound
-openssl version -a
+export TLS_DEFAULT_GROUPS="p384_kyber768:X25519"
 mkdir -p -m 700 /opt/unbound/etc/unbound/var
 chown unbound:unbound /opt/unbound/etc/unbound/var
 /opt/unbound/sbin/unbound-anchor -a "/opt/unbound/etc/unbound/var/root.key"
 touch /opt/unbound/etc/unbound/unbound.log
 chown unbound:unbound /opt/unbound/etc/unbound/unbound.log
-exec /opt/unbound/sbin/unbound -V
-exec export TLS_DEFAULT_GROUPS="p384_kyber768:X25519"
+exec /opt/unbound/sbin/unbound -vv
 
