@@ -1,7 +1,7 @@
 
 # Usage of the DNS server
 
-[Unbound DNS server](https://github.com/NLnetLabs/unbound) was configured with tls connection using the post quantum key exchange [openssl](https://github.com/open-quantum-safe/openssl) variant.
+[Unbound DNS server](https://github.com/NLnetLabs/unbound) was configured with tls connection using the post quantum [openssl](https://github.com/open-quantum-safe/openssl) variant.
 ## Installation
 Assuming you have docker [installed](https://docs.docker.com/install) on your machine all command below will launch dns server docker.
 
