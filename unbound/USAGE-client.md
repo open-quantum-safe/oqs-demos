@@ -57,3 +57,5 @@ Below is an example output of the command where "unbound_pro" has the ip address
         },
 
 ```
+To verify the key exchange algorithm, use the post quantum [wireshark](https://github.com/open-quantum-safe/oqs-demos/tree/main/wireshark) variant to check the "client hello" package.
+![wireshark screenshot](wireshark_screenshot.png)
