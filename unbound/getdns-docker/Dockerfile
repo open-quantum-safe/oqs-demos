@@ -52,27 +52,3 @@ ENV TLS_DEFAULT_GROUPS="p384_kyber768:X25519"
 #	ldconfig && \
 #	cmake .. && \
 #	make install 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
