@@ -12,13 +12,8 @@ Run Unbound DNS container:
     docker run --interactive --publish=853:853 --tty --hostname unbound_pro --name unbound_pro unbound:dev
 ```
 After running all the command above a container will open with unbound running configure with dns-over-tls. 
+Before running unbound, a certificate is needed. Therefore a self sign certificate will be generate using the [unbound.sh](unbound-docker/unbound.sh) and ask for input.
 
-If you are using the self sign certificate I have provided then
-the DNS server will ask for a pass pem. The pass pem is:
-
-```bash
-    cyberstorm
-```
 In the file [unbound.sh](unbound-docker/unbound.sh#L47) the environment variable  TLS_DEFAULT_GROUPS is set "p384_kyber768:X25519" to force for p384_kyber768 key exchange. Other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). 
 
 ```bash
