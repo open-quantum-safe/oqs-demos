@@ -32,7 +32,7 @@ To query the DNS server, run the command:
 ```
 
 By default the DNS server container and the getdns container are connected on the bridge network. The DNS server container has the name of "unbound"
-To get the ip address of DNS server container use the command and find the name "unbound" and check its ip address:
+To get its ip address use the command:
 
 ```bash
     docker network inspect bridge
