@@ -7,8 +7,6 @@ Assuming you have docker [installed](https://docs.docker.com/install) on your ma
 
 Run Unbound DNS container:
 ```bash
-    cd unbound-docker && \
-    docker build -t unbound_docker . && \
     docker run --interactive --publish=853:853 --tty --hostname unbound --name unbound unbound_docker
 ```
 After running all the command above a container will open with unbound running configure with dns-over-tls. 
