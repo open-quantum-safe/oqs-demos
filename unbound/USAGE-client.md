@@ -29,31 +29,29 @@ To query the DNS server, run the command:
     getdns_query -s -d example.com A @<DNS server container ip>:853 -L +return_call_reporting
 ```
 
-By default the DNS server container and the getdns container are connected on the bridge network. The DNS server container has the name of "unbound"
-To get its ip address use the command:
-
+The DNS server container has the name of "unbound" to get its ip address use the command:
 ```bash
-    docker network inspect bridge
+    docker network inspect unbound-test
 ```
-Below is an example output of the command where "unbound" has the ip address of 172.17.0.3.
+
+Below is an example output of the command where "unbound" has the ip address of 172.20.0.2.
 ```json
     "Containers": {
-            "4f60737374fc4d90344e8ce3c9d78a926a58f2c5bfd11a5666f9f3172bb258f6": {
+            "3763586e7b1fce6232671e7d2515cf7aa2bbfb0ba90231b2e0945f2bebb7242c": {
                 "Name": "getdns",
-                "EndpointID": "44e416e9d9eef460035b2153e96a7064922e702e3d1741e681abc16bba2a4f3c",
-                "MacAddress": "02:42:ac:11:00:02",
-                "IPv4Address": "172.17.0.2/16",
+                "EndpointID": "e6b043d166395b1ce6b368ab3ec975f7ffa7eac517a3b3f9774c2950ce4c126d",
+                "MacAddress": "02:42:ac:14:00:03",
+                "IPv4Address": "172.20.0.3/16",
                 "IPv6Address": ""
             },
-            "e47733f957c0bb876fd751d1900cbad27db909e43ced9153b47c01d73f3b09a8": {
+            "95e5bd787333afc893e90e2398407133f1a421933eabdf1c0cd77eaec6feb5e2": {
                 "Name": "unbound",
-                "EndpointID": "b16a1feed8d5f2c840cf8a9ca9c51c7ada5515cb5b99f5c2254bb8ef46c3710a",
-                "MacAddress": "02:42:ac:11:00:03",
-                "IPv4Address": "172.17.0.3/16",
+                "EndpointID": "3479a7c99d9cea7a76218f449ca1bafd35527d79778bcd4af68e8113d96166dd",
+                "MacAddress": "02:42:ac:14:00:02",
+                "IPv4Address": "172.20.0.2/16",
                 "IPv6Address": ""
             }
         },
-
 ```
 After query the DNS server, we can check the key exchange algorithm using wireshark. To verify the key exchange algorithm, use the post quantum [wireshark](https://github.com/open-quantum-safe/oqs-demos/tree/main/wireshark) variant to check the "client hello" package.
 
