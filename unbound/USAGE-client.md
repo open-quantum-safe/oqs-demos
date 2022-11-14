@@ -8,8 +8,8 @@ Assuming you have docker [installed](https://docs.docker.com/install) on your ma
 Run getdns container:
 ```bash
     cd getdns-docker && \
-    docker build -t getdns:dev . && \
-    docker run --interactive --tty --hostname getdns --name getdns getdns:dev
+    docker build -t getdns_docker . && \
+    docker run --interactive --tty --hostname getdns --name getdns getdns_docker
 ```
 After running all the command above a container will open with getdns running with openssl post quantum variant.
 
@@ -31,13 +31,13 @@ To query the DNS server, run the command:
     getdns_query -s -d example.com A @<DNS server container ip>:853 -L +return_call_reporting
 ```
 
-By default the DNS server container and the getdns container are connected on the bridge network.
-To get the ip address of DNS server container use the command and check the "unbound_pro" ip address:
+By default the DNS server container and the getdns container are connected on the bridge network. The DNS server container has the name of "unbound"
+To get the ip address of DNS server container use the command and find the name "unbound" and check its ip address:
 
 ```bash
     docker network inspect bridge
 ```
-Below is an example output of the command where "unbound_pro" has the ip address of 172.17.0.3.
+Below is an example output of the command where "unbound" has the ip address of 172.17.0.3.
 ```json
     "Containers": {
             "4f60737374fc4d90344e8ce3c9d78a926a58f2c5bfd11a5666f9f3172bb258f6": {
@@ -48,7 +48,7 @@ Below is an example output of the command where "unbound_pro" has the ip address
                 "IPv6Address": ""
             },
             "e47733f957c0bb876fd751d1900cbad27db909e43ced9153b47c01d73f3b09a8": {
-                "Name": "unbound_pro",
+                "Name": "unbound",
                 "EndpointID": "b16a1feed8d5f2c840cf8a9ca9c51c7ada5515cb5b99f5c2254bb8ef46c3710a",
                 "MacAddress": "02:42:ac:11:00:03",
                 "IPv4Address": "172.17.0.3/16",
