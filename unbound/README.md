@@ -14,15 +14,15 @@ Assuming you have docker [installed](https://docs.docker.com/install) on your ma
 Run Unbound DNS container:
 ```bash
     cd unbound-docker && \
-    docker build -t unbound:dev . && \
-    docker run --interactive --publish=853:853 --tty --hostname unbound_pro --name unbound_pro unbound:dev
+    docker build -t unbound_docker . && \
+    docker run --interactive --publish=853:853 --tty --hostname unbound_pro --name unbound unbound_docker
 ```
 Documentation for using the server docker image is contained in the separate [USAGE-server.md](USAGE-server.md) file.
 
 Open another terminal in the folder to run the getdns container:
 ```bash
     cd getdns-docker && \
-    docker build -t getdns:dev . && \
-    docker run --interactive --tty --hostname getdns --name getdns getdns:dev
+    docker build -t getdns_docker . && \
+    docker run --interactive --tty --hostname getdns --name getdns getdns_docker
 ```
 Documentation for using the client docker image is contained in the separate [USAGE-client.md](USAGE-client.md) file.
