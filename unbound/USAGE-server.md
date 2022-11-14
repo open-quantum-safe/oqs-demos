@@ -7,7 +7,8 @@ Assuming you have docker [installed](https://docs.docker.com/install) on your ma
 
 Run Unbound DNS container:
 ```bash
-    docker run --interactive --publish=853:853 --tty --hostname unbound --name unbound -it openquantumsafe/unbound
+    docker network create unbound-test
+    docker run --network unbound-test --interactive --publish=853:853 --tty --hostname unbound --name unbound -it openquantumsafe/unbound
 ```
 After running all the command above a container will open with unbound running configure with dns-over-tls. 
 Before running unbound, a certificate is needed. Therefore a self sign certificate will be generate using the [unbound.sh](unbound-docker/unbound.sh) and ask for input.
