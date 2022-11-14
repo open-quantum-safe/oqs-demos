@@ -7,7 +7,7 @@ Assuming you have docker [installed](https://docs.docker.com/install) on your ma
 
 Run getdns container:
 ```bash
-    docker run --interactive --tty --hostname getdns --name getdns getdns_docker
+    docker run --interactive --tty --hostname getdns --name getdns -it openquantumsafe/getdns
 ```
 After running all the command above a container will open with getdns running with openssl post quantum variant.
 
