@@ -15,7 +15,7 @@ Run Unbound DNS container:
 ```bash
     cd unbound-docker && \
     docker build -t unbound_docker . && \
-    docker run --interactive --publish=853:853 --tty --hostname unbound_pro --name unbound unbound_docker
+    docker run --interactive --publish=853:853 --tty --hostname unbound --name unbound unbound_docker
 ```
 Documentation for using the server docker image is contained in the separate [USAGE-server.md](USAGE-server.md) file.
 
