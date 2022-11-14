@@ -14,6 +14,7 @@ Assuming you have docker [installed](https://docs.docker.com/install) on your ma
 Run Unbound DNS container:
 ```bash
     cd unbound-docker && \
+    docker network create unbound-test && \
     docker build -t unbound_docker . && \
     docker run --interactive --publish=853:853 --tty --hostname unbound --name unbound unbound_docker
 ```
