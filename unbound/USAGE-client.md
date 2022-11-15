@@ -13,14 +13,10 @@ After running all the command above a container will open with getdns running wi
 
 ## Usage
 
-In the file [Dockerfile](getdns-docker/Dockerfile#L45) the environment variable  TLS_DEFAULT_GROUPS is set "p384_kyber768:X25519" to force for p384_kyber768 key exchange. Other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). 
+The key exchange between the server and the client is set on p384_kyber768:X25519, other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). To specify the desire key exchange algorithm use the parameter -e in the docker run command such below example wherre kyber1024 is used to do key exchange.
 
 ```bash
-    ENV TLS_DEFAULT_GROUPS="p384_kyber768:X25519"
-```
-Or in the interactive container the environment variable can be set with desired key exchange algorithm from the [list](https://github.com/open-quantum-safe/boringssl#key-exchange):
-```bash
-    export TLS_DEFAULT_GROUPS="p384_kyber768:X25519"
+     docker run --network unbound-test -e TLS_DEFAULT_GROUPS=kyber1024 --interactive --tty --hostname getdns --name getdns -it openquantumsafe/getdns
 ```
 
 To query the DNS server, run the command:
