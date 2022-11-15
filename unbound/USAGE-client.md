@@ -52,3 +52,7 @@ Below is an example output of the command where "unbound" has the ip address of 
 After query the DNS server, we can check the key exchange algorithm using wireshark. To verify the key exchange algorithm, use the post quantum [wireshark](https://github.com/open-quantum-safe/oqs-demos/tree/main/wireshark) variant to check the "client hello" package.
 
 ![wireshark screenshot](wireshark_screenshot.png)
+
+# DISCLAIMER
+
+[Please check the limitations and security information](https://github.com/open-quantum-safe/openssl#limitations-and-security)
