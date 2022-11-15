@@ -27,3 +27,7 @@ Open another terminal in the folder to run the getdns container:
     docker run --network unbound-test --interactive --tty --hostname getdns --name getdns getdns_docker
 ```
 Documentation for using the client docker image is contained in the separate [USAGE-client.md](USAGE-client.md) file.
+
+# DISCLAIMER
+
+[Please check the limitations and security information](https://github.com/open-quantum-safe/openssl#limitations-and-security)
