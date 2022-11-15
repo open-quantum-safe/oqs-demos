@@ -3,7 +3,7 @@
 
 The post quantum key exchange [openssl](https://github.com/open-quantum-safe/openssl) variant and [getdns](https://getdnsapi.net/) were installed to query the DNS server with a post quantum key exchange algorithm.
 ## Installation
-Assuming you have docker [installed](https://docs.docker.com/install) on your machine all command below will launch dns server docker.
+Assuming you have docker [installed](https://docs.docker.com/install) on your machine all command below will launch getdns docker.
 
 Run getdns container:
 ```bash
