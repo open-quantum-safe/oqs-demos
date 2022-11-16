@@ -1,8 +1,8 @@
 #!/bin/bash
 set -x
 
-openssl genrsa -des3 -out /opt/unbound/etc/unbound/dnsPrivate.key 2048
-openssl req -key /opt/unbound/etc/unbound/dnsPrivate.key -new -out /opt/unbound/etc/unbound/domain.csr
+openssl genrsa -out /opt/unbound/etc/unbound/dnsPrivate.key 2048
+openssl req -key /opt/unbound/etc/unbound/dnsPrivate.key -new -out /opt/unbound/etc/unbound/domain.csr -subj "/C=MU/ST=Plaine Wilhem/L=Curepipe/O=University Of Mauritius & cyberstorm.mu/OU=IT Department/CN=ryndia"
 openssl x509 -signkey /opt/unbound/etc/unbound/dnsPrivate.key -in /opt/unbound/etc/unbound/domain.csr -req -days 365 -out /opt/unbound/etc/unbound/unbound_dns.crt
 
 
