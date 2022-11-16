@@ -13,7 +13,6 @@ Assuming you have docker [installed](https://docs.docker.com/install) on your ma
 
 Run Unbound DNS container:
 ```bash
-    cd unbound-docker && \
     docker network create unbound-test && \
     docker build -t unbound_docker -f Dockerfile-unbound . && \
     docker run --network unbound-test --interactive --publish=853:853 --tty --hostname unbound --name unbound unbound_docker
@@ -22,7 +21,6 @@ Documentation for using the server docker image is contained in the separate [US
 
 Open another terminal in the folder to run the getdns container:
 ```bash
-    cd getdns-docker && \
     docker build -t getdns_docker Dockerfile-getdns . && \
     docker run --network unbound-test --interactive --tty --hostname getdns --name getdns getdns_docker
 ```
