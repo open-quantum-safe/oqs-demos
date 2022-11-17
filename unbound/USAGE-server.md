@@ -13,7 +13,7 @@ Run Unbound DNS container:
 After running all the command above a container will open with unbound running configure with dns-over-tls. 
 Before running unbound, a certificate is needed. Therefore a self sign certificate will be generate and ask for input. 
 
-The key exchange between the server and the client is set on p384_kyber768:X25519, other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). To specify the desire key exchange algorithm use the parameter -e in the docker run command such below example wherre kyber1024 is used to do key exchange.
+The key exchange between the server and the client is set on p384_kyber768:X25519, other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). To specify the desired key exchange algorithm use the parameter -e in the docker run command such below example wherre kyber1024 is used to do key exchange.
 
 ```bash
     docker run --network unbound-test -e TLS_DEFAULT_GROUPS=kyber1024 --interactive --publish=853:853 --tty --hostname unbound --name unbound -it openquantumsafe/unbound
