@@ -13,9 +13,9 @@ RUN apt update && apt install -y \
 ##installation of openssl with oqs 
 ##############################################################################
 WORKDIR /root
-RUN git clone --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl.git openssl
+RUN git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl.git openssl
 
-RUN cd openssl && git clone --branch main https://github.com/open-quantum-safe/liboqs.git \
+RUN cd openssl && git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git \
       && cd liboqs \
       && mkdir build && cd build \
       && cmake -GNinja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/root/openssl/oqs .. \
