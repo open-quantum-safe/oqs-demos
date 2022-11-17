@@ -9,6 +9,7 @@ parameters:
 # https://github.com/CircleCI-Public/circleci-cli/issues/281#issuecomment-472808051
 localCheckout: &localCheckout
   run: |-
+    git config --global --add safe.directory /tmp/_circleci_local_build_repo
     PROJECT_PATH=$(cd ${CIRCLE_WORKING_DIRECTORY}; pwd)
     mkdir -p ${PROJECT_PATH}
     cd /tmp/_circleci_local_build_repo
@@ -136,6 +137,43 @@ jobs:
                   docker tag oqs-openlitespeed $TARGETNAME/openlitespeed:latest &&
                   docker push $TARGETNAME/openlitespeed:latest
 
+  ubuntu_x64_openlitespeed:
+    description: Building and pushing OQS-openlitespeed demo Docker images
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build openlitespeed with liboqs
+          command: |
+            docker build -f Dockerfile-server -t oqs-openlitespeed .
+          working_directory: openlitespeed
+      - run:
+          name: Test oqs-openlitespeed using public oqs-msquic
+          command: |
+            docker network create oqsls-test &&
+            docker run --network oqsls-test --detach --rm --name lsws oqs-openlitespeed bash -c "/root/serverstart.sh && /usr/local/lsws/bin/lswsctrl start && sleep 100" &&
+            sleep 10 &&
+            docker run --rm --network oqsls-test -it openquantumsafe/msquic-reach bash -c "wget lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_firesaber quicreach lsws --port 443 --stats"
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push openlitespeed image
+                command: |
+                  docker tag oqs-openlitespeed $TARGETNAME/openlitespeed:latest &&
+                  docker push $TARGETNAME/openlitespeed:latest
+
   ubuntu_x64_quic:
     description: Building and pushing OQS-QUIC-nginx and OQS-msquic demo Docker images
     docker:
@@ -182,7 +220,7 @@ jobs:
                   docker tag oqs-msquic $TARGETNAME/msquic-reach:latest &&
                   docker push $TARGETNAME/msquic-reach:latest &&
                   docker tag oqs-quic-nginx-img $TARGETNAME/nginx-quic:latest &&
-                  docker push $TARGETNAME/nginx-quic:latest
+                  docker push $TARGETNAME/nginx-quic:latest 
 
   ubuntu_x64_httpd:
     description: Building and pushing OQS-httpd and OQS-curl dev demo Docker image
@@ -351,6 +389,51 @@ jobs:
                   docker tag oqs-mosquitto $TARGETNAME/mosquitto:latest &&
                   docker push $TARGETNAME/mosquitto:latest 
 
+  ubuntu_x64_ngtcp2:
+    description: Building OQS-based ngtcp2 docker image
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build ngtcp2 server and client
+          command: |
+            docker build -t oqs-ngtcp2-server -f Dockerfile-server . &&
+            docker build -t oqs-ngtcp2-client -f Dockerfile-client . 
+          working_directory: ngtcp2
+      - run:
+          name: Test ngtcp2 using local docker network
+          command: |
+            docker network create ngtcp2-test
+            docker run --network ngtcp2-test --name oqs-ngtcp2server oqs-ngtcp2-server bash -c 'server --groups kyber512 "*" 6000 CA.key CA.crt' &
+            docker run --network ngtcp2-test -it --name oqs-ngtcp2client oqs-ngtcp2-client bash -c 'client --exit-on-first-stream-close --groups kyber512 oqs-ngtcp2server 6000'
+            docker logs oqs-ngtcp2client | grep "QUIC handshake has been confirmed"
+            docker rm oqs-ngtcp2client
+            docker stop oqs-ngtcp2server
+            docker rm oqs-ngtcp2server
+            docker network rm ngtcp2-test
+          working_directory: ngtcp2
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push OQS ngtcp2 image
+                command: |
+                  docker tag oqs-ngtcp2-server $TARGETNAME/ngtcp2-server:latest &&
+                  docker tag oqs-ngtcp2-client $TARGETNAME/ngtcp2-client:latest &&
+                  docker push $TARGETNAME/ngtcp2-server:latest &&
+                  docker push $TARGETNAME/ngtcp2-client:latest
+
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
     docker:
@@ -442,6 +525,8 @@ workflows:
       - ubuntu_x64_openvpn:
           context: openquantumsafe
       - ubuntu_x64_mosquitto:
+          context: openquantumsafe
+      - ubuntu_x64_ngtcp2:
           context: openquantumsafe
       - ubuntu_x64_openssh:
           context: openquantumsafe

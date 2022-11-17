@@ -1,0 +1,45 @@
+FROM ubuntu:focal 
+
+ENV TZ=Europe/Zurich
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update image and apt software 
+RUN apt update && apt install software-properties-common -y
+
+RUN apt install net-tools nginx -y 
+
+# All build prerequisites for the various software packages:
+RUN apt install git pkg-config  autoconf automake autotools-dev libtool cmake libev-dev -y
+RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt install -y g++-11 -y
+RUN apt-add-repository ppa:lttng/stable-2.12 -y && apt update && apt install wget build-essential cmake liblttng-ust-dev lttng-tools git ninja-build libssl-dev -y
+
+WORKDIR /opt
+COPY merge-oqs-openssl-quic.sh /opt
+RUN ./merge-oqs-openssl-quic.sh mergeonly
+
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git
+
+# until oqs-openssl builds liboqs as submodule, need to do it manually:
+# also copy oqs-includes into a location that the quic-openssl out-of-tree-build will find:
+RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
+
+# build openssl
+RUN cd oqs-openssl-quic && ./config enable-tls1_3 --prefix=$PWD/build && make -j$(nproc) && make install_sw
+
+# build nghttp3
+RUN git clone https://github.com/ngtcp2/nghttp3 && cd nghttp3 && autoreconf -i && ./configure --prefix=$PWD/build --enable-lib-only && make -j$(nproc) check && make install
+
+# build ngtcp2
+RUN git clone https://github.com/ngtcp2/ngtcp2 && cd ngtcp2 && autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig LDFLAGS="-Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib"  CXX=g++-11 && make -j$(nproc) check
+
+# Generate key and certificate
+# Expose certificate
+WORKDIR /root/
+RUN openssl req -x509 -new -newkey rsa:4096 -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365 
+RUN openssl req -new -newkey rsa:4096 -keyout server.key -out server.csr -nodes -subj "/CN=oqs-ngtcp2" 
+RUN cp CA.crt /var/www/html/
+
+# Copy executables to usr/local/bin
+RUN cp /opt/ngtcp2/examples/server /usr/local/bin/ 
+
+WORKDIR /root/

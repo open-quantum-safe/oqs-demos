@@ -16,7 +16,7 @@ Currently supported packages:
 | **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl)                             |
 | **Apache httpd** | [Github: oqs-demos/httpd](httpd)       | [Dockerhub: openquantumsafe/httpd](https://hub.docker.com/repository/docker/openquantumsafe/httpd)                           |
 | **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx)                           |
-| **Chromium**     | [Github: oqs-demos/chromium](chromium) | [Binary for Ubuntu 18.04](https://github.com/open-quantum-safe/oqs-demos/releases/download/v0.4.0/chromium-ubuntu-0.4.0.tgz) |
+| **Chromium** | [Github: oqs-demos/chromium](chromium) | [Binary for Ubuntu 20](https://github.com/open-quantum-safe/oqs-demos/releases/download/0.7.2/chromium-ubuntu-0.7.2.tgz) |
 | **HAproxy**      | [Github: oqs-demos/haproxy](haproxy)   | [Dockerhub: openquantumsafe/haproxy](https://hub.docker.com/repository/docker/openquantumsafe/haproxy)                       |
 | **OpenSSH**      | [Github: oqs-demos/openssh](openssh)   | [Dockerhub: openquantumsafe/openssh](https://hub.docker.com/repository/docker/openquantumsafe/openssh)                       |
 | **Wireshark**    | [Github: oqs-demos/wireshark](wireshark)   | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                       |
@@ -24,6 +24,8 @@ Currently supported packages:
 | **QUIC**         | [Github: oqs-demos/quic](quic)       | Dockerhub: [Server: openquantumsafe/nginx-quic](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic), [Client: openquantumsafe/msquic](https://hub.docker.com/repository/docker/openquantumsafe/msquic-reach)                       |
 | **Mosquitto**         | [Github: oqs-demos/mosquitto](mosquitto)       | [Dockerhub: openquantumsafe/mosquitto](https://hub.docker.com/repository/docker/openquantumsafe/mosquitto)               |
 | **OpenVPN**      | [Github: oqs-demos/openvpn](openvpn)   | [Dockerhub: openquantumsafe/openvpn](https://hub.docker.com/repository/docker/openquantumsafe/openvpn)                       |
+| **ngtcp2**         | [Github: oqs-demos/ngtcp2](ngtcp2)       | Dockerhub: [Server: openquantumsafe/ngtcp2-server](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-server), [Client: openquantumsafe/ngtcp2-client](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-client)                       |
+| **OpenLiteSpeed**         | [Github: oqs-demos/openlitespeed](openlitespeed)       | [ Dockerhub: openquantumsafe/openlitespeed](https://hub.docker.com/repository/docker/openquantumsafe/openlitespeed)                       |
 
 You can use the openssl (s_client), curl, Chromium and GNOME Web/epiphany clients with the Open Quantum Safe test server at https://test.openquantumsafe.org/.
 
@@ -50,6 +52,7 @@ The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.st
     Anthony Hu (wolfSSL)
     Igor Barshteyn
     Chia-Chin Chung
+    Keelan Cannoo (University of Mauritius / Cyberstorm.mu)
 
 ## Acknowledgments
 
