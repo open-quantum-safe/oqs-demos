@@ -42,8 +42,6 @@ RUN apt update && apt install -y \
     flex \
     bison
 
-RUN openssl version -a
-
 ##installation of unbound
 ENV UNBOUND_DOWNLOAD_URL https://www.unbound.net/downloads/unbound-latest.tar.gz
 RUN set -x && \
@@ -52,8 +50,7 @@ RUN set -x && \
     wget --no-check-certificate -O unbound.tar.gz $UNBOUND_DOWNLOAD_URL && \
     tar xzf unbound.tar.gz  && \
     rm -f unbound.tar.gz && \ 
-    ls && \
-    cd unbound-1.17.0 && \
+    cd */ && \
     groupadd unbound && \
     useradd -g unbound -s /etc -d /dev/null unbound && \
     ./configure --prefix=/opt/unbound \
