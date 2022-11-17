@@ -6,4 +6,4 @@ sudo /usr/local/openssl/apps/openssl req -new -newkey dilithium3 -keyout serverk
 
 sudo /usr/local/openssl/apps/openssl x509 -req -in servercsr.csr -out servercert.pem -CA CA_cert.pem -CAkey CA_key.pem -CAcreateserial -days 365
 
-sudo chown -R dan *
+sudo chown -R $USER *

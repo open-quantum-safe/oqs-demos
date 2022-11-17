@@ -51,7 +51,7 @@ RUN wget --no-check-certificate -O /usr/local/bin/bazel https://github.com/bazel
 # Build OpenSSL
 WORKDIR /usr/local/openssl-1.1.1g
 RUN ./config \
-    && make -j \
+    && make ${MAKE_DEFINES} \
     && make install
 
 
@@ -70,7 +70,7 @@ RUN mkdir build-static \
 # build openssl-oqs fork
 WORKDIR /usr/local/openssl
 RUN ./config --openssldir="/usr/local/ssl" \
-    && make -j
+    && make ${MAKE_DEFINES}
 
 # copy openssl-oqs bin to /usr/local/bin
 RUN cp /usr/local/openssl/apps/openssl /usr/local/bin/openssl

@@ -14,7 +14,7 @@ It can be used identically to the standard envoy images. For example, when setti
 
 To use the post-quantum image, replace with
 
-    FROM drouhana/envoy-oqs:envoy
+    FROM openquantumsafe/envoy:latest
 
 ### Local Docker Build
 
@@ -29,3 +29,11 @@ Full source code, instructions, and demo can be found [here](https://github.com/
 ## Sample Usage
 
 An example implementation of oqs-enabled envoy terminating a tls handshake and proxying to an http backend has been included.
+
+## Contact
+
+For questions or contributions to the post-quantum cloud native project:
+
+[Github repo](https://github.com/Post-Quantum-Mesh)
+
+danielrouhana@pm.me
