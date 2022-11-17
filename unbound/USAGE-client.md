@@ -14,7 +14,7 @@ After running all the command above a container will open with getdns running wi
 ## Usage
 
 
-The key exchange between the server and the client is set on p384_kyber768:X25519, other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). To specify the desired key exchange algorithm use the parameter -e in the docker run command.The example below used kyber1024 to do the key exchange.
+The key exchange between the server and the client is set on p384_kyber768:X25519, other key exchange algorithms can be used, find more algorithm in the [list of available post quantum key exchange algorithms](https://github.com/open-quantum-safe/boringssl#key-exchange). To specify the desired key exchange algorithm use the parameter `-e` in the `docker run` command.The example below used `kyber1024` to do the key exchange.
 
 ```bash
      docker run --network unbound-test -e TLS_DEFAULT_GROUPS=kyber1024 --interactive --tty --hostname getdns --name getdns -it openquantumsafe/getdns
