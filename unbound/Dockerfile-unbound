@@ -1,0 +1,69 @@
+FROM ubuntu:18.04
+##necessary lib 
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install -y \
+      cmake \ 
+      gcc \ 
+      libtool \ 
+      libssl-dev \
+      make \ 
+      ninja-build \ 
+      git
+
+##installation of openssl with oqs
+##############################################################################
+WORKDIR /root
+RUN git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl.git openssl
+
+RUN cd openssl && git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git \
+      && cd liboqs \
+      && mkdir build && cd build \
+      && cmake -GNinja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/root/openssl/oqs .. \
+      && ninja && ninja install
+
+WORKDIR /root
+RUN cd openssl \
+ && ./Configure shared linux-x86_64 -lm \
+ && make && make install
+
+##installation of necessary lib for unbound
+##############################################################################
+RUN apt update && apt install -y \
+    wget \
+    tar \
+    libevent-dev \
+    tar \
+    autoconf \
+    libldns-dev \
+    libevent-dev \
+    ca-certificates \
+    libexpat1 \
+    libexpat1-dev \
+    flex \
+    bison
+
+##installation of unbound
+ENV UNBOUND_DOWNLOAD_URL https://www.unbound.net/downloads/unbound-latest.tar.gz
+RUN set -x && \
+    mkdir -p /tmp/src && \
+    cd /tmp/src && \
+    wget --no-check-certificate -O unbound.tar.gz $UNBOUND_DOWNLOAD_URL && \
+    tar xzf unbound.tar.gz  && \
+    rm -f unbound.tar.gz && \ 
+    cd */ && \
+    groupadd unbound && \
+    useradd -g unbound -s /etc -d /dev/null unbound && \
+    ./configure --prefix=/opt/unbound \
+    --with-username=unbound --disable-ecdsa --with-pthreads --with-ssl=/usr/local && \
+    ldconfig && \
+    make install && \
+    mv /opt/unbound/etc/unbound/unbound.conf /opt/unbound/etc/unbound/unbound.conf.example && \
+    rm -fr /opt/unbound/share/man && \
+    rm -fr /tmp/* /var/tmp/*
+
+##setup unbound to be dns-over-tls
+COPY unbound.sh /opt
+RUN chmod 777 /opt/unbound.sh
+
+EXPOSE 853/tcp
+CMD ["/opt/unbound.sh"]
