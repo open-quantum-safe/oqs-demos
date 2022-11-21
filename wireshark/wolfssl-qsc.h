@@ -1,8 +1,14 @@
 /* wolfSSL naming convention */
 
 #define QSC_SIGS \
-	oid_add_from_string("falcon_level1", "1.3.9999.3.1"); \
-	oid_add_from_string("falcon_level5", "1.3.9999.3.4");
+    oid_add_from_string("falcon_level1", "1.3.9999.3.1"); \
+    oid_add_from_string("falcon_level5", "1.3.9999.3.4"); \
+    oid_add_from_string("dilithium_level2", "1.3.6.1.4.1.2.267.7.4.4"); \
+    oid_add_from_string("dilithium_level3", "1.3.6.1.4.1.2.267.7.6.5"); \
+    oid_add_from_string("dilithium_level5", "1.3.6.1.4.1.2.267.7.8.7"); \
+    oid_add_from_string("dilithium_aes_level2", "1.3.6.1.4.1.2.267.11.4.4"); \
+    oid_add_from_string("dilithium_aes_level3", "1.3.6.1.4.1.2.267.11.6.5"); \
+    oid_add_from_string("dilithium_aes_level5", "1.3.6.1.4.1.2.267.11.8.7");
 
 #define QSC_KEMS \
     { 532, "ntru_hps_level1" }, \
@@ -31,6 +37,12 @@
     { 12094, "p256_kyber_90s_level1" }, \
     { 12095, "p384_kyber_90s_level3" }, \
     { 12096, "p521_kyber_90s_level5" }, \
-    { 0xfe0b, "falcon_level1" },\
-    { 0xfe0e, "falcon_level5" },
+    { 0xfe0b, "falcon_level1" }, \
+    { 0xfe0e, "falcon_level5" }, \
+    { 0xfea0, "dilithium_level2" }, \
+    { 0xfea3, "dilithium_level3" }, \
+    { 0xfea5, "dilithium_level5" }, \
+    { 0xfea7, "dilithium_aes_level2" }, \
+    { 0xfeaa, "dilithium_aes_level3" }, \
+    { 0xfeac, "dilithium_aes_level5" },
 
