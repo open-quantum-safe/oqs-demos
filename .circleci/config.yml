@@ -78,7 +78,7 @@ jobs:
       - run:
           name: Test Curl with generic liboqs
           command: |
-            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=picnicl1full -it oqs-curl-generic perftest.sh 
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl-generic perftest.sh 
       - run:
           name: Test nginx and curl generic 
           command: |
