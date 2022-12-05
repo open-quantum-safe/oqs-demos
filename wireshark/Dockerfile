@@ -58,7 +58,7 @@ RUN cp qsc.h epan/dissectors && \
    sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-tls-utils.c && \
    sed -i "s/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");\nQSC_SIGS/g" epan/dissectors/packet-pkcs1.c && \
    sed -i "s/    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\//    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\/\nQSC_KEMS/g" epan/dissectors/packet-tls-utils.c && \
-   sed -i "s/    { 0x080b\, \"rsa_pss_pss_sha512\" }\,/    { 0x080b\, \"rsa_pss_pss_sha512\" }\,\nQSC_KEMS/g" epan/dissectors/packet-tls-utils.c
+   sed -i "s/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,\nQSC_SIG_CPS/g" epan/dissectors/packet-tls-utils.c
 
 # Build wireshark
 RUN mkdir -p build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/wireshark .. && ninja && ninja install
