@@ -352,6 +352,35 @@ jobs:
                   docker tag oqs-mosquitto $TARGETNAME/mosquitto:latest &&
                   docker push $TARGETNAME/mosquitto:latest 
 
+  ubuntu_x64_wireshark:
+    description: Building OQS-based wireshark docker image
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build wireshark image
+          command: |
+            docker build -t $TARGETNAME/wireshark .
+          working_directory: wireshark
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push wireshark image
+                command: |
+                  docker push $TARGETNAME/wireshark
+
   ubuntu_x64_ngtcp2:
     description: Building OQS-based ngtcp2 docker image
     docker:
@@ -450,5 +479,7 @@ workflows:
       - ubuntu_x64_openssh:
           context: openquantumsafe
       - ubuntu_x64_openlitespeed:
+          context: openquantumsafe
+      - ubuntu_x64_wireshark:
           context: openquantumsafe
 
