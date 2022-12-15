@@ -123,8 +123,8 @@ jobs:
           command: |
             docker network create oqsls-test &&
             docker run --network oqsls-test --detach --rm --name lsws oqs-openlitespeed bash -c "/root/serverstart.sh && /usr/local/lsws/bin/lswsctrl start && sleep 100" &&
-            sleep 10 &&
-            docker run --rm --network oqsls-test -it openquantumsafe/msquic-reach bash -c "wget lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_firesaber quicreach lsws --port 443 --stats"
+            sleep 20 &&
+            docker run --rm --network oqsls-test -it openquantumsafe/msquic-reach bash -c "wget http://lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_kyber1024 quicreach lsws --port 443 --stats"
       - when:
           condition:
             or:
