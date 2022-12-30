@@ -30,7 +30,7 @@ RUN git clone --branch main --single-branch --depth 1 https://github.com/open-qu
     && git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git liboqs-static \
     && git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl.git \
     && git clone --branch master https://github.com/open-quantum-safe/boringssl.git \
-    && git clone https://github.com/drouhana/envoy.git envoy \
+    && git clone https://github.com/Post-Quantum-Mesh/envoy-oqs.git envoy \
     && wget http://www.openssl.org/source/openssl-1.1.1g.tar.gz \
     && tar -zxvf openssl-1.1.1g.tar.gz
 

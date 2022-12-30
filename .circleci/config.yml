@@ -137,43 +137,6 @@ jobs:
                   docker tag oqs-openlitespeed $TARGETNAME/openlitespeed:latest &&
                   docker push $TARGETNAME/openlitespeed:latest
 
-  ubuntu_x64_openlitespeed:
-    description: Building and pushing OQS-openlitespeed demo Docker images
-    docker:
-      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
-        auth:
-          username: $DOCKER_LOGIN
-          password: $DOCKER_PASSWORD
-    steps:
-      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
-      - setup_remote_docker
-      - run:
-          name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
-      - run:
-          name: Build openlitespeed with liboqs
-          command: |
-            docker build -f Dockerfile-server -t oqs-openlitespeed .
-          working_directory: openlitespeed
-      - run:
-          name: Test oqs-openlitespeed using public oqs-msquic
-          command: |
-            docker network create oqsls-test &&
-            docker run --network oqsls-test --detach --rm --name lsws oqs-openlitespeed bash -c "/root/serverstart.sh && /usr/local/lsws/bin/lswsctrl start && sleep 100" &&
-            sleep 10 &&
-            docker run --rm --network oqsls-test -it openquantumsafe/msquic-reach bash -c "wget lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_firesaber quicreach lsws --port 443 --stats"
-      - when:
-          condition:
-            or:
-              - equal: [ main, << pipeline.git.branch >> ]
-              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
-          steps:
-            - run:
-                name: Push openlitespeed image
-                command: |
-                  docker tag oqs-openlitespeed $TARGETNAME/openlitespeed:latest &&
-                  docker push $TARGETNAME/openlitespeed:latest
-
   ubuntu_x64_quic:
     description: Building and pushing OQS-QUIC-nginx and OQS-msquic demo Docker images
     docker:
@@ -466,7 +429,7 @@ jobs:
   ubuntu_x64_envoy:
     description: Building and pushing OQS-enabled envoy
     docker:
-      - image: openquantumsafe/envoy:latest
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
         auth:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
@@ -474,28 +437,33 @@ jobs:
       - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
       - setup_remote_docker
       - run:
+          name: Install curl and Docker Compose 
+          environment:
+            COMPOSE_VERSION: '1.29.2'
+          command: |
+            apt-get update && apt-get install curl
+            curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o ~/docker-compose
+            chmod +x ~/docker-compose
+            mv ~/docker-compose /usr/local/bin/docker-compose
+      - run:
           name: Authenticate to Docker
           command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
       - run:
           name: Build OQS envoy
+          no_output_timeout: "1h"
           command: |
             docker build -t envoy-oqs . 
           working_directory: envoy
-      - run:
-          name: Build curl with liboqs
-          command: |
-            docker build -t oqs-curl . 
-          working_directory: curl
-      - run:
+      - run: # /root/project/envoy/tls
           name: Test OQS envoy TLS servers using built OQS envoy
           command: |
-            ./certs/gen_cert.sh &&
+            ls certs &&
             docker-compose pull &&
             docker-compose up --build -d &&
             docker-compose ps &&
             sleep 100 &&
-            docker run --network host -it oqs-curl -v -k https://localhost:10000 -e SIG_ALG=dilithium3
-          working_directory: envoy/certs
+            docker run --network host -it openquantumsafe/curl curl -v -k https://localhost:10000 -e SIG_ALG=dilithium3
+          working_directory: envoy/tls
       - when:
           condition:
             or:

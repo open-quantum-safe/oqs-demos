@@ -1,7 +1,9 @@
  # Define global arguments
 ARG DEBIAN_FRONTEND=noninteractive
 
-FROM openquantumsafe/envoy:latest
+#FROM openquantumsafe/envoy:latest
+#FROM drouhana/envoy-oqs:envoy
+FROM envoy-oqs:latest
 
 # copy certs
 COPY ./certs/servercert.pem /etc/example/servercert.pem
