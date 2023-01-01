@@ -486,12 +486,10 @@ jobs:
       - run:
           name: Test OQS envoy TLS servers using built OQS envoy
           command: |
-            ls ./certs -la &&
             docker create -v /data --name certsvolume openquantumsafe/ci-ubuntu-focal-x86_64:latest &&
             docker cp $(pwd)/certs/gen_cert.sh certsvolume:/data &&
             docker run -it --user root --volumes-from certsvolume -w /data --name keygen openquantumsafe/curl sh -c "ls -la && /data/gen_cert.sh" && 
             docker cp keygen:/data/. $(pwd)/certs &&
-            ls ./certs -la &&
             docker-compose pull &&
             docker-compose up --build -d &&
             docker-compose ps &&
