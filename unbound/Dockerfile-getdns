@@ -1,0 +1,54 @@
+FROM ubuntu:18.04
+##necessary lib
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install -y \
+      cmake \ 
+      gcc \ 
+      libtool \ 
+      libssl-dev \
+      make \ 
+      ninja-build \ 
+      git
+
+##installation of openssl with oqs 
+##############################################################################
+WORKDIR /root
+RUN git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl.git openssl
+
+RUN cd openssl && git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git \
+      && cd liboqs \
+      && mkdir build && cd build \
+      && cmake -GNinja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/root/openssl/oqs .. \
+      && ninja && ninja install
+
+WORKDIR /root
+RUN cd openssl \
+ && ./Configure shared linux-x86_64 -lm \
+ && ldconfig \
+ && make && make install
+
+##installation of getdns && other dependency
+##############################################################################
+RUN apt update && apt install -y \
+      wget build-essential libunbound-dev libidn2-dev libssl-dev cmake libevent-dev libev-dev  libuv1-dev autoconf check 
+      
+RUN git clone https://github.com/libuv/libuv.git && \
+	cd libuv && \
+	sh autogen.sh && \
+	 ./configure && \
+	make install
+
+##getdns to query unbound with tls encryption
+RUN apt install -y getdns-utils   
+
+##force kex to be "p384_kyber768:X25519"
+ENV TLS_DEFAULT_GROUPS="p384_kyber768:X25519"
+
+   
+#RUN wget --no-check-certificate -O getdns.tar.gz  https://getdnsapi.net/releases/getdns-1-7-2/getdns-1.7.2.tar.gz && \
+#	tar xzf getdns.tar.gz && \
+#	cd getdns-1.7.2 && \
+#	mkdir build && cd build && \
+#	ldconfig && \
+#	cmake .. && \
+#	make install 
