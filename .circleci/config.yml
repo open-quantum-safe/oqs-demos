@@ -463,7 +463,7 @@ jobs:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
     steps:
-      - *localCheckout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
       - setup_remote_docker
       - run:
           name: Install curl and Docker Compose 
@@ -474,9 +474,9 @@ jobs:
             curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o ~/docker-compose
             chmod +x ~/docker-compose
             mv ~/docker-compose /usr/local/bin/docker-compose
-      #- run:
-      #    name: Authenticate to Docker
-      #    command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
       - run:
           name: Build OQS envoy
           no_output_timeout: "1h"
@@ -487,8 +487,10 @@ jobs:
           name: Test OQS envoy TLS servers using built OQS envoy
           command: |
             ls ./certs -la &&
-            chmod 777 ./certs/gen_cert.sh &&
-            docker run --rm -v ${PWD}/certs:/work -w /work -it openquantumsafe/curl sh gen_cert.sh &&
+            docker create -v /data --name certsvolume openquantumsafe/ci-ubuntu-focal-x86_64:latest &&
+            docker cp $(pwd)/certs/gen_cert.sh certsvolume:/data &&
+            docker run -it --user root --volumes-from certsvolume -w /data --name keygen openquantumsafe/curl sh -c "ls -la && /data/gen_cert.sh" && 
+            docker cp keygen:/data/. $(pwd)/certs &&
             ls ./certs -la &&
             docker-compose pull &&
             docker-compose up --build -d &&
