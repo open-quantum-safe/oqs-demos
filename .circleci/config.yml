@@ -534,5 +534,6 @@ workflows:
           context: openquantumsafe
       - ubuntu_x64_wireshark:
           context: openquantumsafe
-      - ubuntu_x64_envoy:
-          context: openquantumsafe
+      # Will not complete in 1h on OQS CCI plan:
+      # - ubuntu_x64_envoy:
+      #     context: openquantumsafe
