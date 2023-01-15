@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+
+  proxy:
+    container_name: https-proxy
+    hostname: https-proxy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+    - "10000:10000"
+
+  service-http:
+    image: mendhak/http-https-echo:23
+    container_name: service-http
+    hostname: service-http
+
+    environment:
+    - HTTPS_PORT=0
+    - HTTP_PORT=80
