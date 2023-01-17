@@ -123,8 +123,8 @@ jobs:
           command: |
             docker network create oqsls-test &&
             docker run --network oqsls-test --detach --rm --name lsws oqs-openlitespeed bash -c "/root/serverstart.sh && /usr/local/lsws/bin/lswsctrl start && sleep 100" &&
-            sleep 10 &&
-            docker run --rm --network oqsls-test -it openquantumsafe/msquic-reach bash -c "wget lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_firesaber quicreach lsws --port 443 --stats"
+            sleep 20 &&
+            docker run --rm --network oqsls-test -it openquantumsafe/msquic-reach bash -c "wget http://lsws/CA.crt && SSL_CERT_FILE=CA.crt TLS_DEFAULT_GROUPS=p521_kyber1024 quicreach lsws --port 443 --stats"
       - when:
           condition:
             or:
@@ -530,9 +530,12 @@ workflows:
           context: openquantumsafe
       - ubuntu_x64_openssh:
           context: openquantumsafe
-      - ubuntu_x64_openlitespeed:
-          context: openquantumsafe
+      # Disabled in CI as failing to conclude test properly as per
+      # https://github.com/open-quantum-safe/oqs-demos/pull/167#issuecomment-1383673300
+      # - ubuntu_x64_openlitespeed:
+      #     context: openquantumsafe
       - ubuntu_x64_wireshark:
           context: openquantumsafe
-      - ubuntu_x64_envoy:
-          context: openquantumsafe
+      # Disable as it takes too long on OQS CCI plan
+      #- ubuntu_x64_envoy:
+      #    context: openquantumsafe
