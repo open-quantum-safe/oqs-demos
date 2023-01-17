@@ -530,9 +530,12 @@ workflows:
           context: openquantumsafe
       - ubuntu_x64_openssh:
           context: openquantumsafe
-      - ubuntu_x64_openlitespeed:
-          context: openquantumsafe
+      # Disabled in CI as failing to conclude test properly as per
+      # https://github.com/open-quantum-safe/oqs-demos/pull/167#issuecomment-1383673300
+      # - ubuntu_x64_openlitespeed:
+      #     context: openquantumsafe
       - ubuntu_x64_wireshark:
           context: openquantumsafe
-      - ubuntu_x64_envoy:
-          context: openquantumsafe
+      # Disable as it takes too long on OQS CCI plan
+      #- ubuntu_x64_envoy:
+      #    context: openquantumsafe
