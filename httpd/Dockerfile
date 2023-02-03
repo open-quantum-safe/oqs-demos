@@ -13,7 +13,13 @@ ARG HTTPD_PATH=/opt/httpd
 ARG SIG_ALG="dilithium3"
 
 # define the httpd version to include
-ARG HTTPD_VERSION=2.4.43
+ARG HTTPD_VERSION=2.4.55
+
+# define the APR version to include
+ARG APR_VERSION=1.7.2
+
+# define the APR util version to include
+ARG APRU_VERSION=1.6.3
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 2"
@@ -28,6 +34,8 @@ ARG OPENSSL_PATH
 ARG HTTPD_PATH
 ARG SIG_ALG
 ARG HTTPD_VERSION
+ARG APR_VERSION
+ARG APRU_VERSION
 ARG MAKE_DEFINES
 
 
@@ -43,8 +51,8 @@ RUN apk add build-base linux-headers \
 WORKDIR /opt
 RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
-    wget http://mirror.easyname.ch/apache//apr/apr-1.7.0.tar.gz && tar xzvf apr-1.7.0.tar.gz && \
-    wget http://mirror.easyname.ch/apache//apr/apr-util-1.6.1.tar.gz && tar xzvf apr-util-1.6.1.tar.gz && \
+    wget http://mirror.easyname.ch/apache/apr/apr-${APR_VERSION}.tar.gz && tar xzvf apr-${APR_VERSION}.tar.gz && \
+    wget http://mirror.easyname.ch/apache/apr/apr-util-${APRU_VERSION}.tar.gz && tar xzvf apr-util-${APRU_VERSION}.tar.gz && \
     wget --trust-server-names "https://archive.apache.org/dist/httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
 # build liboqs (static linking only)
@@ -58,9 +66,9 @@ RUN ./config no-shared --prefix=${OPENSSL_PATH} && \
 
 # build httpd
 WORKDIR /opt
-RUN sed -i "s/\$RM \"\$cfgfile\"/\$RM -f \"\$cfgfile\"/g" apr-1.7.0/configure && \
-    cd apr-1.7.0 && ./configure && make ${MAKE_DEFINES} && make install && cd .. && \
-    cd apr-util-1.6.1 && ./configure x86_64-pc-linux-gnu --with-crypto --with-apr=/usr/local/apr && make ${MAKE_DEFINES} && make install
+RUN sed -i "s/\$RM \"\$cfgfile\"/\$RM -f \"\$cfgfile\"/g" apr-${APR_VERSION}/configure && \
+    cd apr-${APR_VERSION} && ./configure && make ${MAKE_DEFINES} && make install && cd .. && \
+    cd apr-util-${APRU_VERSION} && ./configure x86_64-pc-linux-gnu --with-crypto --with-apr=/usr/local/apr && make ${MAKE_DEFINES} && make install
 
 WORKDIR /opt/httpd-${HTTPD_VERSION}
 RUN ./configure --prefix=${HTTPD_PATH} \
