@@ -31,7 +31,9 @@ RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX
 # builds but test would fail b/o powershell dependency of tests:
 # RUN cd /root/msquic && mkdir build && cd build && cmake -G 'Unix Makefiles' ..  && cmake --build .
 
-# patch cmake file to find liboqs.a:
+# patch cmake files to find liboqs.a:
+COPY CMakeLists.txt.patch /root/quicreach/msquic
+RUN patch /root/quicreach/msquic/CMakeLists.txt < /root/quicreach/msquic/CMakeLists.txt.patch
 COPY src-inc-CMakeLists.txt.patch /root/quicreach/msquic
 RUN patch /root/quicreach/msquic/src/inc/CMakeLists.txt < /root/quicreach/msquic/src-inc-CMakeLists.txt.patch
 
