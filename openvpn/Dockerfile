@@ -72,7 +72,7 @@ FROM debian:stable-slim
 # Take in all global args
 ARG INSTALLDIR
 
-RUN apt update && apt upgrade -y && apt install -y liblzo2-2 
+RUN apt update && apt upgrade -y && apt install -y liblzo2-2 libnl-3-200 libnl-genl-3-200
 # Only retain the ${INSTALLDIR} contents in the final image
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
 
