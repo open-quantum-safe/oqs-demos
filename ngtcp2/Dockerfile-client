@@ -46,6 +46,8 @@ RUN git clone --recursive https://github.com/microsoft/quicreach && cd quicreach
 
 RUN cd liboqs && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/quicreach/msquic/submodules/openssl/oqs .. && ninja && ninja install && cp -R /opt/quicreach/msquic/submodules/openssl/oqs/include/oqs /opt/quicreach/msquic/submodules/openssl/include
 
+COPY CMakeLists.txt.patch /opt/quicreach/msquic
+RUN patch /opt/quicreach/msquic/CMakeLists.txt < /opt/quicreach/msquic/CMakeLists.txt.patch
 COPY src-inc-CMakeLists.txt.patch /opt/quicreach/msquic
 RUN patch /opt/quicreach/msquic/src/inc/CMakeLists.txt < /opt/quicreach/msquic/src-inc-CMakeLists.txt.patch
 
