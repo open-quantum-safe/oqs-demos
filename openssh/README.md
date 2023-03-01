@@ -20,6 +20,9 @@ This directory contains a [Dockerfile](Dockerfile) that builds the [OQS OpenSSH 
 
         docker exec --user oqs -it oqs-openssh-server ssh oqs@localhost
 
+   *Note:* It can take a few minutes for the server to be ready. If you attempt to connect before the server is ready,
+   you may see an `ssh: connect to host localhost port 2222: Address not available` error.
+
 4. Accept the host key and authenticate with the default password `Pa55W0rd`
 
 5. To clean up, exit the ssh session with `exit` and run
