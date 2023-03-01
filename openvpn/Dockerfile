@@ -31,7 +31,8 @@ RUN apt install -y  \
             make \
             openssl libssl-dev pkg-config libcap-ng-dev \
             git docker wget \
-            liblzo2-dev libpam0g-dev python3-docutils
+            liblzo2-dev libpam0g-dev python3-docutils \
+            libnl-3-dev libnl-genl-3-dev
 
 # get all sources
 WORKDIR /opt
