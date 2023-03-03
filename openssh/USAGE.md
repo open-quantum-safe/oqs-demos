@@ -175,7 +175,7 @@ docker exec -it <name-or-hash-of-container> /opt/oqs-ssh/scripts/key-gen.sh
 
 For a list of all signature and key exchange algorithms see [here](https://github.com/open-quantum-safe/openssh#supported-algorithms). Be aware that there is a limitation of what algorithms are enabled in PQS-OpenSSH per default, more information in the section **Enabling additional PQC algorithms** below. It is recommended to only use the hybrid variants to maintain established classical security. The post-quantum safe algorithms have not yet received enough confidence to be relied on as the only security mechanism.
 
-The image's default key exchange algorithm is `ecdh-nistp384-kyber-768-sha384`. For host and identity keys (server and client authentication, respectively) algorithms `ssh-ecdsa-nistp384-dilithium3` and `ssh-ecdsa-nistp384-picnicL3FS` are used. Those algorithms may be changed by adjusting the files `ssh_config` and `sshd_config` respectively.
+The image's default key exchange algorithm is `ecdh-nistp384-kyber-768-sha384`. For host and identity keys (server and client authentication, respectively) the `ssh-ecdsa-nistp384-dilithium3` algorithm is used. Those algorithms may be changed by adjusting the files `ssh_config` and `sshd_config` respectively.
 
 **In `ssh_config` (client side)**
 - `KexAlgorithms`: Comma-separated list of enabled key-exchange algorithms. Priority given by order. Names according to [this KEX naming scheme](https://github.com/open-quantum-safe/openssh#key-exchange).
