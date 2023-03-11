@@ -9,10 +9,10 @@ export OQS_DATA="ovpn-data-oqstest"
 # name of docker network to use for testing
 export OQS_NETWORK="oqsopenvpntestnet"
 
-# name of test server
+# DNS name of test server
 export OQS_SERVER="oqsopenvpnserver"
 
-# name of test client
+# DNS name of test client
 export OQS_CLIENT="oqsopenvpnclient"
 
 # name of docker image to run

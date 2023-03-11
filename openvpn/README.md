@@ -1,6 +1,6 @@
 ## Purpose 
 
-This directory contains a Dockerfile that builds [OpenVPN](https://openvpn.net) with the [OQS OpenSSL 3 provider](https://github.com/open-quantum-safe/oqs-provider), which allows openvpn to perform quantum-safe key exchange via TLS 1.3.
+This directory contains a Dockerfile that builds [OpenVPN](https://openvpn.net) with the [OQS OpenSSL 3 provider](https://github.com/open-quantum-safe/oqs-provider), which configures openvpn to perform quantum-safe TLS 1.3 handshakes (KEM for key establishment and X.509 certificates/keys for mutual authentication).
 
 ## Getting started
 
@@ -9,7 +9,7 @@ This directory contains a Dockerfile that builds [OpenVPN](https://openvpn.net) 
 1. `docker build -t oqs-openvpn .` 
 2. `./test.sh`
 
-This will create all keys, certificates and configurations for running an openvpn server and client within a docker network performing a quantum-safe key exchange via the Kyber768 (plain and hybrid) algorithm. Any of the other [supported quantum safe KEM protocols](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange) can be set via the parameter `--tls-groups` in the server and client startup scripts, e.g., by setting the "TLS_GROUPS" environment variable.
+This will create an image for creating configurations, keys and certificates as well as running openvpn server(s) and client(s) within a docker network performing a quantum-safe key exchange via the Kyber768 (plain and hybrid) KEM algorithm. Any of the other [supported quantum safe KEM algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms) can be set via the parameter `--tls-groups` in the server and client startup scripts, e.g., by setting the "TLS_GROUPS" environment variable.
 
 Please note that the test script has only been tested to operate OK on Linux.
 
