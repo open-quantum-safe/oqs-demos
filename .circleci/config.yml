@@ -297,7 +297,7 @@ jobs:
       - run:
           name: Test OpenVPN using local docker network
           command: |
-            ./test.sh p521_kyber1024
+            ./test.sh dilithium5 p521_kyber1024
           working_directory: openvpn
       - when:
           condition:
