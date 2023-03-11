@@ -3,7 +3,7 @@
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
 
-# Default location where all OpenVPN config files wind up:
+# Location where all default OpenVPN config files wind up:
 ARG OPENVPNDIR=/home/openvpn
 
 # liboqs build type variant; maximum portability of image:
@@ -40,9 +40,9 @@ RUN apt install -y  \
 
 # get all sources
 WORKDIR /opt
-RUN git clone https://github.com/open-quantum-safe/liboqs && \
-    git clone https://github.com/openssl/openssl.git && \
-    git clone https://github.com/open-quantum-safe/oqs-provider.git && \
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
+    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
     git clone https://github.com/OpenVPN/openvpn.git
 
 # build liboqs
