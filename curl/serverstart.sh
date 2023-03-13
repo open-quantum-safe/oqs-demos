@@ -6,7 +6,7 @@ if [ "x$KEM_ALG" == "x" ]; then
 	export KEM_ALG=kyber512
 fi
 
-# Optionally set server certificate alg to one defined in https://github.com/open-quantum-safe/openssl#authentication
+# Optionally set server certificate alg to one defined in https://github.com/open-quantum-safe/oqs-provider#algorithms
 # The root CA's signature alg remains as set when building the image
 if [ "x$SIG_ALG" != "x" ]; then
     cd /opt/oqssa/bin

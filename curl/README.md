@@ -1,4 +1,4 @@
-This directory contains a Dockerfile that builds curl with the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows curl to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+This directory contains a Dockerfile that builds `curl` using OpenSSL v3 using the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows `curl` to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
 
 ## Quick start
 
@@ -11,15 +11,15 @@ This directory contains a Dockerfile that builds curl with the [OQS OpenSSL 1.1.
 ## More details
 
 The Dockerfile 
-- obtains all source code required for building the quantum-safe crypto (QSC) algorithms, the QSC-enabled version of OpenSSL (v.1.1.1), curl (v.7.73.0) 
+- obtains all source code required for building the quantum-safe crypto (QSC) algorithms, the QSC-enabled oqs-provider, curl (v.7.87.0) and the latest OpenSSL (master) code
 - builds all libraries and applications
 - creates OQS-enabled certificate files for a mini-root certificate authority (CA) 
 - creates an OQS-enabled server certificate for running a `localhost` QSC-TLS server
 - by default starts an openssl (s_server) based test server.
 
-The signature algorithm for the certificates is set to `dilithium2` by default, but can be changed to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/openssl#authentication) with the build argumemt to docker `--build-arg SIG_ALG=`*name-of-oqs-sig-algorithm*, e.g. as follows:
+The signature algorithm for the certificates is set to `dilithium3` by default, but can be changed to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms) with the build argumemt to docker `--build-arg SIG_ALG=`*name-of-oqs-sig-algorithm*, e.g. as follows:
 ```
-docker build -t oqs-curl --build-arg SIG_ALG=qteslapiii .
+docker build -t oqs-curl --build-arg SIG_ALG=p521_falcon1024 .
 ```
 
 **Note for the interested**: The build process is two-stage with the final image only retaining all executables, libraries and include-files to utilize OQS-enabled curl and openssl.

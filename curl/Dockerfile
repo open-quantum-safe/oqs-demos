@@ -1,7 +1,7 @@
 # Multi-stage build: First the full builder image:
 
 # define the Curl version to be baked in
-ARG CURL_VERSION=7.73.0
+ARG CURL_VERSION=7.87.0
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -13,10 +13,10 @@ ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 ARG OPENSSL_BUILD_DEFINES="-DOQS_DEFAULT_GROUPS=p384_kyber768:X25519:kyber768"
 
 # Default root CA signature algorithm; can be set to any listed at https://github.com/open-quantum-safe/openssl#authentication
-ARG SIG_ALG="dilithium2"
+ARG SIG_ALG="dilithium3"
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j 2"
+ARG MAKE_DEFINES="-j 4"
 
 
 FROM alpine:3.11 as intermediate
@@ -28,7 +28,7 @@ ARG OPENSSL_BUILD_DEFINES
 ARG SIG_ALG
 ARG MAKE_DEFINES
 
-LABEL version="2"
+LABEL version="3"
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -39,28 +39,30 @@ RUN apk add build-base linux-headers \
             libtool automake autoconf cmake ninja \
             make \
             openssl openssl-dev \
-            git docker wget
+            git wget
 
 # get all sources
 WORKDIR /opt
 RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
+    git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
+    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
 
-# build liboqs shared and static
+# build liboqs
 WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
-RUN mkdir build-static && cd build-static && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja install
+RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
 
-# build OQS-OpenSSL
-WORKDIR /opt/ossl-src
-# curl looks for shared libraries
-# at ./configure time
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib" ./config shared ${OPENSSL_BUILD_DEFINES} --prefix=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install;
+# build OpenSSL3
+WORKDIR /opt/openssl
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
+    make ${MAKE_DEFINES} && make install_sw install_ssldirs;
 
-# set path to use 'new' openssl & curl. Dyn libs have been properly linked in to match
+# set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR}/bin:${PATH}"
+
+# build & install provider (and activate by default)
+WORKDIR /opt/oqs-provider
+RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && cmake --build _build  && cp _build/lib/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:KEM_ALG\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = kyber512\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
 
 # generate certificates for openssl s_server, which is what we will test curl against
 ENV OPENSSL=${INSTALLDIR}/bin/openssl
@@ -75,17 +77,16 @@ RUN set -x; \
 WORKDIR /opt/curl-${CURL_VERSION}
 
 # Download and integrate LetsEncrypt Root CA to CA bundle
-RUN wget https://letsencrypt.org/certs/letsencryptauthorityx3.pem.txt && cat ${INSTALLDIR}/bin/CA.crt >> letsencryptauthorityx3.pem.txt 
+RUN wget https://letsencrypt.org/certs/isrgrootx1.pem -O oqs-bundle.pem && cat ${INSTALLDIR}/bin/CA.crt >> oqs-bundle.pem 
 
 # For curl debugging enable it by adding the line below to the configure command:
 #                    --enable-debug \
 
-RUN env CPPFLAGS="-I/opt/ossl-src/oqs/include" \
-        LDFLAGS=-Wl,-R${INSTALLDIR}/lib  \
+RUN env LDFLAGS=-Wl,-R${INSTALLDIR}/lib64  \
         ./configure --prefix=${INSTALLDIR} \
                     --with-ca-bundle=${INSTALLDIR}/oqs-bundle.pem \
                     --with-ssl=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install && mv letsencryptauthorityx3.pem.txt ${INSTALLDIR}/oqs-bundle.pem;
+    make ${MAKE_DEFINES} && make install && mv oqs-bundle.pem ${INSTALLDIR};
 
 # Download current test.openquantumsafe.org test CA cert
 WORKDIR ${INSTALLDIR}
@@ -130,6 +131,9 @@ FROM dev
 ARG INSTALLDIR
 
 WORKDIR /
+
+# Improve size some more: liboqs.a not needed during operation
+RUN rm ${INSTALLDIR}/lib64/liboqs*
 
 # Enable a normal user to create new server keys off set CA
 RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR}/bin/CA.key && chmod go+w ${INSTALLDIR}/bin/CA.srl
