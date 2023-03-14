@@ -14,15 +14,15 @@ docker run -v $OQS_DATA:/etc/openvpn -d -p 1194:1194/udp --cap-add=NET_ADMIN ope
 
 will start up the QSC-enabled openvpn server running and listening for quantum-safe crypto protected TLS 1.3 connections on port 1194.
 
-The docker volume referred-to by the variable `OQS_DATA` needs to be populated with certificates and OpenVPN configuration information as appropriate for the server running the image.
+The docker volume referred-to by the variable `OQS_DATA` needs to be populated with certificates and OpenVPN configuration information as appropriate for setting up a PQ-protected OpenVPN connection.
 
-As this requires some scripting already developed for other docker images we did not re-invent the wheel and simply point to such image: By executing
+The required scripting for generating all keys, certificates and configuration files is also contained in the image and can be run as follows:
 
-    docker run -v $OQS_DATA:/etc/openvpn --rm kylemanna/openvpn sh -c "ovpn_genconfig -u udp://$OQS_SERVER && EASYRSA_BATCH=1 ovpn_initpki nopass && EASYRSA_BATCH=1 easyrsa build-client-full CLIENTNAME nopass && ovpn_getclient CLIENTNAME > /etc/openvpn/CLIENTNAME.ovpn"
+    docker run -e OQSSIGALG=$OQS_SIGALG -e SERVERFQDN=$OQS_SERVER -e CLIENTFQDN=$OQS_CLIENT -v $OQS_DATA:/config/openvpn --rm openquantumsafe/openvpn sh -c "cd /config/openvpn && createcerts_and_config.sh"
 
-all required information is generated into the docker volume. The variable `OQS_SERVER` must contain the FQDN of the server running the instance.
+This generates all required configuration information into the docker volume. The mandatory environment variables `SERVERFQDN` and `CLIENTFQDN` must contain the FQDN of the server and the client respectively running the instance. The optional environment variable `OQSSIGALG` may contain the name of any of the [supported OQS PQ signature algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms); if not set, the default value "dilithium3" is used for creation of client and server keys and certificates.
 
-Additionally, information for connecting to the server is generated into the file `/etc/openvpn/CLIENTNAME.ovpn` and can be used to connect to the server.
+Additionally, information for connecting to the server is generated into the file `/etc/openvpn/client.config` and can be used to connect to the server.
 
 If you try this on your local computer, all required steps for installing client and server into a docker image in its own docker network are thus :
 
@@ -38,7 +38,7 @@ export OQS_CLIENT="oqsopenvpnclient"
 docker volume create --name $OQS_DATA
 docker network create $OQS_NETWORK
 
-docker run -v $OQS_DATA:/etc/openvpn --rm kylemanna/openvpn sh -c "ovpn_genconfig -u udp://$OQS_SERVER && EASYRSA_BATCH=1 ovpn_initpki nopass && EASYRSA_BATCH=1 easyrsa build-client-full CLIENTNAME nopass && ovpn_getclient CLIENTNAME > /etc/openvpn/CLIENTNAME.ovpn"
+docker run -e SERVERFQDN=$OQS_SERVER -e CLIENTFQDN=$OQS_CLIENT -v $OQS_DATA:/config/openvpn --rm openquantumsafe/openvpn sh -c "cd /config/openvpn && createcerts_and_config.sh"
 
 docker run --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN openquantumsafe/openvpn 
 docker run --rm --name $OQS_CLIENT --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn --cap-add=NET_ADMIN -it openquantumsafe/openvpn clientstart.sh
@@ -53,13 +53,19 @@ The last three commands clean up all data structures established.
 
 ## Advanced usage options
 
-The docker image has been pre-configured to use the quantum-safe crypto (QSC) algorithm family "Kyber" for key establishment but any plain or hybrid QSC algorithm [supported -- see list here](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange) can be selected. 
+The docker image has been pre-configured to use the quantum-safe crypto (QSC) algorithm family "Kyber" for key establishment. For TLS1.3 handshaking, the QSC algorithm "dilithium3" is configured by default, but for both algorithm types, any plain or hybrid QSC algorithm can be selected. For the full list of supported OQS KEM and signature algorithms see here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
 ### TLS_GROUPS
 
 In order to change the list of algorithms, simply set the environment variable "TLS_GROUPS" to a list of desired algorithms, e.g.:
 
     docker run -e TLS_GROUPS=p384_frodo976aes:kyber768 --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN openquantumsafe/openvpn
+
+### OQSSIGALG
+
+In order to change the signature algorithm used for performing the TLS authentication, the environment variable "OQSSIGALG" can be set to trigger creation of the required keys and certificates for the TLS1.3 handshake, e.g.:
+
+    docker run -e OQSSIGALG=p521_dilithium5 -e SERVERFQDN=$OQS_SERVER -e CLIENTFQDN=$OQS_CLIENT -v $OQS_DATA:/config/openvpn --rm openquantumsafe/openvpn sh -c "cd /config/openvpn && createcerts_and_config.sh"
 
 ## Disclaimer
 

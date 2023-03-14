@@ -3,6 +3,9 @@
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
 
+# Location where all default OpenVPN config files wind up:
+ARG OPENVPNDIR=/home/openvpn
+
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
@@ -18,6 +21,7 @@ ARG INSTALLDIR
 ARG LIBOQS_BUILD_DEFINES
 ARG MAKE_DEFINES
 ARG KEM_ALGLIST
+ARG OPENVPNDIR
 
 LABEL version="1"
 
@@ -30,7 +34,7 @@ RUN apt install -y  \
             libtool automake autoconf cmake ninja-build \
             make \
             openssl libssl-dev pkg-config libcap-ng-dev \
-            git docker wget \
+            git docker wget vim net-tools \
             liblzo2-dev libpam0g-dev python3-docutils \
             libnl-3-dev libnl-genl-3-dev
 
@@ -65,24 +69,31 @@ ENV OPENSSL3_DIR=${INSTALLDIR}
 WORKDIR /opt/openvpn
 
 RUN libtoolize --force && aclocal && autoheader && automake --force-missing --add-missing && autoconf && \
-    CFLAGS="-I$OPENSSL3_DIR/include -Wl,-rpath=$OPENSSL3_DIR/lib64 -L$OPENSSL3_DIR/lib64" ./configure --prefix=${INSTALLDIR} --disable-lz4 && make -j 2 && make check && make install
+    CFLAGS="-I$OPENSSL3_DIR/include -Wl,-rpath=$OPENSSL3_DIR/lib64 -L$OPENSSL3_DIR/lib64" ./configure --prefix=${INSTALLDIR} --disable-lz4 && make ${MAKE_DEFINES} && make check && make install
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM debian:stable-slim
 # Take in all global args
 ARG INSTALLDIR
+ARG OPENVPNDIR
 
-RUN apt update && apt upgrade -y && apt install -y liblzo2-2 libnl-3-200 libnl-genl-3-200
+# install basics to run executable and enable network control
+RUN apt update && apt upgrade -y && apt install -y liblzo2-2 libnl-3-200 libnl-genl-3-200 procps net-tools iputils-ping && mkdir -p ${OPENVPNDIR}
+
 # Only retain the ${INSTALLDIR} contents in the final image
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
 
-# set path to use 'new' openssl. Dyn libs have been properly linked in to match
+# set path to use openssl built. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR}/bin:${INSTALLDIR}/sbin:${PATH}"
 
 COPY serverstart.sh ${INSTALLDIR}/bin
 COPY clientstart.sh ${INSTALLDIR}/bin
+COPY openvpn-openssl.cnf ${OPENVPNDIR}
+COPY server.config ${OPENVPNDIR}
+COPY client.config ${OPENVPNDIR}
+COPY createcerts_and_config.sh ${INSTALLDIR}/bin
 
-WORKDIR ${INSTALLDIR}
+WORKDIR ${OPENVPNDIR}
 
 # Activate to limit access to normal user rights
 #RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs 
