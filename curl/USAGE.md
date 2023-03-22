@@ -9,9 +9,9 @@ As different images providing the same base functionality may be available, e.g.
 ## Quick start
 
 1) `docker run -it openquantumsafe/curl` starts an OQS-enabled TLS test server.
-2) On the command prompt in the docker container resulting from the first comment, one can query that server by issuing the command `curl --curves kyber512 https://localhost:4433`. 
+2) On the command prompt in the docker container resulting from the first comment, one can query that server by issuing the command `curl --curves kyber768 https://localhost:4433`. 
 
-The latter command returns all TLS information documenting use of OQS-enabled TLS. The parameter to the `--curves` argument is [any Kex Exchange algorithm supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms).
+The latter command returns all TLS information documenting use of OQS-enabled TLS. The parameter to the `--curves` argument is [any Kex Exchange algorithm supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). Alternatively, the environment variable "DEFAULT_GROUPS" can be set to request a specific PQ KEM, e.g., `DEFAULT_GROUPS=p384_kyber768 curl https://localhost:4433`. The latter example of course also necessitates starting the test server with the same KEM, e.g., by running `docker run -e KEM_ALG=p384_kyber768 -it oqs-curl`.
 
 ## Retrieving data from other QSC-enabled TLS servers
 
@@ -31,7 +31,7 @@ Simply start
 ```
 docker run -it openquantumsafe/curl perftest.sh
 ```
-to perform TLS handshakes for 200 seconds (TEST_TIME default value) using dilithium2 (SIG_ALG default value) and kyber512 (KEM_ALG default value) keys and certificates.
+to perform TLS handshakes for 200 seconds (TEST_TIME default value) using dilithium2 (SIG_ALG default value) and kyber768 (KEM_ALG default value) keys and certificates.
 
 A 'worked example' and more general alternative form of the command is
 ```

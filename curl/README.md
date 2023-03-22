@@ -5,7 +5,7 @@ This directory contains a Dockerfile that builds `curl` using OpenSSL v3 using t
 1) Be sure to have [docker installed](https://docs.docker.com/install).
 2) Run `docker build -t oqs-curl .` to create a post quantum-enabled OpenSSL and Curl docker image
 3) To verify all components perform quantum-safe operations, first start the container with `docker run -it oqs-curl` thus starting an OQS-enabled TLS test server.
-4) On the command prompt in the docker container query that server using `curl --curves kyber512 https://localhost:4433`. If all works, the last command returns all TLS information documenting use of OQS-enabled TLS. The parameter to the `--curves` argument is the KEM_ALG chosen when building the docker container ('kyber512' by default).
+4) On the command prompt in the docker container query that server using `curl --curves kyber768 https://localhost:4433`. If all works, the last command returns all TLS information documenting use of OQS-enabled TLS. The parameter to the `--curves` argument is the KEM_ALG chosen when building the docker container ('kyber768' by default).
 
 
 ## More details
@@ -26,10 +26,10 @@ docker build -t oqs-curl --build-arg SIG_ALG=p521_falcon1024 .
 
 Two further, runtime configuration option exist that can both be optionally set via docker environment variables:
 
-1) Setting the key exchange mechanism (KEM): By setting 'KEM_ALG'
-to any of the [supported KEM algorithms built into OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange) one can run TLS using a KEM other than the default algorithm 'kyber512'. Example: `docker run -e KEM_ALG=ntru_hps2048509 -it oqs-curl`. It is always necessary to also request use of this KEM algorithm by passing it to the invocation of `curl` with the `--curves` parameter, i.e. as such in the same example: `curl --curves ntru_hps2048509 https://localhost:4433`.
+1) Setting the key exchange mechanism (KEM): By setting 'DEFAULT_GROUPS'
+to any of the [supported KEM algorithms built into oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms) one can run TLS using a KEM other than a default algorithm like 'kyber512'. Example: `docker run -e DEFAULT_GROUPS=frodo640aes -it oqs-curl`. It is recommended to also request use of this KEM algorithm by passing it to the invocation of `curl` with the `--curves` parameter, i.e. as such in the same example: `curl --curves frodo640aes https://localhost:4433`.
 
-2) Setting the signature algorithm (SIG): By setting 'SIG_ALG' to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/openssl#authentication) one can run TLS using a SIG other than the one set when building the image (see above). Example: `docker run -e SIG_ALG=dilithium3 -it oqs-curl`.
+2) Setting the signature algorithm (SIG): By setting 'SIG_ALG' to any of the [supported OQS signature algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms) one can run TLS using a SIG other than the one set when building the image (see above). Example: `docker run -e SIG_ALG=dilithium3 -it oqs-curl`.
 
 #### Build type argument(s)
 
@@ -55,17 +55,17 @@ This permits changing the build options for the underlying library with the quan
 
 By default, the image is built such as to have maximum portability regardless of CPU type and optimizations available, i.e. to run on the widest possible range of cloud machines.
 
-### OPENSSL_BUILD_DEFINES
+### DEFAULT_GROUPS
 
-This permits changing the build options for the underlying openssl library containing the quantum safe algorithms. 
+This defines the set of (possibly PQ) TLS 1.3 groups requested by the client.
 
-The default setting defines a range of default algorithms suggested for key exchange. For more information see [the documentation](https://github.com/open-quantum-safe/openssl#default-algorithms-announced).
+The default value is `x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024` enabling all Kyber variants as well as two classic EC algorithms. Be sure to disable the latter if no classic crypto should be used by this `curl` instance. For the full list of supported PQ KEM algorithms see [the oqs-provider algorithm documentation](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
 ### SIG_ALG
 
 This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
 
-The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
+The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
 
 ### INSTALL_PATH
