@@ -1,5 +1,3 @@
-LABEL version="2"
-
 # Multi-stage build: First the full builder image:
 
 # First: global build arguments:
@@ -101,6 +99,8 @@ ARG INSTALLDIR
 ARG SIG_ALG
 ARG BASEDIR
 ARG OSSLDIR=${BASEDIR}/openssl/.openssl
+
+LABEL version="2"
 
 RUN apk add pcre-dev
 
