@@ -1,59 +1,62 @@
-FROM ubuntu:focal 
+# Multi-stage build: First the full builder image:
+FROM alpine as intermediate
 
-ENV TZ=Europe/Zurich
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Update image and apt software 
-RUN apt update && apt install software-properties-common -y
-
-RUN apt install net-tools -y 
+RUN apk update && apk upgrade
 
 # All build prerequisites for the various software packages:
-RUN apt install git pkg-config  autoconf automake autotools-dev libtool cmake libev-dev -y
-RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt install -y g++-11 -y
-RUN apt-add-repository ppa:lttng/stable-2.12 -y && apt update && apt install wget build-essential cmake liblttng-ust-dev lttng-tools git ninja-build libssl-dev -y
-
+RUN apk add bash git pkgconfig autoconf automake libtool g++ make cmake ninja   \
+    libev-dev libevent-dev openssl-dev openssl linux-headers
 
 WORKDIR /opt
+
+# get all sources
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch main  https://github.com/ngtcp2/nghttp3 && \
+    git clone --depth 1 --branch main https://github.com/ngtcp2/ngtcp2 
+
 COPY merge-oqs-openssl-quic.sh /opt
 RUN ./merge-oqs-openssl-quic.sh mergeonly
 
+# build liboqs
+WORKDIR /opt/liboqs
+RUN mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
 
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git
+# build oqs-openssl-quic
+WORKDIR /opt/oqs-openssl-quic
+RUN ./config enable-tls1_3 --prefix=$PWD/build && make -j$(nproc) && make install_sw
 
-
-# until oqs-openssl builds liboqs as submodule, need to do it manually:
-# also copy oqs-includes into a location that the quic-openssl out-of-tree-build will find:
-RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
-
-# build openssl
-RUN cd oqs-openssl-quic && ./config enable-tls1_3 --prefix=$PWD/build && make -j$(nproc) && make install_sw
 
 # build nghttp3
-RUN git clone https://github.com/ngtcp2/nghttp3 && cd nghttp3 && autoreconf -i && ./configure --prefix=$PWD/build --enable-lib-only && make -j$(nproc) check && make install
+WORKDIR /opt/nghttp3
+RUN autoreconf -i && ./configure --prefix=$PWD/build --enable-lib-only && make -j$(nproc) check && make install
+
 
 # build ngtcp2
-RUN git clone https://github.com/ngtcp2/ngtcp2 && cd ngtcp2 && autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig LDFLAGS="-Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib"  CXX=g++-11 && make -j$(nproc) check
+WORKDIR /opt/ngtcp2
+RUN autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig LDFLAGS="-Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib"  CXX=g++ CXXFLAGS="-std=c++20"  && make -j$(nproc) && make install 
 
+# Copy all required shared object dependencies to a single directory
+RUN mkdir /opt/lib && cd /opt/lib && \
+    cp /opt/ngtcp2/lib/.libs/libngtcp2.so.11 . && \
+    cp /usr/lib/libev.so.4 . && \
+    cp /opt/nghttp3/build/lib/libnghttp3.so.5 . && \
+    cp /opt/ngtcp2/crypto/openssl/.libs/libngtcp2_crypto_openssl.so.4 . && \
+    cp /opt/oqs-openssl-quic/build/lib/libssl.so.81.1.1 . && \
+    cp /opt/oqs-openssl-quic/build/lib/libcrypto.so.81.1.1 . && \
+    cp /usr/lib/libstdc++.so.6 . && \
+    cp /usr/lib/libgcc_s.so.1 . 
 
-# Copy executable to usr/local/bin
-RUN cp ngtcp2/examples/client /usr/local/bin/ 
+## second stage: Only create minimal image without build tooling and intermediate build results generated above:
+FROM alpine as dev
+ENV DEBIAN_FRONTEND=noninteractive
 
-# quicreach
-RUN git config --global protocol.file.allow always
-RUN git clone --recursive https://github.com/microsoft/quicreach && cd quicreach/msquic && git submodule deinit -f -- submodules/openssl && rm -rf ../.git/modules/msquic/modules/submodules/openssl && git rm -f submodules/openssl && git submodule add /opt/oqs-openssl-quic submodules/openssl && git submodule update --init submodules/googletest && cd ../..
+RUN apk update && apk upgrade
 
+# copy executable
+COPY --from=intermediate /opt/ngtcp2/examples/client /usr/local/bin
 
-RUN cd liboqs && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/quicreach/msquic/submodules/openssl/oqs .. && ninja && ninja install && cp -R /opt/quicreach/msquic/submodules/openssl/oqs/include/oqs /opt/quicreach/msquic/submodules/openssl/include
-
-COPY CMakeLists.txt.patch /opt/quicreach/msquic
-RUN patch /opt/quicreach/msquic/CMakeLists.txt < /opt/quicreach/msquic/CMakeLists.txt.patch
-COPY src-inc-CMakeLists.txt.patch /opt/quicreach/msquic
-RUN patch /opt/quicreach/msquic/src/inc/CMakeLists.txt < /opt/quicreach/msquic/src-inc-CMakeLists.txt.patch
-
-WORKDIR /opt/quicreach
-RUN mkdir build && cd build && cmake -G 'Unix Makefiles' .. && cmake --build .
-
-RUN cp /opt/quicreach/build/src/quicreach /usr/local/bin
-
-WORKDIR /root/
+# copy shared object dependencies 
+COPY --from=intermediate /opt/lib /usr/local/lib
