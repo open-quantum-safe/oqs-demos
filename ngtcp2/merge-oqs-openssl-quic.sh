@@ -2,6 +2,7 @@
 
 #OQS-OpenSSL-QUIC Auto-Build Script v0.1 by Igor Barshteyn (CC BY 4.0, January 25, 2022)
 #amended by Michael Baentsch
+#modified for Alpine by Keelan Cannoo
 
 # if script is called with "mergeonly" argument, don't build and test things
 
@@ -9,10 +10,10 @@ MERGEONLY=0
 if [ $# -gt 0 ] && [ $1 == "mergeonly" ]; then
       MERGEONLY=1
       # Install merge prereqs
-      apt update && apt install -y git
+      apk update && apk add git
    else
       # Install build prereqs
-      apt update && apt install build-essential git cmake gcc libtool libssl-dev make astyle ninja-build python3-pytest python3-pytest-xdist unzip xsltproc doxygen graphviz python3-yaml python3-psutil -y
+      apk update && apk add --update build-base git cmake libtool openssl-dev make astyle ninja python3-pytest py3-pytest-xdist unzip xsltproc doxygen graphviz py3-yaml py3-psutil
 fi
 
 # Set TARGETDIR for updating oqs-openssl to support the QUIC API as developed in quictls:

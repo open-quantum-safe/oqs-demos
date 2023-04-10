@@ -1,45 +1,72 @@
-FROM ubuntu:focal 
+# Multi-stage build: First the full builder image:
+FROM alpine as intermediate
 
-ENV TZ=Europe/Zurich
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Update image and apt software 
-RUN apt update && apt install software-properties-common -y
-
-RUN apt install net-tools nginx -y 
+RUN apk update && apk upgrade
 
 # All build prerequisites for the various software packages:
-RUN apt install git pkg-config  autoconf automake autotools-dev libtool cmake libev-dev -y
-RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test && apt install -y g++-11 -y
-RUN apt-add-repository ppa:lttng/stable-2.12 -y && apt update && apt install wget build-essential cmake liblttng-ust-dev lttng-tools git ninja-build libssl-dev -y
+RUN apk add bash git pkgconfig autoconf automake libtool g++ make cmake ninja   \
+    libev-dev libevent-dev openssl-dev openssl linux-headers
 
 WORKDIR /opt
+
+# get all sources
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch main  https://github.com/ngtcp2/nghttp3 && \
+    git clone --depth 1 --branch main https://github.com/ngtcp2/ngtcp2 
+
 COPY merge-oqs-openssl-quic.sh /opt
 RUN ./merge-oqs-openssl-quic.sh mergeonly
 
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git
+# build liboqs
+WORKDIR /opt/liboqs
+RUN mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
 
-# until oqs-openssl builds liboqs as submodule, need to do it manually:
-# also copy oqs-includes into a location that the quic-openssl out-of-tree-build will find:
-RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
+# build oqs-openssl-quic
+WORKDIR /opt/oqs-openssl-quic
+RUN ./config enable-tls1_3 --prefix=$PWD/build && make -j$(nproc) && make install_sw
 
-# build openssl
-RUN cd oqs-openssl-quic && ./config enable-tls1_3 --prefix=$PWD/build && make -j$(nproc) && make install_sw
 
 # build nghttp3
-RUN git clone https://github.com/ngtcp2/nghttp3 && cd nghttp3 && autoreconf -i && ./configure --prefix=$PWD/build --enable-lib-only && make -j$(nproc) check && make install
+WORKDIR /opt/nghttp3
+RUN autoreconf -i && ./configure --prefix=$PWD/build --enable-lib-only && make -j$(nproc) check && make install
+
 
 # build ngtcp2
-RUN git clone https://github.com/ngtcp2/ngtcp2 && cd ngtcp2 && autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig LDFLAGS="-Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib"  CXX=g++-11 && make -j$(nproc) check
+WORKDIR /opt/ngtcp2
+RUN autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig LDFLAGS="-Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib"  CXX=g++ CXXFLAGS="-std=c++20"  && make -j$(nproc) && make install 
 
-# Generate key and certificate
-# Expose certificate
-WORKDIR /root/
-RUN openssl req -x509 -new -newkey rsa:4096 -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365 
-RUN openssl req -new -newkey rsa:4096 -keyout server.key -out server.csr -nodes -subj "/CN=oqs-ngtcp2" 
-RUN cp CA.crt /var/www/html/
+WORKDIR /
+# Generate server key and self-signed certificate files 
+RUN echo "Generating server key and certificate"  && mkdir certs && cd certs && openssl req -newkey rsa:4096 -nodes -keyout server.key -x509 -days 365 -out server.crt -subj "/CN=localhost"
 
-# Copy executables to usr/local/bin
-RUN cp /opt/ngtcp2/examples/server /usr/local/bin/ 
+# Copy all required shared object dependencies to a single directory
+RUN mkdir /opt/lib && cd /opt/lib && \
+    cp /opt/ngtcp2/lib/.libs/libngtcp2.so.11 . && \
+    cp /usr/lib/libev.so.4 . && \
+    cp /opt/nghttp3/build/lib/libnghttp3.so.5 . && \
+    cp /opt/ngtcp2/crypto/openssl/.libs/libngtcp2_crypto_openssl.so.4 . && \
+    cp /opt/oqs-openssl-quic/build/lib/libssl.so.81.1.1 . && \
+    cp /opt/oqs-openssl-quic/build/lib/libcrypto.so.81.1.1 . && \
+    cp /usr/lib/libstdc++.so.6 . && \
+    cp /usr/lib/libgcc_s.so.1 . 
 
-WORKDIR /root/
+## second stage: Only create minimal image without build tooling and intermediate build results generated above:
+FROM alpine as dev
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apk update && apk upgrade && apk add mailcap && echo "This is my index page">index.html
+COPY ./serverstart.sh .
+
+# copy executable
+COPY --from=intermediate /opt/ngtcp2/examples/server /usr/local/bin
+
+# Copy server key and self-signed certificate files 
+COPY --from=intermediate /certs /certs
+
+# copy shared object dependencies 
+COPY --from=intermediate /opt/lib /usr/local/lib
+
+CMD ["./serverstart.sh"]
