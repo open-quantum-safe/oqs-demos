@@ -70,13 +70,3 @@ COPY --from=intermediate /usr/local/bin/h2load /usr/local/bin
 
 # copy shared object dependencies 
 COPY --from=intermediate /opt/lib /usr/local/lib
-
-# COPY --from=intermediate /usr/local/lib/libnghttp2.so.14 /usr/local/lib
-# COPY --from=intermediate /usr/lib/libev.so.4 /usr/local/lib
-# COPY --from=intermediate /opt/nghttp3/build/lib/libnghttp3.so.5 /usr/local/lib
-# COPY --from=intermediate /usr/local/lib/libngtcp2_crypto_openssl.so.4 /usr/local/lib
-# COPY --from=intermediate /usr/local/lib/libngtcp2.so.11 /usr/local/lib
-# COPY --from=intermediate /opt/oqs-openssl-quic/build/lib/libssl.so.81.1.1 /usr/local/lib
-# COPY --from=intermediate /opt/oqs-openssl-quic/build/lib/libcrypto.so.81.1.1 /usr/local/lib
-# COPY --from=intermediate /usr/lib/libstdc++.so.6 /usr/local/lib
-# COPY --from=intermediate /usr/lib/libgcc_s.so.1 /usr/local/lib
