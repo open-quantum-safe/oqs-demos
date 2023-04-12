@@ -1,6 +1,6 @@
 ## Purpose 
 
-This is an [apache httpd](https://httpd.apache.org) docker image building on the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows httpd to negotiate quantum-safe keys and use quantum-safe authentication using TLS 1.3.
+This is an [apache httpd](https://httpd.apache.org) docker image using OpenSSL(v3) using [oqs-provider](https://github.com/open-quantum-safe/oqs-provider), which allows httpd to negotiate quantum-safe keys and use quantum-safe authentication using TLS 1.3.
 
 If you built the docker image yourself following the instructions [here](https://github.com/open-quantum-safe/oqs-demos/tree/master/httpd), exchange the  name of the image from 'openquantumsafe/httpd' in the examples below suitably.
 
@@ -21,7 +21,7 @@ To retrieve a test page, a quantum-safe crypto client program is required. For t
 If you started the OQS-httpd image on a machine with a registered IP name the required command is simply
 
 ```
-docker run -it openquantumsafe/curl curl -k https://<ip-name-of-testmachine>:4433
+docker run -it openquantumsafe/curl curl -k https://<ip-name-of-testmachine>:4433 --curves kyber768
 ```
 
 If you try this on your local computer, you need to execute both images within one docker network as follows:
@@ -29,12 +29,12 @@ If you try this on your local computer, you need to execute both images within o
 ```
 docker network create httpd-test
 docker run --network httpd-test --name oqs-httpd -p 4433:4433 openquantumsafe/httpd
-docker run --network httpd-test -it openquantumsafe/curl curl -k https://oqs-httpd:4433
+docker run --network httpd-test -it openquantumsafe/curl curl -k https://oqs-httpd:4433 --curves kyber768
 ```
 
 ## Slightly more advanced usage options
 
-This httpd image supports all quantum-safe key exchange algorithms [presently supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange). If you want to control with algorithm is actually used, you can request one from the list above to the curl command with the '--curves' parameter, e.g., requesting the hybrid Kyber768 variant:
+This httpd image supports all quantum-safe key exchange algorithms [presently supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). If you want to control with algorithm is actually used, you can request one from the list above to the curl command with the '--curves' parameter, e.g., requesting the hybrid Kyber768 variant:
 
 ```
 docker run -it openquantumsafe/curl curl -k https://oqs-httpd:4433  --curves p384_kyber768
@@ -77,7 +77,7 @@ docker run -v `pwd`:/opt/cacert -it openquantumsafe/curl curl --cacert /opt/cace
 A completely successful call requires use of a local docker-network where the server name is ensured to match the one encoded in the certificate:
 
 ```
-docker run --network httpd-test -v `pwd`:/opt/cacert -it openquantumsafe/curl curl --cacert /opt/cacert/CA.crt https://oqs-httpd:4433
+docker run --network httpd-test -v `pwd`:/opt/cacert -it openquantumsafe/curl curl --cacert /opt/cacert/CA.crt https://oqs-httpd:4433 --curves kyber768
 ```
 
 ## Completely standalone deployment
@@ -94,18 +94,18 @@ docker run -p 4433:4433 -v `pwd`/server-pki:/opt/httpd/pki openquantumsafe/httpd
 For creating the required keys and certificates, it is also possible to utilize the [openquantumsafe/curl](https://hub.docker.com/r/openquantumsafe/curl) image using standard `openssl` commands. 
 
 An example sequence is shown below, using 
-- 'qteslapi' for signing the CA certificate,
+- 'dilithium5' for signing the CA certificate,
 - 'dilithium2' for signing the server certificate,
 - 'httpd.server.my.org' as the address of the server for which the certificate is intended.
 
-Instead of 'qteslapi' or 'dilithium2' any of the [quantum safe authentication algorithms presently supported](https://github.com/open-quantum-safe/openssl#authentication) can be used.
+Instead of 'dilithium5' or 'dilithium2' any of the [quantum safe authentication algorithms presently supported](https://github.com/open-quantum-safe/oqs-provider#algorithms) can be used.
 
 ```
 # create and enter directory to contain keys and certificates
 mkdir -p server-pki && cd server-pki
 
-# create CA key and certificate using qteslapi
-docker run -v `pwd`:/opt/tmp -it openquantumsafe/curl openssl req -x509 -new -newkey qteslapi -keyout /opt/tmp/CA.key -out /opt/tmp/CA.crt -nodes -subj "/CN=oqstest CA" -days 365
+# create CA key and certificate using dilithium5
+docker run -v `pwd`:/opt/tmp -it openquantumsafe/curl openssl req -x509 -new -newkey dilithium5 -keyout /opt/tmp/CA.key -out /opt/tmp/CA.crt -nodes -subj "/CN=oqstest CA" -days 365
 
 # create server key using dilithium2
 docker run -v `pwd`:/opt/tmp -it openquantumsafe/curl openssl req -new -newkey dilithium2 -keyout /opt/tmp/server.key -out /opt/tmp/server.csr -nodes -subj "/CN=httpd.server.my.org"
@@ -181,7 +181,7 @@ Validating that all works as desired can be done by retrieving a document using 
 ```
 # Give curl access to CA certificate via bind-mount
 docker run -v `pwd`/server-pki:/opt/tmp -it openquantumsafe/curl \
-           curl --cacert /opt/tmp/CA.crt https://httpd.server.my.org:4433
+           curl --cacert /opt/tmp/CA.crt https://httpd.server.my.org:4433 --curves kyber768
 ```
 
 Again, if you don't have your own server and want to test on a local machine, start both of them in a docker network (adding the option `--network httpd-test`). 

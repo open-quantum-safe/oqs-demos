@@ -221,7 +221,7 @@ jobs:
             docker network create httpd-test &&
             docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img &&
             sleep 2 &&
-            docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433
+            docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433 --curves kyber768
       - when:
           condition:
             or:

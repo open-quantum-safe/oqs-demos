@@ -1,12 +1,12 @@
 ## Purpose 
 
-This directory contains a Dockerfile that builds [httpd (a.k.a the Apache HTTP Server)](https://httpd.apache.org) with the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows httpd to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+This directory contains a Dockerfile that builds [httpd (a.k.a the Apache HTTP Server)](https://httpd.apache.org) using OpenSSL(v3) using [oqs-provider](https://github.com/open-quantum-safe/oqs-provider), which allows httpd to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
 
 ## Getting started
 
 [Install Docker](https://docs.docker.com/install) and run the following commands in this directory:
 
-1. `docker build --build-arg SIG_ALG=<SIG> --tag oqs-httpd-img .` (`<SIG>` can be any of the authentication algorithms listed [here](https://github.com/open-quantum-safe/openssl#authentication)). An alternative, simplified build instruction is `docker build -t oqs-httpd-img .`: This will generate the image with a default QSC algorithm (dilithium2 -- see Dockerfile to change this).
+1. `docker build --build-arg SIG_ALG=<SIG> --tag oqs-httpd-img .` (`<SIG>` can be any of the authentication algorithms listed [here](https://github.com/open-quantum-safe/oqs-provider#algorithms)). An alternative, simplified build instruction is `docker build -t oqs-httpd-img .`: This will generate the image with a default QSC algorithm (dilithium3 -- see Dockerfile to change this).
 2. `docker run --detach --rm --name oqs-httpd -p 4433:4433 oqs-httpd-img`
 
 This will start a docker container that has httpd listening for TLS 1.3 connections on port 4433. 
@@ -30,7 +30,13 @@ By default, the image is built such as to have maximum portability regardless of
 
 This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
 
-The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
+The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
+
+### DEFAULT_GROUPS
+
+This defines the (quantum-safe) cryptographic KEM algorithms utilized for TLS 1.3 session establishment.
+
+The default value is 'kyber768:p384_kyber768' activating Kyber768 and its hybrid variant for session setup.
 
 
 ### HTTPD_PATH
