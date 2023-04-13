@@ -1,5 +1,5 @@
 ## Purpose 
-This directory contains a Dockerfile that builds the [h2load](https://nghttp2.org/documentation/h2load-howto.html) (with support for HTTP/2 and HTTP/3 load testing) using [OQS-OpenSSL-QUIC](../quic/), which allows h2load to negotiate quantum-safe keys in TLS 1.3.
+This directory contains a Dockerfile that builds the [h2load](https://nghttp2.org/documentation/h2load-howto.html) (with support for HTTP/2 and HTTP/3 load testing) using [quictls](https://github.com/quictls/openssl) and [oqs-provider](https://github.com/open-quantum-safe/oqs-provider), which allows h2load to negotiate quantum-safe keys in TLS 1.3.
 
 ## Quick start
 Assuming Docker is [installed](https://docs.docker.com/install) the following command

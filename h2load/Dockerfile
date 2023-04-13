@@ -3,6 +3,8 @@ FROM alpine as intermediate
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG INSTALLDIR=/opt/oqssa
+
 # Update image and apt software 
 RUN apk update && apk upgrade
 
@@ -15,23 +17,24 @@ WORKDIR /opt
 
 # get all sources
 RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch openssl-3.0.8+quic https://github.com/quictls/openssl.git && \
+    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
     git clone --depth 1 --branch main  https://github.com/ngtcp2/nghttp3 && \
     git clone --depth 1 --branch main https://github.com/ngtcp2/ngtcp2 && \
     git clone --depth 1 --branch master  https://github.com/nghttp2/nghttp2.git
 
-
-COPY merge-oqs-openssl-quic.sh /opt
-RUN ./merge-oqs-openssl-quic.sh mergeonly
-
 # build liboqs
 WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
+RUN mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} .. && ninja && ninja install
 
+# build openssl 3
+WORKDIR /opt/openssl
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
+    make ${MAKE_DEFINES} && make install_sw install_ssldirs
 
-# build oqs-openssl-quic
-WORKDIR /opt/oqs-openssl-quic
-RUN ./config enable-tls1_3 --prefix=$PWD/build && make -j$(nproc) && make install_sw
-
+# build & install provider (and activate by default)
+WORKDIR /opt/oqs-provider
+RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && cmake --build _build  && cp _build/lib/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:KEM_ALG\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = kyber512\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
 
 # build nghttp3
 WORKDIR /opt/nghttp3
@@ -40,14 +43,13 @@ RUN autoreconf -i && ./configure --prefix=$PWD/build --enable-lib-only && make -
 
 # build ngtcp2
 WORKDIR /opt/ngtcp2
-RUN autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig LDFLAGS="-Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib"  CXX=g++ CXXFLAGS="-std=c++20"  && make -j$(nproc) && make install 
+RUN autoreconf -i && ./configure PKG_CONFIG_PATH=$PWD/../nghttp3/build/lib/pkgconfig:/opt/oqssa/lib64/pkgconfig  CXX=g++ CXXFLAGS="-std=c++20"  && make -j$(nproc) && make install 
 
 
 # build nghttp2
 WORKDIR /opt/nghttp2
 RUN autoreconf -i && ./configure --enable-http3 \
-    PKG_CONFIG_PATH="$PWD/../oqs-openssl-quic/build/lib/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig:$PWD/../ngtcp2/crypto/openssl/" \
-    LDFLAGS="$LDFLAGS -Wl,-rpath,$PWD/../oqs-openssl-quic/build/lib" && make -j$(nproc) install
+    PKG_CONFIG_PATH="/opt/oqssa/lib64/pkgconfig:$PWD/../nghttp3/build/lib/pkgconfig:$PWD/../ngtcp2/crypto/openssl/"  && make -j$(nproc) install
 
 # Copy all required shared object dependencies to a single directory
 RUN mkdir /opt/lib && cd /opt/lib && \
@@ -56,8 +58,8 @@ RUN mkdir /opt/lib && cd /opt/lib && \
         cp /usr/lib/libev.so.4 . && \
         cp /opt/nghttp3/build/lib/libnghttp3.so.5 . && \
         cp /opt/ngtcp2/crypto/openssl/.libs/libngtcp2_crypto_openssl.so.4 . && \
-        cp /opt/oqs-openssl-quic/build/lib/libssl.so.81.1.1 . && \
-        cp /opt/oqs-openssl-quic/build/lib/libcrypto.so.81.1.1 . && \
+        cp /opt/oqssa/lib64/libssl.so.81.3 . && \
+        cp /opt/oqssa/lib64/libcrypto.so.81.3 . && \
         cp /usr/lib/libstdc++.so.6 . && \
         cp /usr/lib/libgcc_s.so.1 . 
 
@@ -68,5 +70,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # copy executable
 COPY --from=intermediate /usr/local/bin/h2load /usr/local/bin
 
-# copy shared object dependencies 
+# copy shared object dependencies and configuration
 COPY --from=intermediate /opt/lib /usr/local/lib
+COPY --from=intermediate /opt/oqssa/lib64/ossl-modules/oqsprovider.so /opt/oqssa/lib64/ossl-modules/oqsprovider.so
+COPY --from=intermediate /opt/oqssa/ssl/openssl.cnf /opt/oqssa/ssl/openssl.cnf
