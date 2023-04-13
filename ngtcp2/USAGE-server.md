@@ -1,6 +1,6 @@
 ## Purpose
 
-This is a [ngtcp2](https://github.com/ngtcp2/ngtcp2) server docker image building on [OQS-OpenSSL-QUIC](../quic), which allows ngtcp2 to negotiate quantum-safe keys in TLS 1.3.
+This is a [ngtcp2](https://github.com/ngtcp2/ngtcp2) server docker image building on [quictls](https://github.com/quictls/openssl) and [oqs-provider](https://github.com/open-quantum-safe/oqs-provider), which allows ngtcp2 to negotiate quantum-safe keys in TLS 1.3.
 
 
 ## Quick start
