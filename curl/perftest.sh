@@ -1,12 +1,14 @@
 #!/bin/sh
 set -e
 
-# Optionally set KEM to one defined in https://github.com/open-quantum-safe/openssl#key-exchange
+# Optionally set KEM to one defined in https://github.com/open-quantum-safe/oqs-provider#algorithms
 if [ "x$KEM_ALG" == "x" ]; then
-	export KEM_ALG=kyber512
+	export DEFAULT_GROUPS=kyber512
+else
+        export DEFAULT_GROUPS=$KEM_ALG
 fi
 
-# Optionally set SIG to one defined in https://github.com/open-quantum-safe/openssl#key-exchange
+# Optionally set SIG to one defined in https://github.com/open-quantum-safe/oqs-provider#algorithms
 if [ "x$SIG_ALG" == "x" ]; then
 	export SIG_ALG=dilithium2
 fi
@@ -16,7 +18,7 @@ if [ "x$TEST_TIME" == "x" ]; then
 	export TEST_TIME=100
 fi
 
-# Optionally set server certificate alg to one defined in https://github.com/open-quantum-safe/openssl#authentication
+# Optionally set server certificate alg to one defined in https://github.com/open-quantum-safe/oqs-provider#algorithms
 # The root CA's signature alg remains as set when building the image
 if [ "x$SIG_ALG" != "x" ]; then
     cd /opt/oqssa/bin
@@ -38,11 +40,13 @@ echo "Running $0 with SIG_ALG=$SIG_ALG and KEM_ALG=$KEM_ALG"
 echo
 
 # Start a TLS1.3 test server based on OpenSSL accepting only the specified KEM_ALG
-openssl s_server -cert /opt/test/server.crt -key /opt/test/server.key -curves $KEM_ALG -www -tls1_3 -accept localhost:4433&
+# The env var DEFAULT_GROUPS activates the required Group via the system openssl.cnf:
+# we put it on the command line to check for possible typos otherwise silently discarded:
+openssl s_server -cert /opt/test/server.crt -key /opt/test/server.key -groups $DEFAULT_GROUPS -www -tls1_3 -accept localhost:4433&
 
 # Give server time to come up first:
 sleep 1
 
 # Run handshakes for $TEST_TIME seconds
-# The env var KEM_ALG activates the required Group via the system openssl.cnf:
+# The env var DEFAULT_GROUPS activates the required Group via the system openssl.cnf:
 openssl s_time -connect :4433 -new -time $TEST_TIME -verify 1 | grep connections

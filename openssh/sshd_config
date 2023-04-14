@@ -15,7 +15,7 @@
 ###############################################################################
 
 # Key-exchange algorithms
-KexAlgorithms ecdh-nistp384-kyber-768-sha384
+KexAlgorithms ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org
 
 # Host key algorithms, these determine the generated host keys
 HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3

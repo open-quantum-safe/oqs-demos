@@ -9,7 +9,7 @@ rc-service oqs-sshd stop
 OPTIONS=${OPTIONS:="-q -o BatchMode=yes -o StrictHostKeyChecking=no"}
 
 SIG=${SIG_ALG:="ecdsa-nistp384-dilithium3"}
-KEM=${KEM_ALG:="ecdh-nistp384-kyber-768"}
+KEM=${KEM_ALG:="ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org"}
 
 # Generate new identity keys, overwrite old keys
 SSH_DIR="/home/${OQS_USER}/.ssh"
@@ -47,7 +47,7 @@ fi
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/openssh#key-exchange
 # if left empty, the options defined in sshd_config will be used
 if [ "x$KEM" != "x" ]; then
-    OPTIONS="${OPTIONS} -o KexAlgorithms=${KEM}-sha384"
+    OPTIONS="${OPTIONS} -o KexAlgorithms=${KEM}"
 fi
 
 # Optionally set SIG to one defined in https://github.com/open-quantum-safe/openssh#digital-signature

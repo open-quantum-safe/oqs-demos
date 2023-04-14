@@ -12,11 +12,14 @@ ARG HTTPD_PATH=/opt/httpd
 # defines the QSC signature algorithm used for the certificates:
 ARG SIG_ALG="dilithium3"
 
+# defines default KEM groups to be announced
+ARG DEFAULT_GROUPS="kyber768:p384_kyber768"
+
 # define the httpd version to include
-ARG HTTPD_VERSION=2.4.55
+ARG HTTPD_VERSION=2.4.57
 
 # define the APR version to include
-ARG APR_VERSION=1.7.2
+ARG APR_VERSION=1.7.3
 
 # define the APR util version to include
 ARG APRU_VERSION=1.6.3
@@ -37,38 +40,47 @@ ARG HTTPD_VERSION
 ARG APR_VERSION
 ARG APRU_VERSION
 ARG MAKE_DEFINES
-
+ARG DEFAULT_GROUPS
 
 # Get all software packages required for builing all components:
 RUN apk add build-base linux-headers \
             libtool automake autoconf cmake ninja \
             make \
-            openssl openssl-dev \
             git wget pcre-dev \
             expat-dev
 
 # get sources
 WORKDIR /opt
 RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch OQS-OpenSSL_1_1_1-stable https://github.com/open-quantum-safe/openssl ossl-src && \
+    git clone --depth 1 --branch master https://github.com/openssl/openssl ossl-src && \
+    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider && \
     wget http://mirror.easyname.ch/apache/apr/apr-${APR_VERSION}.tar.gz && tar xzvf apr-${APR_VERSION}.tar.gz && \
     wget http://mirror.easyname.ch/apache/apr/apr-util-${APRU_VERSION}.tar.gz && tar xzvf apr-util-${APRU_VERSION}.tar.gz && \
     wget --trust-server-names "https://archive.apache.org/dist/httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
-# build liboqs (static linking only)
-WORKDIR /opt/liboqs
-RUN mkdir build-static && cd build-static && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossl-src/oqs && ninja && ninja install
-
-# build OQS-OpenSSL
+# build OpenSSL3 (latest); make libs detectable to old (APRU) tooling not knowing about lib64
 WORKDIR /opt/ossl-src
 RUN ./config no-shared --prefix=${OPENSSL_PATH} && \
-    make ${MAKE_DEFINES} && make install_sw;
+    make ${MAKE_DEFINES} && make install_sw install_ssldirs && \
+    ln -s ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib;
+
+# build liboqs (shared lib only for oqsprovider)
+WORKDIR /opt/liboqs
+RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${OPENSSL_PATH} && ninja && ninja install
+
+# create openssl.cnf activating oqsprovider & setting default groups
+RUN sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${OPENSSL_PATH}/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" ${OPENSSL_PATH}/ssl/openssl.cnf
+
+
+# build oqs-provider
+WORKDIR /opt/oqs-provider
+RUN rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OPENSSL_PATH} -DCMAKE_PREFIX_PATH=${OPENSSL_PATH} -S . -B build && cmake --build build && cp build/lib/oqsprovider.so ${OPENSSL_PATH}/lib64/ossl-modules/oqsprovider.so
 
 # build httpd
 WORKDIR /opt
 RUN sed -i "s/\$RM \"\$cfgfile\"/\$RM -f \"\$cfgfile\"/g" apr-${APR_VERSION}/configure && \
     cd apr-${APR_VERSION} && ./configure && make ${MAKE_DEFINES} && make install && cd .. && \
-    cd apr-util-${APRU_VERSION} && ./configure x86_64-pc-linux-gnu --with-crypto --with-apr=/usr/local/apr && make ${MAKE_DEFINES} && make install
+    cd apr-util-${APRU_VERSION} && ./configure x86_64-pc-linux-gnu --with-crypto --with-openssl=${OPENSSL_PATH} --with-apr=/usr/local/apr && make ${MAKE_DEFINES} && make install
 
 WORKDIR /opt/httpd-${HTTPD_VERSION}
 RUN ./configure --prefix=${HTTPD_PATH} \
@@ -76,11 +88,10 @@ RUN ./configure --prefix=${HTTPD_PATH} \
                     --enable-ssl --with-ssl=${OPENSSL_PATH} \
                     --enable-ssl-staticlib-deps \
                     --enable-mods-static=ssl && \
-    sed -i "s/-lpthread/-lpthread -L\/opt\/openssl\/lib -loqs/g" build/config_vars.mk && \
     make ${MAKE_DEFINES} && make install;
 
 # prepare to run httpd
-ARG OPENSSL_CNF=/opt/ossl-src/apps/openssl.cnf
+ARG OPENSSL_CNF=${OPENSSL_PATH}/ssl/openssl.cnf
 
 WORKDIR ${HTTPD_PATH}
     # generate CA key and cert
@@ -98,6 +109,9 @@ RUN rm -rf ${HTTPD_PATH}/bin/ab
 
 # second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM alpine:3.13
+
+LABEL version="2"
+
 # Take in global args
 ARG HTTPD_PATH
 ARG OPENSSL_PATH
@@ -109,8 +123,9 @@ COPY --from=intermediate ${HTTPD_PATH} ${HTTPD_PATH}
 # copy over manually build libapr{util}
 COPY --from=intermediate /usr/local/apr/lib  /usr/local/apr/lib
 
-#Enable this if you want to have openssl also in this image
-#COPY --from=intermediate ${OPENSSL_PATH}/apps/openssl ${OPENSSL_PATH}
+# Need to copy over OpenSSL3 libs and conf for oqsprovider use
+COPY --from=intermediate ${OPENSSL_PATH}/ssl ${OPENSSL_PATH}/ssl
+COPY --from=intermediate ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib64
 
 COPY httpd-conf/httpd-ssl.conf ${HTTPD_PATH}/httpd-conf/httpd-ssl.conf
 COPY httpd-conf/httpd.conf ${HTTPD_PATH}/httpd-conf/httpd.conf

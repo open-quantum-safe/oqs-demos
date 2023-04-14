@@ -1,13 +1,13 @@
 ## Purpose 
 
-This directory contains a Dockerfile that builds nginx with the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows nginx to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+This directory contains a Dockerfile that builds nginx using OpenSSL3 with the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows nginx to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
 
 ## Getting started
 
 [Install Docker](https://docs.docker.com/install) and run the following commands in this directory:
 
-1. `docker build --build-arg SIG_ALG=<SIG> -t oqs-nginx-img .` (`<SIG>` can be any of the authentication algorithms listed [here](https://github.com/open-quantum-safe/openssl#authentication)). An alternative, simplified build instruction is `docker build -t oqs-nginx-img .`: This will generate the image with a default QSC algorithm (dilithium3 -- see Dockerfile to change this).
-2. `docker run --detach --rm --name oqs-nginx -p 4433:4433 oqs-nginx-img` will start up the resulting container with QSC-enabled nginx running and listening for TLS 1.3 connections on port 4433.
+1. `docker build -t oqs-nginx .` This will generate the image with a default QSC algorithm built-in (dilithium3 -- see Build options below to change this).
+2. `docker run --detach --rm --name oqs-nginx -p 4433:4433 oqs-nginx` will start up the resulting container with QSC-enabled nginx running and listening for TLS 1.3 connections on port 4433.
 
 ## Usage
 
@@ -27,14 +27,25 @@ By default, the image is built such as to have maximum portability regardless of
 
 This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
 
-The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
+The default value is 'dilithium3' but can be set to any signature algorithm supported by [the oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
+### DEFAULT_GROUPS
 
-### NGINX_PATH
+This defines the set of (possibly PQ) TLS 1.3 groups announced by the running server.
 
-This defines the resultant location of the nginx installatiion.
+The default value is `x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024` enabling all Kyber variants as well as two classic EC algorithms. Be sure to disable the latter if no classic crypto should be used by this `nginx` instance. For the full list of supported PQ KEM algorithms see [the oqs-provider algorithm documentation](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
-By default this is '/opt/nginx'. It is recommended to not change this. Also, all [usage documentation](USAGE.md) assumes this path.
+### BASEDIR
+
+This defines the resultant base location of the installatiion.
+
+By default this is '/opt'. Changing this invalidates some paths in the [usage documentation](USAGE.md).
+
+### INSTALLDIR
+
+This defines the resultant location of the installatiion.
+
+By default this is '/opt/nginx'. Changing this invalidates some paths in the [usage documentation](USAGE.md).
 
 ### NGINX_VERSION
 
