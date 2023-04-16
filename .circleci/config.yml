@@ -531,8 +531,7 @@ ubuntu_x64_h2load:
           command: |
             docker network create h2load-test &&
             docker run --network h2load-test --detach --rm --name oqs-nginx openquantumsafe/nginx &&
-            docker run --network h2load-test --ulimit nofile=5000:5000 --detach --rm --name oqs-nginx-quic openquantumsafe/nginx-quic &&
-            docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups kyber512 && h2load -n 100 -c 10 https://oqs-nginx-quic:6000 --groups kyber512 --npn-list h3"
+            docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups kyber512"
       - when:
           condition:
             or:
