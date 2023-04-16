@@ -1,6 +1,6 @@
 ## Purpose
 
-This is a [ngtcp2](https://github.com/ngtcp2/ngtcp2) server docker image building on [quictls](https://github.com/quictls/openssl) and [oqs-provider](https://github.com/open-quantum-safe/oqs-provider), which allows ngtcp2 to negotiate quantum-safe keys in TLS 1.3.
+This is a [ngtcp2](https://github.com/ngtcp2/ngtcp2) server docker image building on [quictls](https://github.com/quictls/openssl) and [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows ngtcp2 to negotiate quantum-safe keys in TLS 1.3.
 
 
 ## Quick start
@@ -37,7 +37,7 @@ For example,
 server "*" 6000  /certs/server.key /certs/server.crt --groups=kyber512
 ```
 
-By default the ngtcp2 server supports X25519, P-256, P-384 and P-521 for key exchange but any plain or hybrid QSC (Quantum-Safe Cryptography) algorithm can be selected. [See list of supported key exchange algorithms here](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange).
+By default the ngtcp2 server supports X25519, P-256, P-384 and P-521 for key exchange but any plain or hybrid QSC (Quantum-Safe Cryptography) algorithm can be selected. [See list of supported key exchange algorithms here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
 
 If multiple algorithms are selected, they are separated with colons. For example `--groups=kyber512:p256_bikel1`
