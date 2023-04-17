@@ -541,7 +541,7 @@ ubuntu_x64_h2load:
             - run:
                 name: Push h2load image
                 command: |
-                  docker tag h2load $TARGETNAME/h2load:latest &&
+                  docker tag oqs-h2load $TARGETNAME/h2load:latest &&
                   docker push $TARGETNAME/h2load:latest
 
 workflows:
