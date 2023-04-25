@@ -4,7 +4,7 @@ Further be aware that both cloning the source code as well as building Chromium 
 
 0. Ensure the system requirements listed [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#System-requirements) are met.
 
-1. To obtain the source code, follow the instructions in the "Install depot_tools" and "Get the code" sections [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install). Note: Do *not* set `--no-history` to save time as you need git history in the next step.
+1. To obtain the source code, follow the instructions given [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#Install) in the "Install depot_tools" section and in the "Get the code" section up to (and not including) the "Install additional build dependencies" sub-section. Note: Do *not* set `--no-history` to save time as you need git history in the next step.
 
 2. Navigate to the root directory of the source code, which we will refer to hereafter as `<CHROMIMUM_ROOT>`, and run `git checkout 100.0.4856.2`, which is the latest tag for which we have verified the build instructions. Then, to ensure that all of chromium's third party dependencies are compatible with this tag, run `gclient sync`.
 
