@@ -19,10 +19,13 @@ ARG DEFAULT_GROUPS="kyber768:p384_kyber768"
 ARG HTTPD_VERSION=2.4.57
 
 # define the APR version to include
-ARG APR_VERSION=1.7.3
+ARG APR_VERSION=1.7.4
 
 # define the APR util version to include
 ARG APRU_VERSION=1.6.3
+
+# define the mirror from which to fetch the APR and APR-util source code
+ARG APR_MIRROR="https://dlcdn.apache.org"
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 2"
@@ -39,6 +42,7 @@ ARG SIG_ALG
 ARG HTTPD_VERSION
 ARG APR_VERSION
 ARG APRU_VERSION
+ARG APR_MIRROR
 ARG MAKE_DEFINES
 ARG DEFAULT_GROUPS
 
@@ -54,8 +58,8 @@ WORKDIR /opt
 RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch master https://github.com/openssl/openssl ossl-src && \
     git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider && \
-    wget http://mirror.easyname.ch/apache/apr/apr-${APR_VERSION}.tar.gz && tar xzvf apr-${APR_VERSION}.tar.gz && \
-    wget http://mirror.easyname.ch/apache/apr/apr-util-${APRU_VERSION}.tar.gz && tar xzvf apr-util-${APRU_VERSION}.tar.gz && \
+    wget ${APR_MIRROR}/apr/apr-${APR_VERSION}.tar.gz && tar xzvf apr-${APR_VERSION}.tar.gz && \
+    wget ${APR_MIRROR}/apr/apr-util-${APRU_VERSION}.tar.gz && tar xzvf apr-util-${APRU_VERSION}.tar.gz && \
     wget --trust-server-names "https://archive.apache.org/dist/httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
 # build OpenSSL3 (latest); make libs detectable to old (APRU) tooling not knowing about lib64
