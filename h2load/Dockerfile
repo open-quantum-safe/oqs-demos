@@ -42,12 +42,12 @@ RUN LD_LIBRARY_PATH=${INSTALLDIR}/lib64 autoreconf -i && automake && autoconf &&
 
 # Copy all required shared object dependencies to a single directory
 RUN mkdir /opt/lib && cd /opt/lib && \
-        cp /usr/local/lib/libnghttp2.so.14 . && \
-        cp /usr/lib/libev.so.4 . && \
-        cp /opt/oqssa/lib64/libssl.so.3 . && \
-        cp /opt/oqssa/lib64/libcrypto.so.3 . && \
-        cp /usr/lib/libstdc++.so.6 . && \
-        cp /usr/lib/libgcc_s.so.1 . 
+        cp /usr/local/lib/libnghttp2.so.* . && \
+        cp /usr/lib/libev.so.* . && \
+        cp /opt/oqssa/lib64/libssl.so.* . && \
+        cp /opt/oqssa/lib64/libcrypto.so.* . && \
+        cp /usr/lib/libstdc++.so.* . && \
+        cp /usr/lib/libgcc_s.so.* .
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM alpine as dev
@@ -55,6 +55,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # copy executable
 COPY --from=intermediate /usr/local/bin/h2load /usr/local/bin
+COPY check_algorithms.sh /usr/local/bin
 
 # copy shared object dependencies and configuration file
 COPY --from=intermediate /opt/lib /usr/local/lib
