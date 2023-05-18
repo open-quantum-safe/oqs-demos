@@ -48,7 +48,7 @@ docker run -it openquantumsafe/curl openssl speed
 ```
 to run through all crypto algorithms built into and enabled in the docker image. This includes classic as well as quantum-safe algorithms side by side.
 
-If interested in performance of only specific algorithms, this can be done by providing parameters as usual for [openssl speed](https://www.openssl.org/docs/man1.1.1/man1/openssl-speed.html). The list of [currently supported OQS algorithms is accessible here](https://github.com/open-quantum-safe/oqs-provider#algorithms), so an example call would be `docker run -it openquantumsafe/curl openssl speed -seconds 2 kyber90s512`.
+If interested in performance of only specific algorithms, this can be done by providing parameters as usual for [openssl speed](https://www.openssl.org/docs/man1.1.1/man1/openssl-speed.html). The list of [currently supported OQS algorithms is accessible here](https://github.com/open-quantum-safe/oqs-provider#algorithms), so an example call would be `docker run -it openquantumsafe/curl openssl speed -seconds 2 kyber512`.
 
 #### Classic algorithm names for reference
 

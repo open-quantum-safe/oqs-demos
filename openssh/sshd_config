@@ -33,16 +33,12 @@ Port 2222
 #HostKey /opt/oqs-ssh/ssh_host_dsa_key
 #HostKey /opt/oqs-ssh/ssh_host_ed25519_key
 
-#HostKey /opt/oqs-ssh/ssh_host_ssh-dilithium2aes_key
 #HostKey /opt/oqs-ssh/ssh_host_ssh-falcon512_key
-#HostKey /opt/oqs-ssh/ssh_host_ssh-sphincsharaka192frobust_key
 
 HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-dilithium3_key
 #HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp256-falcon512_key
 
-#HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-dilithium2aes_key
 #HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-falcon512_key
-#HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-sphincsharaka128fsimple_key
 
 
 ###############################################################################
