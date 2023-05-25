@@ -508,6 +508,42 @@ jobs:
                   docker tag envoy-oqs $TARGETNAME/envoy:latest &&
                   docker push $TARGETNAME/envoy:latest 
 
+ubuntu_x64_h2load:
+    description: Building and pushing OQS-h2load demo Docker images
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - setup_remote_docker
+      - run:
+          name: Authenticate to Docker
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+      - run:
+          name: Build h2load with liboqs
+          command: |
+            docker build -t oqs-h2load .
+          working_directory: h2load
+      - run:
+          name: Test oqs-h2load using public oqs-nginx and oqs-nginx-quic
+          command: |
+            docker network create h2load-test &&
+            docker run --network h2load-test --detach --rm --name oqs-nginx openquantumsafe/nginx &&
+            docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups kyber512"
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ true, << pipeline.parameters.new_openssl_commit >> ]
+          steps:
+            - run:
+                name: Push h2load image
+                command: |
+                  docker tag oqs-h2load $TARGETNAME/h2load:latest &&
+                  docker push $TARGETNAME/h2load:latest
+
 workflows:
   version: 2.1
   build:
@@ -539,3 +575,5 @@ workflows:
       # Disable as it takes too long on OQS CCI plan
       #- ubuntu_x64_envoy:
       #    context: openquantumsafe
+      - ubuntu_x64_h2load:
+          context: openquantumsafe
