@@ -77,7 +77,7 @@ def gen_cert(sig_alg):
 
 def write_nginx_config(f, port, sig, k):
            f.write("server {\n")
-           f.write("    listen              0.0.0.0:"+str(port)+" http3 reuseport;\n\n")
+           f.write("    listen              0.0.0.0:"+str(port)+" quic reuseport;\n\n")
            f.write("    server_name         "+TESTFQDN+";\n")
            f.write("    access_log          "+BASEPATH+"logs/"+sig+"-access.log;\n")
            f.write("    error_log           "+BASEPATH+"logs/"+sig+"-error.log;\n\n")
