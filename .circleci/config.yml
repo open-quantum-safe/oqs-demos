@@ -508,7 +508,7 @@ jobs:
                   docker tag envoy-oqs $TARGETNAME/envoy:latest &&
                   docker push $TARGETNAME/envoy:latest 
 
-ubuntu_x64_h2load:
+  ubuntu_x64_h2load:
     description: Building and pushing OQS-h2load demo Docker images
     docker:
       - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
