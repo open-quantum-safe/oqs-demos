@@ -36,7 +36,7 @@ CAROOTDIR="root"
 ASSIGNMENT_FILE="assignments.json"
 
 # The list of chromium-supported KEMs:
-chromium_algs = ["p256_bikel1", "p256_frodo640aes", "p256_kyber90s512", "p256_ntru_hps2048509", "p256_lightsaber"]
+chromium_algs = ["p256_bikel1", "p256_frodo640aes", "p256_kyber512", "p256_ntru_hps2048509", "p256_lightsaber"]
 
 ############# Functions starting here
 
