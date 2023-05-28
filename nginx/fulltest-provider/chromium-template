@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #eeeeee;
+}
+</style>
+<title>Open Quantum Safe interop test server for quantum-safe cryptography - Chromium overview</title>
+</head>
+<body>
+<h1 align=center>Open Quantum Safe interop test server for quantum-safe cryptography</h1>
+<h2> Purpose </h2>
+
+<p>This server is an NGINX instance enhanced with support for quantum-safe cryptography (QSC) using software packages provided by the <a href="https://www.openquantumsafe.org">Open Quantum Safe project</a> (OQS).</p>
+
+<p>In order to provide a means for clients to test interoperability with this QSC-enhanced software and the QSC algorithms contained it features separate ports for all QSC signature/key exchange algorithm combinations supported by the current OQS distribution. This page focuses on the algorithms supported by the OQS-enabled Chromium browser build.</p>
+
+<h2> Specification details </h2>
+
+<p>This nginx server supports</p>
+<ul>
+<li>the TLS1.3 specification with QSC enhancement as specified in <a href="https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-06">https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-06</a></li>
+<li>Code points/curve IDs of KEM algorithms are implemented with the highest numbers available for each algorithm listed <a href="https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md">here</a>. </li>
+<li>Code points/OIDs of SIG algorithms are implemented with the highest numbers available for each algorithm as listed <a href="https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md">here</a>. </li>
+</ul>
+
+<p>This corresponds to the OQS release version LIBOQS_RELEASE </p>
+
+<p>These specifications should not be taken as a standard, de facto and otherwise, and are subject to change at any time.</p>
+
+<p>Use the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium">OQS-enabled Chromium build</a> to access this web page. As per the limitations concerning supported algorithms as documented <a href="https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes">here</a>, only the KEM algorithm combinations listed below will function (P256_BIKEL1, P256_FRODO640AES, P256_KYBER90S512, P256_NTRU_HPS2048509, P256_LIGHTSABER) and no hybrid signature algorithms are supported.
+
+<p>More details are available at <a href="https://github.com/open-quantum-safe/openssl/wiki/Integrating-PQC-into-TLS-1.3">Github</a>.</p>
+
+<p>An alternative view to <a href="index-base.html">all supported algorithms is available at this web page</a>.</p>
+
+<h4> Caveats </h4>
+
+<ol>
+<li>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/openssl#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</li>
+
+</ol>
+
+<h2> Certificates </h2>
+
+<p>Each test port provides TLS server authentication using a server certificate generated using the listed QSC-signature algorithm. All server certificates are signed by a common CA certificate using conventional (RSA) cryptography. This certificate is available for download <a href="CA.crt">here</a>.</p>
+
+<h2> List of all supported QSC Signature / Key Exchange algorithms for use by OQS-enabled Chromium</h2>
+
+<p>The list below provides links to the entry points of all OQS signature / key exchange algorithm combinations supported by the OQS-Chromium build.</p>
+
+<table>
+  <tr>
+    <th>Signature algorithm</th>
+    <th>Key exchange algorithm</th>
+    <th>Port</th>
+    <th>Link</th>
+  </tr>
