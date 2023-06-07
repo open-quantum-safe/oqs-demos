@@ -9,4 +9,4 @@
 docker build --no-cache -t oqs-nginx-fulltest-provider .
 
 # Copy tar from image
-docker cp $(docker create oqs-nginx-fulltest-provider:latest):oqs-nginx-0.8.0-rc1.tgz .
+docker cp $(docker create oqs-nginx-fulltest-provider:latest):oqs-nginx-0.8.0.tgz .

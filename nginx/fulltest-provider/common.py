@@ -3,25 +3,7 @@ import subprocess
 import pathlib
 import psutil
 import time
-
-key_exchanges = [
-##### OQS_TEMPLATE_FRAGMENT_KEX_ALGS_START
-    # quantum-safe key exchanges
-    ('frodo640aes', 128),('frodo640shake', 128),('frodo976aes', 192),('frodo976shake', 192),('frodo1344aes', 256),('frodo1344shake', 256),('kyber512', 128),('kyber768', 192),('kyber1024', 256),('bikel1', 128),('bikel3', 192),('bikel5', 256),('hqc128', 128),('hqc192', 192),('hqc256', 256),
-    # quantum-safe + classical NIST key exchanges
-    ('p256_frodo640aes', 128),('p256_frodo640shake', 128),('p384_frodo976aes', 192),('p384_frodo976shake', 192),('p521_frodo1344aes', 256),('p521_frodo1344shake', 256),('p256_kyber512', 128),('p384_kyber768', 192),('p521_kyber1024', 256),('p256_bikel1', 128),('p384_bikel3', 192),('p521_bikel5', 256),('p256_hqc128', 128),('p384_hqc192', 192),('p521_hqc256', 256),
-    # quantum-safe + classical X key exchanges
-    ('x25519_frodo640aes', 128),('x25519_frodo640shake', 128),('x448_frodo976aes', 192),('x448_frodo976shake', 192),('x25519_kyber512', 128),('x448_kyber768', 192),('x25519_bikel1', 128),('x448_bikel3', 192),('x25519_hqc128', 128),('x448_hqc192', 192),    
-##### OQS_TEMPLATE_FRAGMENT_KEX_ALGS_END
-]
-signatures = [
-    ('ecdsap256', 0), ('rsa3072', 0),
-##### OQS_TEMPLATE_FRAGMENT_SIG_ALGS_START    # quantum-safe signatures
-    ('dilithium2', 128),('dilithium3', 192),('dilithium5', 256),('falcon512', 128),('falcon1024', 256),('sphincssha2128fsimple', 128),('sphincssha2128ssimple', 128),('sphincssha2192fsimple', 192),('sphincsshake128fsimple', 128),
-    # quantum-safe + classical signatures
-    ('p256_dilithium2', 128),('rsa3072_dilithium2', 128),('p384_dilithium3', 192),('p521_dilithium5', 256),('p256_falcon512', 128),('rsa3072_falcon512', 128),('p521_falcon1024', 256),('p256_sphincssha2128fsimple', 128),('rsa3072_sphincssha2128fsimple', 128),('p256_sphincssha2128ssimple', 128),('rsa3072_sphincssha2128ssimple', 128),('p384_sphincssha2192fsimple', 192),('p256_sphincsshake128fsimple', 128),('rsa3072_sphincsshake128fsimple', 128),
-##### OQS_TEMPLATE_FRAGMENT_SIG_ALGS_END
-]
+import oqsprovider_alglist
 
 SERVER_START_ATTEMPTS = 10
 

@@ -1,6 +1,7 @@
 import common
 import os
 import json
+import oqsprovider_alglist
 
 # Script assumes nginx to have been built for this platform using build-ubuntu.sh
 
@@ -173,12 +174,12 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
      f.write("}\n")
 
      f.write("\n")
-     for sig in common.signatures:
+     for sig in oqsprovider_alglist.signatures:
         assignments[sig[0]]={}
         assignments[sig[0]]["*"]=port
         write_nginx_config(f, i, cf, port, sig, "*")
         port = port+1
-        for kex in common.key_exchanges:
+        for kex in oqsprovider_alglist.key_exchanges:
             # replace oqs_kem_default with X25519:
             if kex[0]=='oqs_kem_default':
                write_nginx_config(f, i, cf, port, sig, "X25519")
@@ -201,7 +202,7 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
 
 def main():
    # first generate certs for all supported sig algs:
-   for sig in common.signatures:
+   for sig in oqsprovider_alglist.signatures:
       gen_cert(sig)
    # now do conf and HTML files
    gen_conf("interop.conf", "index-base.html", "chromium-base.html")
