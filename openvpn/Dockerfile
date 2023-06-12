@@ -27,7 +27,7 @@ LABEL version="2"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9 F8D2585B8783D481 6ED0E7B82643E131 0E98404D386FA1D9 54404762BBB6E853 BDE6D2B9216EC7A8 && apt -y upgrade
+RUN apt update && apt install -y gnupg && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9 F8D2585B8783D481 6ED0E7B82643E131 0E98404D386FA1D9 54404762BBB6E853 BDE6D2B9216EC7A8 && apt -y upgrade
 
 # Get all software packages required for builing all components:
 RUN apt install -y  \
