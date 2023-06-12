@@ -15,7 +15,7 @@ ARG MAKE_DEFINES="-j 4"
 # Default KEM algorithms to be utilized
 ARG KEM_ALGLIST="kyber768:p384_kyber768"
 
-FROM debian:bookworm as intermediate
+FROM debian:bullseye as intermediate
 # Take in all global args
 ARG INSTALLDIR
 ARG LIBOQS_BUILD_DEFINES
@@ -27,7 +27,7 @@ LABEL version="2"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt install -y gnupg && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9 F8D2585B8783D481 6ED0E7B82643E131 0E98404D386FA1D9 54404762BBB6E853 BDE6D2B9216EC7A8 && apt update && apt -y upgrade
+RUN apt update && apt -y upgrade
 
 # Get all software packages required for builing all components:
 RUN apt install -y  \
@@ -72,7 +72,7 @@ RUN libtoolize --force && aclocal && autoheader && automake --force-missing --ad
     CFLAGS="-I$OPENSSL3_DIR/include -Wl,-rpath=$OPENSSL3_DIR/lib64 -L$OPENSSL3_DIR/lib64" ./configure --prefix=${INSTALLDIR} --disable-lz4 && make ${MAKE_DEFINES} && make check && make install
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM debian:bookworm-slim
+FROM debian:bullseye-slim
 # Take in all global args
 ARG INSTALLDIR
 ARG OPENVPNDIR
