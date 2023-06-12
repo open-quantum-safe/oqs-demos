@@ -15,7 +15,7 @@ ARG MAKE_DEFINES="-j 4"
 # Default KEM algorithms to be utilized
 ARG KEM_ALGLIST="kyber768:p384_kyber768"
 
-FROM debian as intermediate
+FROM debian:bookworm as intermediate
 # Take in all global args
 ARG INSTALLDIR
 ARG LIBOQS_BUILD_DEFINES
@@ -72,7 +72,7 @@ RUN libtoolize --force && aclocal && autoheader && automake --force-missing --ad
     CFLAGS="-I$OPENSSL3_DIR/include -Wl,-rpath=$OPENSSL3_DIR/lib64 -L$OPENSSL3_DIR/lib64" ./configure --prefix=${INSTALLDIR} --disable-lz4 && make ${MAKE_DEFINES} && make check && make install
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM debian:stable-slim
+FROM debian:bookworm-slim
 # Take in all global args
 ARG INSTALLDIR
 ARG OPENVPNDIR
