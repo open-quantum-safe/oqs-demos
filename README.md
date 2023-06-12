@@ -31,7 +31,7 @@ Currently supported packages:
 
 <!---| **HAproxy**      | [Github: oqs-demos/haproxy](haproxy)   | [Dockerhub: openquantumsafe/haproxy](https://hub.docker.com/repository/docker/openquantumsafe/haproxy)                       | -->
 
-You can use the openssl (s_client), curl, Chromium and GNOME Web/epiphany clients with the Open Quantum Safe test server at https://test.openquantumsafe.org/.
+You can use the openssl (s_client), curl and GNOME Web/epiphany clients with all algorithm combinations available at the Open Quantum Safe TLS/X.509 interoperability test server at https://test.openquantumsafe.org (set up using `oqs-provider v0.5.0` and `liboqs v0.8.0`). Chromium and `oqs-boringssl` are no longer maintained to the same set of algorithms, so are not to be expected to (inter)operate fully with the test server.
 
 ## Contributing
 
