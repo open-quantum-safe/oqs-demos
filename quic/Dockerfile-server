@@ -13,7 +13,7 @@ RUN /opt/merge-oqs-openssl-quic.sh mergeonly
 
 WORKDIR /opt
 #RUN git clone https://github.com/open-quantum-safe/liboqs.git && git clone https://github.com/igorbarshteyn/oqs-openssl-quic.git && hg clone -b quic https://hg.nginx.org/nginx-quic && cd nginx-quic
-RUN git clone https://github.com/open-quantum-safe/liboqs.git && hg clone -b quic https://hg.nginx.org/nginx-quic && cd nginx-quic
+RUN git clone https://github.com/open-quantum-safe/liboqs.git && hg clone https://hg.nginx.org/nginx-quic && cd nginx-quic
 
 # Make sure library runs on all CPUs:
 RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DOQS_DIST_BUILD=ON -DCMAKE_INSTALL_PREFIX=/opt/oqs-openssl-quic/oqs .. && ninja && ninja install
