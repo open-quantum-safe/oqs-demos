@@ -544,4 +544,5 @@ If the build completes successfully, it will create _chrome.exe_ in _%CHROMIUM_R
 ### 8. Miscellaneous
 
 - This guide was initially published on July 1, 2023, and may be outdated.
+- A certificate chain that includes quantum-safe signatures can only be validated if it terminates with a root certificate that is in the [Chrome Root Store](https://chromium.googlesource.com/chromium/src/+/main/net/data/ssl/chrome_root_store/faq.md).
 - These instructions have been tested on 64-bit Windows 10 Enterprise with Visual Studio 2022 Community, [Go 1.20.5](https://go.dev/dl/), and [ActiveState Perl 5.36](https://www.activestate.com/products/perl/); the Chromium version is 117.0.5863.0.
