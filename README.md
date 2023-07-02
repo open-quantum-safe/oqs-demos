@@ -59,6 +59,7 @@ The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.st
     Keelan Cannoo (University of Mauritius / Cyberstorm.mu)
     Dindyal Jeevesh Rishi (University of Mauritius / cyberstorm.mu)
     Dan Rouhana (University of Washington)
+    JT (Henan Raytonne Trading Company)
 
 ## Acknowledgments
 

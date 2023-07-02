@@ -7,5 +7,5 @@ export CHROMIUM_TAG=100.0.4856.2
 fi
 if [ -z "$CHROMIUM_PATCH" ]
 then
-export CHROMIUM_PATCH=https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/chromium94.patch
+export CHROMIUM_PATCH=https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/oqs-changes.patch
 fi
