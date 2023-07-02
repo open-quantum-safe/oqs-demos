@@ -12,7 +12,7 @@ Note that both cloning the source code as well as building Chromium can take sev
 
 - `git remote add oqs-bssl https://github.com/open-quantum-safe/boringssl`
 - `git fetch oqs-bssl`
-- `git checkout -b oqs-bssl-master oqs-bssl/master`
+- `git checkout -b oqs-bssl-master e2d2587065eacfe97aaae940dd43cd964b71f5b4`
 
 4. In a directory of your choosing, clone and build liboqs as follows:
 
@@ -47,10 +47,10 @@ If the build completes successfully, i.e., the executable `chrome` has been crea
 
 0. Navigate to `<CHROMIUM_ROOT>`, and start Chromium by executing `./out/Default/chrome`
 1. Navigate again to the `<CHROMIUM_ROOT>/third_party/boringssl/src` folder, and build OQS-BoringSSL as a standalone project by running `mkdir build && cd build && cmake -GNinja ..`.
-2. Then, in the `build` directory, run `./tool/bssl server -accept 4433 -www -loop -curves <KEX>`, where `<KEX>` can be any key-exchange algorithm named [here](https://github.com/open-quantum-safe/boringssl#supported-algorithms) that is supported by default by Chromium. The [kDefaultGroups array](https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes) lists all such algorithms\*.
+2. Then, in the `build` directory, run `./tool/bssl server -accept 4433 -www -loop -curves <KEX>`, where `<KEX>` can be any key-exchange algorithm named [here](https://github.com/open-quantum-safe/boringssl/blob/e2d2587065eacfe97aaae940dd43cd964b71f5b4#supported-algorithms) that is supported by default by Chromium. The [kDefaultGroups array](https://github.com/open-quantum-safe/boringssl/wiki/Implementation-Notes) lists all such algorithms\*.
 3. Load `https://localhost:4433` in Chromium.
 
-An alternative test consists of using the newly built Chromium to access the OQS test server at [https://test.openquantumsafe.org](https://test.openquantumsafe.org) and clicking on any of the algorithm combinations [supported by Chromium](https://github.com/open-quantum-safe/boringssl/blob/master/ssl/t1_lib.cc#L375), e.g., `p256_kyber512`).
+An alternative test consists of using the newly built Chromium to access the OQS test server at [https://test.openquantumsafe.org](https://test.openquantumsafe.org) and clicking on any of the algorithm combinations [supported by Chromium](https://github.com/open-quantum-safe/boringssl/blob/e2d2587065eacfe97aaae940dd43cd964b71f5b4/ssl/extensions.cc#L353), e.g., `p256_kyber512`).
 
 Note: In order to avoid certificate warnings, you need to [download the test site certificate](https://test.openquantumsafe.org/CA.crt) using the newly-built chromium. Then click the "..." Control extensions button in the top-right window corner of your newly built Chromium browser, select "Settings", click on "Privacy and Security" in the newly opened window on the left, click on "Security" in the window pane on the right, scroll down and click on "Manage certificates", click on the "Certificates" tab in the newly opened screen, click on "Import" near the top of the newly opened pane and click on the "Downloads" folder on the file selector window that opens. Then double-click on "CA.crt" and check the box next to "Trust this certificate for identifying websites" and finally click "OK".
 
