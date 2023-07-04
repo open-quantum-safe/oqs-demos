@@ -3,7 +3,7 @@
 cd /home/oqs
 
 if [ "$#" -gt 0 ]; then
-   sed -i "$ s/$/:$1/" openssl-client.cnf
+   sed -i "s/x25519/x25519:$1/g" openssl-client.cnf
 fi
 
 epiphany
