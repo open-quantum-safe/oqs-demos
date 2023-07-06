@@ -7,7 +7,8 @@ parameters:
 
 # CircleCI doesn't handle large file sets properly for local builds
 # https://github.com/CircleCI-Public/circleci-cli/issues/281#issuecomment-472808051
-localCheckout: &localCheckout
+localCheckout:
+  &localCheckout
   run: |-
     git config --global --add safe.directory /tmp/_circleci_local_build_repo
     PROJECT_PATH=$(cd ${CIRCLE_WORKING_DIRECTORY}; pwd)
@@ -29,7 +30,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build Provider
           command: |
@@ -51,6 +53,8 @@ jobs:
                 command: |
                   docker tag oqs-ossl3-img $TARGETNAME/oqs-ossl3:latest &&
                   docker push $TARGETNAME/oqs-ossl3:latest 
+    # The resource_class feature allows configuring CPU and RAM resources for each job. Different resource classes are available for different executors. https://circleci.com/docs/2.0/configuration-reference/#resourceclass
+    resource_class: large
 
   ubuntu_x64_nginx:
     description: Building and pushing OQS-nginx and OQS-curl generic demo Docker image
@@ -64,7 +68,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build OQS nginx
           command: |
@@ -80,7 +85,7 @@ jobs:
           command: |
             docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl-generic perftest.sh 
       - run:
-          name: Test nginx and curl generic 
+          name: Test nginx and curl generic
           command: |
             docker network create nginx-test &&
             docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img &&
@@ -99,7 +104,7 @@ jobs:
                   docker push $TARGETNAME/curl:latest &&
                   docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
                   docker push $TARGETNAME/nginx:latest 
-  
+
   ubuntu_x64_openlitespeed:
     description: Building and pushing OQS-openlitespeed demo Docker images
     docker:
@@ -112,7 +117,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build openlitespeed with liboqs
           command: |
@@ -149,7 +155,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build OQS QUIC nginx
           command: |
@@ -197,7 +204,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build Apache httpd
           command: |
@@ -250,7 +258,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build HAproxy
           command: |
@@ -288,7 +297,8 @@ jobs:
           version: 20.10.2
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build OpenVPN
           command: |
@@ -323,7 +333,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build Mosquitto
           command: |
@@ -364,7 +375,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build wireshark image
           command: |
@@ -393,7 +405,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build ngtcp2 server and client
           command: |
@@ -427,7 +440,9 @@ jobs:
                   docker push $TARGETNAME/ngtcp2-client:latest
 
   ubuntu_x64_openssh:
-    description: A template for building and pushing OQS demo Docker images on Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form (e.g. OQS-OpenSSH)
+    description: A template for building and pushing OQS demo Docker images on
+      Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form
+      (e.g. OQS-OpenSSH)
     docker:
       - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
         auth:
@@ -438,7 +453,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Test OpenSSH
           command: |
@@ -466,7 +482,7 @@ jobs:
       - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
       - setup_remote_docker
       - run:
-          name: Install curl and Docker Compose 
+          name: Install curl and Docker Compose
           environment:
             COMPOSE_VERSION: '1.29.2'
           command: |
@@ -476,7 +492,8 @@ jobs:
             mv ~/docker-compose /usr/local/bin/docker-compose
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build OQS envoy
           no_output_timeout: "1h"
@@ -520,7 +537,8 @@ jobs:
       - setup_remote_docker
       - run:
           name: Authenticate to Docker
-          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
+            --password-stdin
       - run:
           name: Build h2load with liboqs
           command: |
