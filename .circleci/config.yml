@@ -40,7 +40,7 @@ jobs:
       - run:
           name: Spot-test Provider -- One baseline and one hybrid QSC alg
           command: |
-            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --CAfile /opt/openssl32/bin/CA.crt" &&
+            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "openssl list -providers; cat /opt/openssl32/ssl/openssl.cnf; /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber768 --CAfile /opt/openssl32/bin/CA.crt" &&
             docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "KEM_ALG=p521_frodo1344aes /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/openssl32/bin/CA.crt"
       - when:
           condition:
