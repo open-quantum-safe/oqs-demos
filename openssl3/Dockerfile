@@ -1,105 +1,134 @@
 # Multi-stage build: First the full builder image:
 
-# Default location where all binaries wind up:
-ARG INSTALLDIR=/opt/oqssa
+ARG INSTALLDIR_OPENSSL=/opt/openssl32
+ARG INSTALLDIR_LIBOQS=/opt/liboqs
 
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j 2"
+ARG MAKE_DEFINES="-j 8"
 
-# Change this at your own risk: OSSL3 can handle OQS-sigs only
-# after https://github.com/openssl/openssl/pull/19312 lands
-ARG SIG_ALG="rsa:2048"
+ARG SIG_ALG="dilithium3"
 
-FROM alpine:3.13 as intermediate
+FROM alpine:3.13 as buildopenssl
 # Take in all global args
-ARG CURL_VERSION
-ARG INSTALLDIR
+ARG INSTALLDIR_OPENSSL
+ARG INSTALLDIR_LIBOQS
 ARG LIBOQS_BUILD_DEFINES
 ARG MAKE_DEFINES
 ARG SIG_ALG
 
 LABEL version="1"
-
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apk update && apk upgrade
 
-# Get all software packages required for builing all components:
+# Get all software packages required for builing openssl
+RUN apk add build-base linux-headers \
+            libtool automake autoconf \
+            make \
+            git wget
+
+# get current openssl sources
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch master https://github.com/openssl/openssl.git
+
+# build OpenSSL3
+WORKDIR /optbuild/openssl
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" ./config shared --prefix=${INSTALLDIR_OPENSSL} && \
+    make ${MAKE_DEFINES} && make install && if [ -d ${INSTALLDIR_OPENSSL}/lib64 ]; then ln -s ${INSTALLDIR_OPENSSL}/lib64 ${INSTALLDIR_OPENSSL}/lib; fi && if [ -d ${INSTALLDIR_OPENSSL}/lib ]; then ln -s ${INSTALLDIR_OPENSSL}/lib ${INSTALLDIR_OPENSSL}/lib64; fi 
+
+FROM alpine:3.13 as buildliboqs
+# Take in all global args
+ARG INSTALLDIR_OPENSSL
+ARG INSTALLDIR_LIBOQS
+ARG LIBOQS_BUILD_DEFINES
+ARG MAKE_DEFINES
+ARG SIG_ALG
+
+LABEL version="1"
+ENV DEBIAN_FRONTEND noninteractive
+
+# Get all software packages required for builing liboqs:
 RUN apk add build-base linux-headers \
             libtool automake autoconf cmake ninja \
             make \
-            openssl openssl-dev \
-            git docker wget
+            git wget
 
-# get all sources
-WORKDIR /opt
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
-    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git
+# Get OpenSSL image (from cache)
+COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 
-WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs
 
-# build OpenSSL3
-WORKDIR /opt/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install;
+WORKDIR /optbuild/liboqs
+RUN mkdir build && cd build && cmake -G"Ninja" .. -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && ninja install
 
-# set path to use 'new' openssl & curl. Dyn libs have been properly linked in to match
-ENV PATH="${INSTALLDIR}/bin:${PATH}"
+FROM alpine:3.13 as buildoqsprovider
+# Take in all global args
+ARG INSTALLDIR_OPENSSL
+ARG INSTALLDIR_LIBOQS
+ARG LIBOQS_BUILD_DEFINES
+ARG MAKE_DEFINES
+ARG SIG_ALG
+
+LABEL version="1"
+ENV DEBIAN_FRONTEND noninteractive
+
+# Get all software packages required for builing oqsprovider
+RUN apk add build-base linux-headers \
+            libtool cmake ninja \
+            git wget
+
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git
+
+# Get openssl32 and liboqs
+COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
+COPY --from=buildliboqs ${INSTALLDIR_LIBOQS} ${INSTALLDIR_LIBOQS}
 
 # build & install provider (and activate by default)
-WORKDIR /opt/oqs-provider
-RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && cmake --build _build  && cp _build/lib/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf
+WORKDIR /optbuild/oqs-provider
+RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR_OPENSSL} -S . -B _build && cmake --build _build  && cmake --install _build && cp _build/lib/oqsprovider.so ${INSTALLDIR_OPENSSL}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = kyber768/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
 
-# generate certificates for openssl s_server, which is what we will test curl against
-ENV OPENSSL=${INSTALLDIR}/bin/openssl
-ENV OPENSSL_CNF=${INSTALLDIR}/ssl/openssl.cnf
+WORKDIR ${INSTALLDIR_OPENSSL}/bin
+# set path to use 'new' openssl. Dyn libs have been properly linked in to match
+ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-WORKDIR ${INSTALLDIR}/bin
 # generate CA key and cert
 RUN set -x; \
-    ${OPENSSL} req -x509 -new -newkey ${SIG_ALG} -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365 -config ${OPENSSL_CNF}
+    openssl req -x509 -new -newkey ${SIG_ALG} -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 FROM alpine:3.13 as dev
 # Take in all global args
-ARG INSTALLDIR
+ARG INSTALLDIR_OPENSSL
 ARG SIG_ALG
 
-# Only retain the ${INSTALLDIR} contents in the final image
-COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
+# Only retain the ${INSTALLDIR_OPENSSL} contents in the final image
+COPY --from=buildoqsprovider ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
-ENV PATH="${INSTALLDIR}/bin:${PATH}"
+ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
 # generate certificates for openssl s_server, which is what we will test curl against
-ENV OPENSSL=${INSTALLDIR}/bin/openssl
-ENV OPENSSL_CNF=${INSTALLDIR}/ssl/openssl.cnf
+WORKDIR ${INSTALLDIR_OPENSSL}/bin
 
-WORKDIR ${INSTALLDIR}/bin
-
-# oqs-provider cannot deal with OQS sigs, so use classic crypto for sigs
 # generate server CSR using pre-set CA.key and cert
 # and generate server cert
-RUN set -x && mkdir /opt/test; \
-    ${OPENSSL} req -new -newkey ${SIG_ALG} -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" -config ${OPENSSL_CNF}; \
-    ${OPENSSL} x509 -req -in /opt/test/server.csr -out /opt/test/server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
+RUN set -x && mkdir -p /opt/test; \
+    openssl version && openssl list -providers && openssl req -new -newkey ${SIG_ALG} -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" && \
+    openssl x509 -req -in /opt/test/server.csr -out /opt/test/server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
 
-COPY serverstart.sh ${INSTALLDIR}/bin
+COPY serverstart.sh ${INSTALLDIR_OPENSSL}/bin
 
-WORKDIR ${INSTALLDIR}
+WORKDIR ${INSTALLDIR_OPENSSL}
 
 FROM dev
-ARG INSTALLDIR
+ARG INSTALLDIR_OPENSSL
 
 WORKDIR /
 
 # Enable a normal user to create new server keys off set CA
-RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR}/bin/CA.key 
+RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR_OPENSSL}/bin/CA.key 
 
 #USER oqs
 CMD ["serverstart.sh"]
