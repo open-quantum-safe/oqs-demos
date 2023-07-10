@@ -54,7 +54,7 @@ RUN mkdir /opt/lib && cd /opt/lib && \
         cp /opt/ngtcp2/lib/.libs/libngtcp2.so.* . && \
         cp /usr/lib/libev.so.* . && \
         cp /opt/nghttp3/build/lib/libnghttp3.so.* . && \
-        cp /opt/ngtcp2/crypto/openssl/.libs/libngtcp2_crypto_openssl.so.* . && \
+        cp /opt/ngtcp2/crypto/quictls/.libs/libngtcp2_crypto_quictls.so.* . && \
         cp /opt/oqssa/lib64/libssl.so.* . && \
         cp /opt/oqssa/lib64/libcrypto.so.* . && \
         cp /usr/lib/libstdc++.so.* . && \
