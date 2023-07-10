@@ -68,7 +68,7 @@ RUN apk update && apk upgrade && apk add mailcap && echo "This is my index page"
 COPY ./serverstart.sh .
 
 # copy executable
-COPY --from=intermediate /opt/ngtcp2/examples/server /usr/local/bin
+COPY --from=intermediate /opt/ngtcp2/examples/qtlsserver /usr/local/bin
 
 # Copy server key and self-signed certificate files 
 COPY --from=intermediate /certs /certs

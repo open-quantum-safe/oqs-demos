@@ -63,7 +63,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apk update && apk upgrade
 
 # copy executable
-COPY --from=intermediate /opt/ngtcp2/examples/client /usr/local/bin
+COPY --from=intermediate /opt/ngtcp2/examples/qtlsclient /usr/local/bin
 
 # copy shared object dependencies and configuration file
 COPY --from=intermediate /opt/lib /usr/local/lib

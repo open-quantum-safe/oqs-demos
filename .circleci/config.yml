@@ -418,7 +418,7 @@ jobs:
           command: |
             docker network create ngtcp2-test
             docker run --network ngtcp2-test --name oqs-ngtcp2server oqs-ngtcp2-server &
-            docker run --network ngtcp2-test -it --name oqs-ngtcp2client oqs-ngtcp2-client sh -c 'client --exit-on-first-stream-close --groups kyber512 oqs-ngtcp2server 6000'
+            docker run --network ngtcp2-test -it --name oqs-ngtcp2client oqs-ngtcp2-client sh -c 'qtlsclient --exit-on-first-stream-close --groups kyber512 oqs-ngtcp2server 6000'
             docker logs oqs-ngtcp2client | grep "QUIC handshake has been confirmed"
             docker rm oqs-ngtcp2client
             docker stop oqs-ngtcp2server
