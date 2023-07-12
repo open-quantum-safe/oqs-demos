@@ -40,8 +40,8 @@ jobs:
       - run:
           name: Spot-test Provider -- One baseline and one hybrid QSC alg
           command: |
-            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "/opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber512 --CAfile /opt/oqssa/bin/CA.crt" &&
-            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "KEM_ALG=p521_frodo1344aes /opt/oqssa/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/oqssa/bin/CA.crt"
+            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "openssl list -providers; /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber768 --CAfile /opt/openssl32/bin/CA.crt" &&
+            docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "KEM_ALG=p521_frodo1344aes /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/openssl32/bin/CA.crt"
       - when:
           condition:
             or:
@@ -418,7 +418,7 @@ jobs:
           command: |
             docker network create ngtcp2-test
             docker run --network ngtcp2-test --name oqs-ngtcp2server oqs-ngtcp2-server &
-            docker run --network ngtcp2-test -it --name oqs-ngtcp2client oqs-ngtcp2-client sh -c 'client --exit-on-first-stream-close --groups kyber512 oqs-ngtcp2server 6000'
+            docker run --network ngtcp2-test -it --name oqs-ngtcp2client oqs-ngtcp2-client sh -c 'qtlsclient --exit-on-first-stream-close --groups kyber512 oqs-ngtcp2server 6000'
             docker logs oqs-ngtcp2client | grep "QUIC handshake has been confirmed"
             docker rm oqs-ngtcp2client
             docker stop oqs-ngtcp2server

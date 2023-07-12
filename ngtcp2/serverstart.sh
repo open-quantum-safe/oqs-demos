@@ -7,4 +7,4 @@ if [ "x$KEM_ALG" == "x" ]; then
 fi
 
 # Start ngtcp2 server accepting only the specified KEM_ALG
-server --groups $KEM_ALG "*" 6000 /certs/server.key /certs/server.crt
+qtlsserver --groups $KEM_ALG "*" 6000 /certs/server.key /certs/server.crt
