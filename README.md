@@ -1,3 +1,4 @@
+[![GitHub actions](https://github.com/open-quantum-safe/oqs-demos/actions/workflows/linux.yml/badge.svg)](https://github.com/open-quantum-safe/oqs-demos/actions/workflows/linux.yml)
 [![open-quantum-safe](https://circleci.com/gh/open-quantum-safe/oqs-demos.svg?style=svg)](https://app.circleci.com/pipelines/github/open-quantum-safe/oqs-demos)
 
 oqs-demos
