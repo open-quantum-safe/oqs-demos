@@ -34,12 +34,21 @@ docker run --network httpd-test -it openquantumsafe/curl curl -k https://oqs-htt
 
 ## Slightly more advanced usage options
 
-This httpd image supports all quantum-safe key exchange algorithms [presently supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). If you want to control with algorithm is actually used, you can request one from the list above to the curl command with the '--curves' parameter, e.g., requesting the hybrid Kyber768 variant:
+### DEFAULT_GROUPS
+
+This environment variable defines the (quantum-safe) cryptographic KEM algorithms utilized for TLS 1.3 session establishment.
+
+The default value is 'kyber768:p384_kyber768' activating Kyber768 and its hybrid variant for session setup.
+
+Any quantum-safe key exchange algorithm [presently supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider/#kem-algorithms) may be activated for use. If you want to control which algorithm is actually used, you can request one from the list above you can do this 
+
+- on the server side by setting the environment variable suitably
+- on the client side by requesting the algorithm(s) by starting the curl command with the '--curves' parameter, e.g., requesting the weak hybrid Kyber768 variant:
 
 ```
-docker run -it openquantumsafe/curl curl -k https://oqs-httpd:4433  --curves p384_kyber768
+docker run --network httpd-test --name oqs-httpd --env DEFAULT_GROUPS=kyber1024:p256_kyber768 openquantumsafe/httpd
+docker run --network httpd-test -it openquantumsafe/curl curl -k https://oqs-httpd:4433  --curves p256_kyber768
 ```
-
 
 ## Seriously more advanced usage options
 
@@ -51,7 +60,7 @@ If you want to adapt the docker image to your needs you may want to change the h
 docker run -p 4433:4433 -v `pwd`/httpd-conf:/opt/httpd/httpd-conf openquantumsafe/httpd
 ```
 
-*Note*: Of particular interest is the parameter `SSLOpenSSLConfCmd Curves` as it can be used to set the (quantum safe) cryptographic algorithms supported by the httpd installation. See the example in the 'httpd.conf' built into the image and [accessible here](https://github.com/open-quantum-safe/oqs-demos/blob/master/httpd/httpd-conf/httpd.conf).
+*Note*: Of particular interest is the parameter `SSLOpenSSLConfCmd Curves` as it can be used to set the (quantum safe) cryptographic algorithms supported by the httpd installation. See the example in the 'httpd.conf' built into the image and [accessible here](https://github.com/open-quantum-safe/oqs-demos/blob/master/httpd/httpd-conf/httpd.conf). An alternative to this option to set the list of permissible KEM algorithms to be used, the underlying OpenSSL configuration logic is set such as to allow even more simple setting of this list via the [DEFAULT_GROUPS](#DEFAULT_GROUPS) environment variable documented above.
 
 ### Logfile access
 
