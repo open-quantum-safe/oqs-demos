@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# Optionally set KEM to one defined in https://github.com/open-quantum-safe/openssl#key-exchange
+# Optionally set KEM to one defined in https://github.com/open-quantum-safe/oqs-provider#kem-algorithms
 if [ "x$KEM_ALG" == "x" ]; then
 	export KEM_ALG=kyber768
 fi
