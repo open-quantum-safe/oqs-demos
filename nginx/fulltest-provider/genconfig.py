@@ -103,9 +103,8 @@ def write_nginx_config(f, i, cf, port, _sig, k):
            if k!="*" :  
               f.write("    ssl_ecdh_curve      "+k+";\n")
            f.write("    location / {\n")
-           f.write("            ssi    on;\n")
-           if k!="*" :  
-              f.write("            set    $oqs_alg_name \""+sig+"-"+k+"\";\n")
+           f.write("            ssi    on;\n") 
+           f.write("            set    $oqs_sig_name \""+sig+"\";\n")
            f.write("            root   html;\n")
            f.write("            index  success.html;\n")
            f.write("    }\n\n")

@@ -1,0 +1,94 @@
+diff --git a/src/event/ngx_event_openssl.c b/src/event/ngx_event_openssl.c
+index c38aa27f1..82debe09b 100644
+--- a/src/event/ngx_event_openssl.c
++++ b/src/event/ngx_event_openssl.c
+@@ -5102,17 +5102,31 @@ ngx_ssl_get_curve(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
+ #ifdef SSL_get_negotiated_group
+ 
+     int  nid;
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++    const char  *grpname;
++#endif
+ 
+     nid = SSL_get_negotiated_group(c->ssl->connection);
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++    grpname = SSL_group_to_name(c->ssl->connection, nid);
++#endif
+ 
+     if (nid != NID_undef) {
+ 
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++        if (grpname != NULL) {
++            s->len = ngx_strlen(grpname);
++            s->data = (u_char *) grpname;
++            return NGX_OK;
++        }
++#else
+         if ((nid & TLSEXT_nid_unknown) == 0) {
+             s->len = ngx_strlen(OBJ_nid2sn(nid));
+             s->data = (u_char *) OBJ_nid2sn(nid);
+             return NGX_OK;
+         }
+ 
++#endif
+         s->len = sizeof("0x0000") - 1;
+ 
+         s->data = ngx_pnalloc(pool, s->len);
+@@ -5140,6 +5154,9 @@ ngx_ssl_get_curves(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
+     int         *curves, n, i, nid;
+     u_char      *p;
+     size_t       len;
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++    const char  *grpname;
++#endif
+ 
+     n = SSL_get1_curves(c->ssl->connection, NULL);
+ 
+@@ -5156,12 +5173,23 @@ ngx_ssl_get_curves(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
+     for (i = 0; i < n; i++) {
+         nid = curves[i];
+ 
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++        grpname = SSL_group_to_name(c->ssl->connection, nid);
++
++        if (grpname == NULL) {
++            len += sizeof("0x0000") - 1;
++
++        } else {
++            len += ngx_strlen(grpname);
++        }
++#else
+         if (nid & TLSEXT_nid_unknown) {
+             len += sizeof("0x0000") - 1;
+ 
+         } else {
+             len += ngx_strlen(OBJ_nid2sn(nid));
+         }
++#endif
+ 
+         len += sizeof(":") - 1;
+     }
+@@ -5176,12 +5204,22 @@ ngx_ssl_get_curves(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
+     for (i = 0; i < n; i++) {
+         nid = curves[i];
+ 
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++        grpname = SSL_group_to_name(c->ssl->connection, nid);
++        if (grpname == NULL) {
++            p = ngx_sprintf(p, "0x%04xd", nid & 0xffff);
++
++        } else {
++            p = ngx_sprintf(p, "%s", grpname);
++        }
++#else
+         if (nid & TLSEXT_nid_unknown) {
+             p = ngx_sprintf(p, "0x%04xd", nid & 0xffff);
+ 
+         } else {
+             p = ngx_sprintf(p, "%s", OBJ_nid2sn(nid));
+         }
++#endif
+ 
+         *p++ = ':';
+     }
+
