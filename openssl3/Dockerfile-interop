@@ -118,7 +118,7 @@ RUN set -x && mkdir -p /opt/test; \
     openssl version && openssl list -providers && openssl req -new -newkey ${SIG_ALG} -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" && \
     openssl x509 -req -in /opt/test/server.csr -out /opt/test/server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
 
-COPY serverstart-ubuntu.sh ${INSTALLDIR_OPENSSL}/bin/serverstart.sh
+COPY serverstart.sh ${INSTALLDIR_OPENSSL}/bin/serverstart.sh
 
 WORKDIR ${INSTALLDIR_OPENSSL}
 

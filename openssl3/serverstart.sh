@@ -2,7 +2,7 @@
 set -e
 
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/oqs-provider#kem-algorithms
-if [ "x$KEM_ALG" == "x" ]; then
+if [ -z $KEM_ALG ]; then
 	export KEM_ALG=kyber768
 fi
 
@@ -12,4 +12,4 @@ openssl s_server -cert /opt/test/server.crt -key /opt/test/server.key -groups $K
 echo "Test server started for KEM $KEM_ALG at port 4433"
 
 # Open a shell for local experimentation
-sh
+if command -v bash > /dev/null; then bash; else sh; fi
