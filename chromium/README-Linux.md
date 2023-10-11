@@ -1,3 +1,5 @@
+** WARNING: THESE INSTRUCTIONS ARE OUTDATED. CONTRIBUTIONS WELCOME TO BRING THIS TO THE LATEST UP- AND DOWNSTREAM CODE LEVEL **
+
 Note that both cloning the source code as well as building Chromium can take several hours if you do not have excellent network connectivity and serious multicore CPUs at your disposal: The download has a size of over 40GB and even a size-and-performance optimized build (see note below) takes 1143 CPU user minutes on a 2.6GHz i7 CPU, i.e. something like 300 minutes or 5 hours on a quad-core system.
 
 0. Ensure the system requirements listed [here](https://chromium.googlesource.com/chromium/src/+/master/docs/linux/build_instructions.md#System-requirements) are met.
