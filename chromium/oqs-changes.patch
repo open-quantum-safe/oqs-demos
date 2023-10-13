@@ -1,19 +1,246 @@
-diff --git a/net/cert/internal/simple_path_builder_delegate.cc b/net/cert/internal/simple_path_builder_delegate.cc
-index e4259ee6eb39..511b5fb48cd2 100644
---- a/net/cert/internal/simple_path_builder_delegate.cc
-+++ b/net/cert/internal/simple_path_builder_delegate.cc
-@@ -35,6 +35,10 @@ bool IsAcceptableCurveForEcdsa(int curve_nid) {
+diff --git a/net/base/features.cc b/net/base/features.cc
+index d9fe52b201b33..008b2f7c34bc3 100644
+--- a/net/base/features.cc
++++ b/net/base/features.cc
+@@ -137,7 +137,7 @@ BASE_FEATURE(kPermuteTLSExtensions,
+ 
+ BASE_FEATURE(kPostQuantumKyber,
+              "PostQuantumKyber",
+-             base::FEATURE_DISABLED_BY_DEFAULT);
++	     base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kNetUnusedIdleSocketTimeout,
+              "NetUnusedIdleSocketTimeout",
+diff --git a/net/cert/cert_verify_proc.cc b/net/cert/cert_verify_proc.cc
+index b1dab376aa8e6..71e2eaf75c29c 100644
+--- a/net/cert/cert_verify_proc.cc
++++ b/net/cert/cert_verify_proc.cc
+@@ -96,6 +96,14 @@ const char* CertTypeToString(X509Certificate::PublicKeyType cert_type) {
+       return "DH";
+     case X509Certificate::kPublicKeyTypeECDH:
+       return "ECDH";
++    case X509Certificate::kPublicKeyTypeDilithium:
++      return "Dilithium";
++    case X509Certificate::kPublicKeyTypeFalcon:
++      return "Falcon";
++    case X509Certificate::kPublicKeyTypeSPHINCSSHA2:
++      return "SPHINCSSHA2";
++    case X509Certificate::kPublicKeyTypeSPHINCSSHAKE:
++      return "SPHINCSSHAKE";
+   }
+   NOTREACHED();
+   return "Unsupported";
+@@ -308,6 +316,23 @@ void RecordTrustAnchorHistogram(const HashValueVector& spki_hashes,
+     case SignatureAlgorithm::kRsaPssSha256:
+     case SignatureAlgorithm::kRsaPssSha384:
+     case SignatureAlgorithm::kRsaPssSha512:
++    case SignatureAlgorithm::kDilithium2:
++    case SignatureAlgorithm::kDilithium3:
++    case SignatureAlgorithm::kDilithium5:
++    case SignatureAlgorithm::kFalcon512:
++    case SignatureAlgorithm::kFalcon1024:
++    case SignatureAlgorithm::kSPHINCSSHA2128fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2128ssimple:
++    case SignatureAlgorithm::kSPHINCSSHA2192fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2192ssimple:
++    case SignatureAlgorithm::kSPHINCSSHA2256fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2256ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE128fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE128ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE192fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE192ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE256fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE256ssimple:
        return true;
    }
  
+diff --git a/net/cert/pki/signature_algorithm.cc b/net/cert/pki/signature_algorithm.cc
+index 90932f02f8bfe..99c3dac856ee9 100644
+--- a/net/cert/pki/signature_algorithm.cc
++++ b/net/cert/pki/signature_algorithm.cc
+@@ -122,6 +122,24 @@ const uint8_t kOidRsaSsaPss[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
+ const uint8_t kOidMgf1[] = {0x2a, 0x86, 0x48, 0x86, 0xf7,
+                             0x0d, 0x01, 0x01, 0x08};
+ 
++const uint8_t kOidDilithium2[] = {0x2b, 0x06, 0x01, 0x04, 0x01, 0x02, 0x82, 0x0b, 0x07, 0x04, 0x04};
++const uint8_t kOidDilithium3[] = {0x2b, 0x06, 0x01, 0x04, 0x01, 0x02, 0x82, 0x0b, 0x07, 0x06, 0x05};
++const uint8_t kOidDilithium5[] = {0x2b, 0x06, 0x01, 0x04, 0x01, 0x02, 0x82, 0x0b, 0x07, 0x08, 0x07};
++const uint8_t kOidFalcon512[] = {0x2b, 0xce, 0x0f, 0x03, 0x06};
++const uint8_t kOidFalcon1024[] = {0x2b, 0xce, 0x0f, 0x03, 0x09};
++const uint8_t kOidSPHINCSSHA2128fsimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x04, 0x0d};
++const uint8_t kOidSPHINCSSHA2128ssimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x04, 0x10};
++const uint8_t kOidSPHINCSSHA2192fsimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x05, 0x0a};
++const uint8_t kOidSPHINCSSHA2192ssimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x05, 0x0c};
++const uint8_t kOidSPHINCSSHA2256fsimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x06, 0x0a};
++const uint8_t kOidSPHINCSSHA2256ssimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x06, 0x0c};
++const uint8_t kOidSPHINCSSHAKE128fsimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x07, 0x0d};
++const uint8_t kOidSPHINCSSHAKE128ssimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x07, 0x10};
++const uint8_t kOidSPHINCSSHAKE192fsimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x08, 0x0a};
++const uint8_t kOidSPHINCSSHAKE192ssimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x08, 0x0c};
++const uint8_t kOidSPHINCSSHAKE256fsimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x09, 0x0a};
++const uint8_t kOidSPHINCSSHAKE256ssimple[] = {0x2b, 0xce, 0x0f, 0x06, 0x09, 0x0c};
++
+ // Returns true if |input| is empty.
+ [[nodiscard]] bool IsEmpty(const der::Input& input) {
+   return input.Length() == 0;
+@@ -370,6 +388,57 @@ absl::optional<SignatureAlgorithm> ParseSignatureAlgorithm(
+   if (oid == der::Input(kOidEcdsaWithSha512) && IsEmpty(params)) {
+     return SignatureAlgorithm::kEcdsaSha512;
+   }
++  if (oid == der::Input(kOidDilithium2)) {
++    return SignatureAlgorithm::kDilithium2;
++  }
++  if (oid == der::Input(kOidDilithium3)) {
++    return SignatureAlgorithm::kDilithium3;
++  }
++  if (oid == der::Input(kOidDilithium5)) {
++    return SignatureAlgorithm::kDilithium5;
++  }
++  if (oid == der::Input(kOidFalcon512)) {
++    return SignatureAlgorithm::kFalcon512;
++  }
++  if (oid == der::Input(kOidFalcon1024)) {
++    return SignatureAlgorithm::kFalcon1024;
++  }
++  if (oid == der::Input(kOidSPHINCSSHA2128fsimple)) {
++    return SignatureAlgorithm::kSPHINCSSHA2128fsimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHA2128ssimple)) {
++    return SignatureAlgorithm::kSPHINCSSHA2128ssimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHA2192fsimple)) {
++    return SignatureAlgorithm::kSPHINCSSHA2192fsimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHA2192ssimple)) {
++    return SignatureAlgorithm::kSPHINCSSHA2192ssimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHA2256fsimple)) {
++    return SignatureAlgorithm::kSPHINCSSHA2256fsimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHA2256ssimple)) {
++    return SignatureAlgorithm::kSPHINCSSHA2256ssimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHAKE128fsimple)) {
++    return SignatureAlgorithm::kSPHINCSSHAKE128fsimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHAKE128ssimple)) {
++    return SignatureAlgorithm::kSPHINCSSHAKE128ssimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHAKE192fsimple)) {
++    return SignatureAlgorithm::kSPHINCSSHAKE192fsimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHAKE192ssimple)) {
++    return SignatureAlgorithm::kSPHINCSSHAKE192ssimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHAKE256fsimple)) {
++    return SignatureAlgorithm::kSPHINCSSHAKE256fsimple;
++  }
++  if (oid == der::Input(kOidSPHINCSSHAKE256ssimple)) {
++    return SignatureAlgorithm::kSPHINCSSHAKE256ssimple;
++  }
+ 
+   if (oid == der::Input(kOidRsaSsaPss)) {
+     return ParseRsaPss(params);
+@@ -394,14 +463,31 @@ absl::optional<DigestAlgorithm> GetTlsServerEndpointDigestAlgorithm(
+ 
+     case SignatureAlgorithm::kRsaPkcs1Sha256:
+     case SignatureAlgorithm::kEcdsaSha256:
++    case SignatureAlgorithm::kDilithium2:
++    case SignatureAlgorithm::kFalcon512:
++    case SignatureAlgorithm::kSPHINCSSHA2128fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2128ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE128fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE128ssimple:
+       return DigestAlgorithm::Sha256;
+ 
+     case SignatureAlgorithm::kRsaPkcs1Sha384:
+     case SignatureAlgorithm::kEcdsaSha384:
++    case SignatureAlgorithm::kDilithium3:
++    case SignatureAlgorithm::kSPHINCSSHA2192fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2192ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE192fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE192ssimple:
+       return DigestAlgorithm::Sha384;
+ 
+     case SignatureAlgorithm::kRsaPkcs1Sha512:
+     case SignatureAlgorithm::kEcdsaSha512:
++    case SignatureAlgorithm::kDilithium5:
++    case SignatureAlgorithm::kFalcon1024:
++    case SignatureAlgorithm::kSPHINCSSHA2256fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2256ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE256fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE256ssimple:
+       return DigestAlgorithm::Sha512;
+ 
+     // It is ambiguous whether hash-matching RSASSA-PSS instantiations count as
+diff --git a/net/cert/pki/signature_algorithm.h b/net/cert/pki/signature_algorithm.h
+index 875d7a83c3cbd..0694878f8f596 100644
+--- a/net/cert/pki/signature_algorithm.h
++++ b/net/cert/pki/signature_algorithm.h
+@@ -44,6 +44,23 @@ enum class SignatureAlgorithm {
+   kRsaPssSha256,
+   kRsaPssSha384,
+   kRsaPssSha512,
++  kDilithium2,
++  kDilithium3,
++  kDilithium5,
++  kFalcon512,
++  kFalcon1024,
++  kSPHINCSSHA2128fsimple,
++  kSPHINCSSHA2128ssimple,
++  kSPHINCSSHA2192fsimple,
++  kSPHINCSSHA2192ssimple,
++  kSPHINCSSHA2256fsimple,
++  kSPHINCSSHA2256ssimple,
++  kSPHINCSSHAKE128fsimple,
++  kSPHINCSSHAKE128ssimple,
++  kSPHINCSSHAKE192fsimple,
++  kSPHINCSSHAKE192ssimple,
++  kSPHINCSSHAKE256fsimple,
++  kSPHINCSSHAKE256ssimple,
+ };
+ 
+ // Parses AlgorithmIdentifier as defined by RFC 5280 section 4.1.1.2:
+diff --git a/net/cert/pki/simple_path_builder_delegate.cc b/net/cert/pki/simple_path_builder_delegate.cc
+index 83cd265ce78d6..97c2726b84edd 100644
+--- a/net/cert/pki/simple_path_builder_delegate.cc
++++ b/net/cert/pki/simple_path_builder_delegate.cc
+@@ -29,6 +29,10 @@ DEFINE_CERT_ERROR_ID(kUnacceptableCurveForEcdsa,
+                      "Only P-256, P-384, P-521 are supported for ECDSA");
+ 
+ bool IsAcceptableCurveForEcdsa(int curve_nid) {
 +  if (IS_OQS_PKEY(curve_nid)) {
-+      return true;
++    return true;
 +  }
 +
+   switch (curve_nid) {
+     case NID_X9_62_prime256v1:
+     case NID_secp384r1:
+@@ -78,6 +82,23 @@ bool SimplePathBuilderDelegate::IsSignatureAlgorithmAcceptable(
+     case SignatureAlgorithm::kRsaPssSha256:
+     case SignatureAlgorithm::kRsaPssSha384:
+     case SignatureAlgorithm::kRsaPssSha512:
++    case SignatureAlgorithm::kDilithium2:
++    case SignatureAlgorithm::kDilithium3:
++    case SignatureAlgorithm::kDilithium5:
++    case SignatureAlgorithm::kFalcon512:
++    case SignatureAlgorithm::kFalcon1024:
++    case SignatureAlgorithm::kSPHINCSSHA2128fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2128ssimple:
++    case SignatureAlgorithm::kSPHINCSSHA2192fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2192ssimple:
++    case SignatureAlgorithm::kSPHINCSSHA2256fsimple:
++    case SignatureAlgorithm::kSPHINCSSHA2256ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE128fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE128ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE192fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE192ssimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE256fsimple:
++    case SignatureAlgorithm::kSPHINCSSHAKE256ssimple:
+       return true;
+   }
    return false;
- }
- 
-@@ -110,6 +114,10 @@ bool SimplePathBuilderDelegate::IsPublicKeyAcceptable(EVP_PKEY* public_key,
+@@ -119,6 +140,10 @@ bool SimplePathBuilderDelegate::IsPublicKeyAcceptable(EVP_PKEY* public_key,
      return true;
    }
  
@@ -24,33 +251,248 @@ index e4259ee6eb39..511b5fb48cd2 100644
    // Unexpected key type.
    return false;
  }
+diff --git a/net/cert/pki/verify_signed_data.cc b/net/cert/pki/verify_signed_data.cc
+index 82acf9003525f..14e692e3726dd 100644
+--- a/net/cert/pki/verify_signed_data.cc
++++ b/net/cert/pki/verify_signed_data.cc
+@@ -154,6 +154,74 @@ bool VerifySignedData(SignatureAlgorithm algorithm,
+   bool is_rsa_pss = false;
+   std::string_view cache_algorithm_name;
+   switch (algorithm) {
++    case SignatureAlgorithm::kDilithium2:
++      expected_pkey_id = EVP_PKEY_DILITHIUM2;
++      cache_algorithm_name = "Dilithium2";
++      break;
++    case SignatureAlgorithm::kDilithium3:
++      expected_pkey_id = EVP_PKEY_DILITHIUM3;
++      cache_algorithm_name = "Dilithium3";
++      break;
++    case SignatureAlgorithm::kDilithium5:
++      expected_pkey_id = EVP_PKEY_DILITHIUM5;
++      cache_algorithm_name = "Dilithium5";
++      break;
++    case SignatureAlgorithm::kFalcon512:
++      expected_pkey_id = EVP_PKEY_FALCON512;
++      cache_algorithm_name = "Falcon512";
++      break;
++    case SignatureAlgorithm::kFalcon1024:
++      expected_pkey_id = EVP_PKEY_FALCON1024;
++      cache_algorithm_name = "Falcon1024";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHA2128fsimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHA2128FSIMPLE;
++      cache_algorithm_name = "SPHINCSSHA2128fsimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHA2128ssimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHA2128SSIMPLE;
++      cache_algorithm_name = "SPHINCSSHA2128ssimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHA2192fsimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHA2192FSIMPLE;
++      cache_algorithm_name = "SPHINCSSHA2192fsimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHA2192ssimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHA2192SSIMPLE;
++      cache_algorithm_name = "SPHINCSSHA2192ssimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHA2256fsimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHA2256FSIMPLE;
++      cache_algorithm_name = "SPHINCSSHA2256fsimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHA2256ssimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHA2256SSIMPLE;
++      cache_algorithm_name = "SPHINCSSHA2256ssimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHAKE128fsimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHAKE128FSIMPLE;
++      cache_algorithm_name = "SPHINCSSHAKE128fsimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHAKE128ssimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHAKE128SSIMPLE;
++      cache_algorithm_name = "SPHINCSSHAKE128ssimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHAKE192fsimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHAKE192FSIMPLE;
++      cache_algorithm_name = "SPHINCSSHAKE192fsimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHAKE192ssimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHAKE192SSIMPLE;
++      cache_algorithm_name = "SPHINCSSHAKE192ssimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHAKE256fsimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHAKE256FSIMPLE;
++      cache_algorithm_name = "SPHINCSSHAKE256fsimple";
++      break;
++    case SignatureAlgorithm::kSPHINCSSHAKE256ssimple:
++      expected_pkey_id = EVP_PKEY_SPHINCSSHAKE256SSIMPLE;
++      cache_algorithm_name = "SPHINCSSHAKE256ssimple";
++      break;
+     case SignatureAlgorithm::kRsaPkcs1Sha1:
+       expected_pkey_id = EVP_PKEY_RSA;
+       digest = EVP_sha1();
+@@ -241,6 +309,11 @@ bool VerifySignedData(SignatureAlgorithm algorithm,
+     }
+   }
+ 
++  bool ret;
++  if (IS_OQS_PKEY(expected_pkey_id)) {
++    ret = oqs_verify_sig(public_key, signature_value_bytes.UnsafeData(), signature_value_bytes.Length(), signed_data.UnsafeData(), signed_data.Length()) ? true : false;
++  } else {
++
+   crypto::OpenSSLErrStackTracer err_tracer(FROM_HERE);
+ 
+   bssl::ScopedEVP_MD_CTX ctx;
+@@ -264,9 +337,10 @@ bool VerifySignedData(SignatureAlgorithm algorithm,
+     return false;
+   }
+ 
+-  bool ret =
++  ret =
+       1 == EVP_DigestVerifyFinal(ctx.get(), signature_value_bytes.UnsafeData(),
+                                  signature_value_bytes.Length());
++  }
+   if (!cache_key.empty()) {
+     cache->Store(cache_key, ret ? SignatureVerifyCache::Value::kValid
+                                 : SignatureVerifyCache::Value::kInvalid);
+diff --git a/net/cert/x509_certificate.cc b/net/cert/x509_certificate.cc
+index 05fb039c0dd09..eaeff8c5f4ed1 100644
+--- a/net/cert/x509_certificate.cc
++++ b/net/cert/x509_certificate.cc
+@@ -647,6 +647,31 @@ void X509Certificate::GetPublicKeyInfo(const CRYPTO_BUFFER* cert_buffer,
+     case EVP_PKEY_DH:
+       *type = kPublicKeyTypeDH;
+       break;
++    case EVP_PKEY_DILITHIUM2:
++    case EVP_PKEY_DILITHIUM3:
++    case EVP_PKEY_DILITHIUM5:
++      *type = kPublicKeyTypeDilithium;
++      break;
++    case EVP_PKEY_FALCON512:
++    case EVP_PKEY_FALCON1024:
++      *type = kPublicKeyTypeFalcon;
++      break;
++    case EVP_PKEY_SPHINCSSHA2128FSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2128SSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2192FSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2192SSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2256FSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2256SSIMPLE:
++      *type = kPublicKeyTypeSPHINCSSHA2;
++      break;
++    case EVP_PKEY_SPHINCSSHAKE128FSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE128SSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE192FSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE192SSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE256FSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE256SSIMPLE:
++      *type = kPublicKeyTypeSPHINCSSHAKE;
++      break;
+   }
+   *size_bits = base::saturated_cast<size_t>(EVP_PKEY_bits(pkey.get()));
+ }
+diff --git a/net/cert/x509_certificate.h b/net/cert/x509_certificate.h
+index 5ef19cf89d691..7e6710c539961 100644
+--- a/net/cert/x509_certificate.h
++++ b/net/cert/x509_certificate.h
+@@ -47,6 +47,10 @@ class NET_EXPORT X509Certificate
+     kPublicKeyTypeDSA,
+     kPublicKeyTypeECDSA,
+     kPublicKeyTypeDH,
++    kPublicKeyTypeDilithium,
++    kPublicKeyTypeFalcon,
++    kPublicKeyTypeSPHINCSSHA2,
++    kPublicKeyTypeSPHINCSSHAKE,
+     kPublicKeyTypeECDH
+   };
+ 
+diff --git a/net/quic/quic_stream_factory.cc b/net/quic/quic_stream_factory.cc
+index d7a1d98b8a3a0..7c72ae0d38d3a 100644
+--- a/net/quic/quic_stream_factory.cc
++++ b/net/quic/quic_stream_factory.cc
+@@ -217,9 +217,19 @@ class QuicStreamFactory::QuicCryptoClientConfigOwner {
+                             base::Unretained(this)));
+     if (quic_stream_factory_->ssl_config_service_->GetSSLContextConfig()
+             .PostQuantumKeyAgreementEnabled()) {
+-      config_.set_preferred_groups({SSL_GROUP_X25519_KYBER768_DRAFT00,
+-                                    SSL_GROUP_X25519, SSL_GROUP_SECP256R1,
++      config_.set_preferred_groups({SSL_GROUP_KYBER512, SSL_GROUP_KYBER768, SSL_GROUP_KYBER1024,
++				    SSL_GROUP_HQC128, SSL_GROUP_HQC192, SSL_GROUP_HQC256,
++                                    SSL_GROUP_BIKEL1, SSL_GROUP_BIKEL3,
++                                    SSL_GROUP_FRODO640AES, SSL_GROUP_FRODO640SHAKE, SSL_GROUP_FRODO976AES, SSL_GROUP_FRODO976SHAKE, SSL_GROUP_FRODO1344AES, SSL_GROUP_FRODO1344SHAKE,
++                                    SSL_GROUP_X25519_KYBER768_DRAFT00,
++                                    SSL_GROUP_P256_KYBER512, SSL_GROUP_P384_KYBER768, SSL_GROUP_P521_KYBER1024,
++                                    SSL_GROUP_P256_HQC128, SSL_GROUP_P384_HQC192, SSL_GROUP_P521_HQC256,
++                                    SSL_GROUP_P256_BIKEL1, SSL_GROUP_P384_BIKEL3,
++                                    SSL_GROUP_P256_FRODO640AES, SSL_GROUP_P256_FRODO640SHAKE, SSL_GROUP_P384_FRODO976AES, SSL_GROUP_P384_FRODO976SHAKE, SSL_GROUP_P521_FRODO1344AES, SSL_GROUP_P521_FRODO1344SHAKE,
++				    SSL_GROUP_X25519, SSL_GROUP_SECP256R1,
+                                     SSL_GROUP_SECP384R1});
++
++
+     }
+   }
+ 
+diff --git a/net/socket/ssl_client_socket_impl.cc b/net/socket/ssl_client_socket_impl.cc
+index 9aa3f2607292a..d065066b4fbb5 100644
+--- a/net/socket/ssl_client_socket_impl.cc
++++ b/net/socket/ssl_client_socket_impl.cc
+@@ -746,8 +746,16 @@ int SSLClientSocketImpl::Init() {
+   }
+ 
+   if (context_->config().PostQuantumKeyAgreementEnabled()) {
+-    static const int kCurves[] = {NID_X25519Kyber768Draft00, NID_X25519,
+-                                  NID_X9_62_prime256v1, NID_secp384r1};
++    static const int kCurves[] = {NID_kyber512, NID_kyber768, NID_kyber1024,
++                               NID_hqc128, NID_hqc192, NID_hqc256,
++                               NID_bikel1, NID_bikel3,
++                               NID_p256_kyber512, NID_p384_kyber768, NID_p521_kyber1024,
++                               NID_p256_hqc128, NID_p384_hqc192, NID_p521_hqc256,
++                               NID_p256_bikel1, NID_p384_bikel3,
++                               NID_X25519Kyber768Draft00, NID_frodo640aes, NID_frodo640shake, NID_frodo976aes, NID_frodo976shake, NID_frodo1344aes, NID_frodo1344shake,
++                               NID_p256_frodo640aes, NID_p256_frodo640shake, NID_p384_frodo976aes, NID_p384_frodo976shake, NID_p521_frodo1344aes, NID_p521_frodo1344shake,
++                               NID_X25519, NID_X9_62_prime256v1, NID_secp384r1};
++
+     if (!SSL_set1_curves(ssl_.get(), kCurves, std::size(kCurves))) {
+       return ERR_UNEXPECTED;
+     }
+@@ -847,6 +855,10 @@ int SSLClientSocketImpl::Init() {
+         SSL_SIGN_RSA_PKCS1_SHA256,       SSL_SIGN_ECDSA_SECP384R1_SHA384,
+         SSL_SIGN_RSA_PSS_RSAE_SHA384,    SSL_SIGN_RSA_PKCS1_SHA384,
+         SSL_SIGN_RSA_PSS_RSAE_SHA512,    SSL_SIGN_RSA_PKCS1_SHA512,
++	SSL_SIGN_DILITHIUM2, SSL_SIGN_DILITHIUM3, SSL_SIGN_DILITHIUM5,
++        SSL_SIGN_FALCON512, SSL_SIGN_FALCON1024,
++        SSL_SIGN_SPHINCSSHA2128FSIMPLE, SSL_SIGN_SPHINCSSHA2128SSIMPLE, SSL_SIGN_SPHINCSSHA2192FSIMPLE, SSL_SIGN_SPHINCSSHA2192SSIMPLE, SSL_SIGN_SPHINCSSHA2256FSIMPLE, SSL_SIGN_SPHINCSSHA2256SSIMPLE,
++        SSL_SIGN_SPHINCSSHAKE128FSIMPLE, SSL_SIGN_SPHINCSSHAKE128SSIMPLE, SSL_SIGN_SPHINCSSHAKE192FSIMPLE, SSL_SIGN_SPHINCSSHAKE192SSIMPLE, SSL_SIGN_SPHINCSSHAKE256FSIMPLE, SSL_SIGN_SPHINCSSHAKE256SSIMPLE,
+     };
+     if (!SSL_set_verify_algorithm_prefs(ssl_.get(), kVerifyPrefs,
+                                         std::size(kVerifyPrefs))) {
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index 23c167f11787..a38adb880261 100644
+index 6fb13437c6bcc..3f52ce76da21e 100644
 --- a/third_party/boringssl/BUILD.gn
 +++ b/third_party/boringssl/BUILD.gn
-@@ -13,7 +13,7 @@ import("BUILD.generated_tests.gni")
+@@ -18,7 +18,7 @@ if (enable_rust) {
  
  # Config for us and everybody else depending on BoringSSL.
  config("external_config") {
 -  include_dirs = [ "src/include" ]
-+  include_dirs = [ "src/include", "src/oqs/include" ]
++  include_dirs = [ "src/include",  "src/oqs/include" ]
    if (is_component_build) {
      defines = [ "BORINGSSL_SHARED_LIBRARY" ]
    }
-@@ -39,7 +39,7 @@ config("no_asm_config") {
+@@ -48,7 +48,8 @@ config("no_asm_config") {
  }
  
  all_sources = crypto_sources + ssl_sources
 -all_headers = crypto_headers + ssl_headers
 +all_headers = crypto_headers + ssl_headers + oqs_headers
++
  
- # Windows' assembly is built with NASM. The other platforms use the platform
- # assembler. Exclude Windows ARM64 because NASM targets x86 and x64 only.
-@@ -109,6 +109,7 @@ component("boringssl") {
+ if (enable_rust_boringssl) {
+   rust_bindgen("raw_bssl_sys_bindings") {
+@@ -158,6 +159,7 @@ component("boringssl") {
    sources = all_sources
    public = all_headers
    friend = [ ":*" ]
-+  libs = ["//third_party/boringssl/src/oqs/lib/liboqs.a"]
++  libs = [ "//third_party/boringssl/src/oqs/lib/liboqs.a" ]
    deps = [ "//third_party/boringssl/src/third_party/fiat:fiat_license" ]
  
    # Mark boringssl_asm as a public dependency so the OPENSSL_NO_ASM
