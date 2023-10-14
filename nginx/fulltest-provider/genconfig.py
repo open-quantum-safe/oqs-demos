@@ -117,8 +117,9 @@ def write_nginx_config(f, i, cf, port, _sig, k):
 
            # deactivate if you don't like tables:
            i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
-           if k in chromium_algs and not ("_" in sig and (sig.startswith("p") or (sig.startswith("rsa")))):
-               cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
+           # chromium support discontinued
+           #if k in chromium_algs and not ("_" in sig and (sig.startswith("p") or (sig.startswith("rsa")))):
+           #    cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
 
 # generates nginx config
@@ -126,14 +127,17 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
    port = STARTPORT
    assignments={}
    i = open(indexbasefilename, "w")
-   cf = open(chromiumfilename, "w")
+   # chromium support discontinued
+   cf = None
+   #cf = open(chromiumfilename, "w")
    # copy baseline templates
    with open(TEMPLATE_FILE, "r") as tf:
      for line in tf:
        i.write(line)
-   with open(CHROMIUM_TEMPLATE_FILE, "r") as ctf:
-     for line in ctf:
-       cf.write(line)
+   #chromium support discontinued
+   #with open(CHROMIUM_TEMPLATE_FILE, "r") as ctf:
+   #  for line in ctf:
+   #    cf.write(line)
 
    with open(filename, "w") as f:
      # baseline config
@@ -193,9 +197,9 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
    i.write("</table>\n")
    i.write("</body></html>\n")
    i.close()
-   cf.write("</table>\n")
-   cf.write("</body></html>\n")
-   cf.close()
+   #cf.write("</table>\n")
+   #cf.write("</body></html>\n")
+   #cf.close()
    with open(ASSIGNMENT_FILE, 'w') as outfile:
       json.dump(assignments, outfile)
 
