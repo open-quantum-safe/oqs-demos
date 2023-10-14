@@ -17,6 +17,7 @@ Currently supported packages:
 | **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl)                             |
 | **Apache httpd** | [Github: oqs-demos/httpd](httpd)       | [Dockerhub: openquantumsafe/httpd](https://hub.docker.com/repository/docker/openquantumsafe/httpd)                           |
 | **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx)                           |
+| **Chromium** | [Github: oqs-demos/chromium](chromium) (limited support) | - |
 | **OpenSSH**      | [Github: oqs-demos/openssh](openssh)   | [Dockerhub: openquantumsafe/openssh](https://hub.docker.com/repository/docker/openquantumsafe/openssh)                       |
 | **Wireshark**    | [Github: oqs-demos/wireshark](wireshark)   | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                       |
 | **Epiphany**     | [Github: oqs-demos/epiphany](epiphany)   | [Dockerhub: openquantumsafe/epiphany](https://hub.docker.com/repository/docker/openquantumsafe/epiphany)                       |
@@ -30,10 +31,8 @@ Currently supported packages:
 | **h2load**         | [Github: oqs-demos/h2load](h2load)       | [ Dockerhub: openquantumsafe/h2load](https://hub.docker.com/repository/docker/openquantumsafe/h2load)                       |
 
 <!---| **HAproxy**      | [Github: oqs-demos/haproxy](haproxy)   | [Dockerhub: openquantumsafe/haproxy](https://hub.docker.com/repository/docker/openquantumsafe/haproxy)                       | -->
-<!--- | **Chromium** | [Github: oqs-demos/chromium](chromium) | [Binary for Ubuntu 20](https://github.com/open-quantum-safe/oqs-demos/releases/download/0.7.2/chromium-ubuntu-0.7.2.tgz) |-->
 
-You can use the openssl (s_client), curl and GNOME Web/epiphany clients with all algorithm combinations available at the Open Quantum Safe TLS/X.509 interoperability test server at https://test.openquantumsafe.org (set up using `oqs-provider v0.5.0` and `liboqs v0.8.0`).
-<!--Chromium and `oqs-boringssl` are no longer maintained to the same standards (algorithms, operating systems), so are not to be expected to (inter)operate fully with the test server.-->
+You can use the openssl (s_client), curl and GNOME Web/epiphany clients with all algorithm combinations available at the Open Quantum Safe TLS/X.509 interoperability test server at https://test.openquantumsafe.org (set up using `oqs-provider v0.5.0` and `liboqs v0.8.0`). Chromium and [oqs-boringssl](https://github.com/open-quantum-safe/boringssl) are no longer maintained to the same set of algorithms, so are not to be expected to (inter)operate fully with the test server.
 
 ## Contributing
 
@@ -70,4 +69,3 @@ Financial support for the development of Open Quantum Safe has been provided by 
 We'd like to make a special acknowledgement to the companies who have dedicated programmer time to contribute source code to OQS, including Amazon Web Services, evolutionQ, Microsoft Research, Cisco Systems, IBM Research and Fachhochschule Nordwestschweiz.
 
 Research projects which developed specific components of OQS have been supported by various research grants, including funding from the Natural Sciences and Engineering Research Council of Canada (NSERC); see here and here for funding acknowledgments.
-
