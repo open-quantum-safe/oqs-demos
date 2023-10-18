@@ -1,7 +1,7 @@
 # Multi-stage build: First the full builder image:
 
 # define the Curl version to be baked in
-ARG CURL_VERSION=7.87.0
+ARG CURL_VERSION=7.81.0
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
