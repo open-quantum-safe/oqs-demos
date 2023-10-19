@@ -3,11 +3,11 @@
 # First: global build arguments:
 
 # liboqs build type variant; maximum portability of image:
-ARG LIBOQS_VERSION=0.8.0
+ARG LIBOQS_VERSION=0.9.0
 
 ARG OPENSSL_VERSION=master
 
-ARG OQS_PROVIDER_VERSION=0.5.1
+ARG OQS_PROVIDER_VERSION=main
 
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
@@ -26,7 +26,7 @@ ARG SIG_ALG="dilithium3"
 ARG DEFAULT_GROUPS=x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.25.1
+ARG NGINX_VERSION=1.25.2
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j"
@@ -97,7 +97,7 @@ COPY genconfig.py ${CONFIGDIR}
 COPY common.py ${CONFIGDIR}
 COPY ext-csr.conf ${CONFIGDIR}
 COPY index-template ${CONFIGDIR}
-COPY chromium-template ${CONFIGDIR}
+#COPY chromium-template ${CONFIGDIR}
 COPY success.htm ${CONFIGDIR}
 COPY OsslAlgParser.scala ${CONFIGDIR}
 
@@ -108,8 +108,8 @@ RUN python3 genconfig.py
 
 RUN sed -i "s/LIBOQS_RELEASE/${LIBOQS_VERSION}/g" index-base.html
 RUN sed -i "s/OQSPROVIDER_RELEASE/${OQS_PROVIDER_VERSION}/g" index-base.html
-RUN sed -i "s/LIBOQS_RELEASE/${LIBOQS_VERSION}/g" chromium-base.html
-RUN sed -i "s/OQSPROVIDER_RELEASE/${OQS_PROVIDER_VERSION}/g" chromium-base.html
+#RUN sed -i "s/LIBOQS_RELEASE/${LIBOQS_VERSION}/g" chromium-base.html
+#RUN sed -i "s/OQSPROVIDER_RELEASE/${OQS_PROVIDER_VERSION}/g" chromium-base.html
 
 RUN rm -rf ${INSTALLDIR}/pki
 RUN rm -rf ${INSTALLDIR}/logs/*

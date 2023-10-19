@@ -18,7 +18,7 @@ ARG SIG_ALG="dilithium3"
 ARG DEFAULT_GROUPS=x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.23.3
+ARG NGINX_VERSION=1.25.2
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 18"
@@ -126,6 +126,7 @@ STOPSIGNAL SIGTERM
 # Enable a normal user to create new server keys off set CA
 RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs ${INSTALLDIR}
 USER oqs
-
+# From nginx 1.25.2: "nginx does not try to load OpenSSL configuration if the --with-openssl option was used to built OpenSSL and the OPENSSL_CONF environment variable is not set".
+# We therefore have to set the OPENSSL_CONF environment variable.
+ENV OPENSSL_CONF ${OSSLDIR}/ssl/openssl.cnf
 CMD ["nginx", "-c", "nginx-conf/nginx.conf", "-g", "daemon off;"]
-

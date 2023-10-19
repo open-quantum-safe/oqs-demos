@@ -32,6 +32,12 @@ Note that, the oqs-nginx-{LIBOQS_VERSION}.tgz package contains all required conf
 
 #### Activation
 
-Execute `/opt/nginx/sbin/nginx -c /opt/nginx/interop.conf` to start the test server.
+Execute `OPENSSL_CONF=/opt/openssl/.openssl/ssl/openssl.cnf /opt/nginx/sbin/nginx -c /opt/nginx/interop.conf` to start the test server.
+
+*Note*: From nginx version 1.25.2, nginx does not try to load OpenSSL configuration if the --with-openssl option was used to built OpenSSL. We therefore have to set the `OPENSSL_CONF` environment variable when activating nginx.
 
 *Note*: As the server many of ports, the server may need to be configured to permit this, e.g., using `ulimit -S -n 4096`.
+
+#### Test run
+
+The `testrun.sh` script runs test connections against all ports configured by the server. To run the script, execute `testrun.sh openquantumsafe/curl`.
