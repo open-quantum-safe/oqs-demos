@@ -6,6 +6,12 @@ Please read [Google's instructions](https://chromium.googlesource.com/chromium/s
 
 The rest of the instructions will use **$CHROMIUM_ROOT** to refer to the root directory of the Chromium source code.
 
+```shellscript
+cd $CHROMIUM_ROOT
+git checkout tags/117.0.5863.0
+gclient sync
+```
+
 ### 2. Install Go and Perl
 
 ### 3. Switch to the OQS-BoringSSL
@@ -22,7 +28,7 @@ git checkout -b oqs-bssl-master 1ca41b49e9198f510991fb4f350b4a5fd4c1d5ff
 Choose a directory to store the liboqs source code and use the `cd` command to move to that directory. We will use ninja to build liboqs.
 
 ```shellscript
-git clone --branch main https://github.com/open-quantum-safe/liboqs.git
+git clone https://github.com/open-quantum-safe/liboqs.git --branch 0.8.0 --single-branch
 cd liboqs && mkdir build && cd build
 cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=$CHROMIUM_ROOT/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF
 ninja && ninja install
