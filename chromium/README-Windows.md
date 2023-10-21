@@ -7,6 +7,14 @@ Please read [Google's instructions](https://chromium.googlesource.com/chromium/s
 The rest of the instructions will use **%CHROMIUM_ROOT%** to refer to the root directory of the Chromium source code.\
 You may set `CHROMIUM_ROOT` variable by running `set CHROMIUM_ROOT=/path/to/the/Chromium/source` in Command Prompt.
 
+In Command Prompt, run following commands:
+
+```bat
+cd %CHROMIUM_ROOT%
+git checkout tags/117.0.5863.0
+gclient sync
+```
+
 ### 2. Install Go and Perl
 
 ### 3. Switch to the OQS-BoringSSL
@@ -26,7 +34,7 @@ Choose a directory to store the liboqs source code and use the `cd` command to m
 Start _x64 Native Tools Command Prompt for VS 2022_ (usually it's in _C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC_) and run following commands:
 
 ```bat
-git clone --branch main https://github.com/open-quantum-safe/liboqs.git
+git clone https://github.com/open-quantum-safe/liboqs.git --branch 0.8.0 --single-branch
 cd liboqs && mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=%CHROMIUM_ROOT%/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF
 msbuild ALL_BUILD.vcxproj
