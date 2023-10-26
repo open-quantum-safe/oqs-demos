@@ -107,6 +107,7 @@ def write_nginx_config(f, i, cf, port, _sig, k):
            f.write("            set    $oqs_sig_name \""+sig+"\";\n")
            f.write("            root   html;\n")
            f.write("            index  success.html;\n")
+           f.write("            keepalive_timeout 0;\n")
            f.write("    }\n\n")
 
            f.write("}\n\n")
