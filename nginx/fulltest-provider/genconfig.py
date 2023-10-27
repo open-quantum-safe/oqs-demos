@@ -63,7 +63,7 @@ def gen_cert(_sig_alg):
    if not os.path.exists(PKIPATH):
            os.mkdir(PKIPATH)
 
-   # now generate suitable server keys signed by that root; adapt algorithm names to std ossl 
+   # now generate suitable server keys signed by that root; adapt algorithm names to std ossl
    if sig_alg == 'rsa3072':
        ossl_sig_alg_arg = 'rsa:3072'
    elif sig_alg == 'ecdsap256':
@@ -71,6 +71,24 @@ def gen_cert(_sig_alg):
        ossl_sig_alg_arg = 'ec:{}'.format(os.path.join(PKIPATH, "prime256v1.pem"))
    else:
        ossl_sig_alg_arg = sig_alg
+   # generate intermediate CA key and CSR
+   common.run_subprocess([OPENSSL, 'req', '-new',
+                              '-newkey', ossl_sig_alg_arg,
+                              '-keyout', os.path.join(PKIPATH, '{}_interm.key'.format(sig_alg)),
+                              '-out', os.path.join(PKIPATH, '{}_interm.csr'.format(sig_alg)),
+                              '-nodes',
+                              '-subj', '/CN=oqstest_intermediate_'+sig_alg,
+                              '-config', OPENSSL_CNF])
+   # sign the intermediate CA using the root
+   common.run_subprocess([OPENSSL, 'x509', '-req',
+                                  '-in', os.path.join(PKIPATH, '{}_interm.csr'.format(sig_alg)),
+                                  '-out', os.path.join(PKIPATH, '{}_interm.crt'.format(sig_alg)),
+                                  '-CA', os.path.join(CAROOTDIR, 'CA.crt'),
+                                  '-CAkey', os.path.join(CAROOTDIR, 'CA.key'),
+                                  '-CAcreateserial',
+                                  '-extfile', 'ext-csr.conf',
+                                  '-extensions', 'v3_intermediate_ca',
+                                  '-days', '366'])
    # generate server key and CSR
    common.run_subprocess([OPENSSL, 'req', '-new',
                               '-newkey', ossl_sig_alg_arg,
@@ -83,12 +101,17 @@ def gen_cert(_sig_alg):
    common.run_subprocess([OPENSSL, 'x509', '-req',
                                   '-in', os.path.join(PKIPATH, '{}_srv.csr'.format(sig_alg)),
                                   '-out', os.path.join(PKIPATH, '{}_srv.crt'.format(sig_alg)),
-                                  '-CA', os.path.join(CAROOTDIR, 'CA.crt'),
-                                  '-CAkey', os.path.join(CAROOTDIR, 'CA.key'),
+                                  '-CA', os.path.join(PKIPATH, '{}_interm.crt'.format(sig_alg)),
+                                  '-CAkey', os.path.join(PKIPATH, '{}_interm.key'.format(sig_alg)),
                                   '-CAcreateserial',
-                                  '-extfile', 'ext-csr.conf', 
+                                  '-extfile', 'ext-csr.conf',
                                   '-extensions', 'v3_req',
                                   '-days', '365'])
+   # append intermediate cert to server cert
+   with open(os.path.join(PKIPATH, '{}_srv.crt'.format(sig_alg)), 'a') as srv:
+      srv.write("\n")
+      with open(os.path.join(PKIPATH, '{}_interm.crt'.format(sig_alg))) as interm:
+            srv.write(interm.read())
 
 def write_nginx_config(f, i, cf, port, _sig, k):
            sig = _sig[0]
