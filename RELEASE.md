@@ -19,8 +19,9 @@ What's New
 ----------
 
 Since the 0.8.0 release (2023-06) the following key changes occurred:
-- General upgrade to Chromium and BoringSSL integration documentation, incl. Windows support
-- Added support for signature verification in Chromium
+- ngtcp2 and epiphany integration updated to use OpenSSL3 & oqs-provider
+- General upgrade to Chromium and BoringSSL integration and documentation, incl. Windows support
+- Added full QSC chain to (nginx) test server logic
 - Several updates to follow upstream package changes (nginx, curl, oqs-provider, liboqs, ngtcp2)
 
 ## What's Changed
