@@ -1,3 +1,53 @@
+oqs-demos snapshot 2023-10 (0.9.0)
+==================================
+
+About
+-----
+
+The **Open Quantum Safe (OQS) project** has the goal of developing and prototyping quantum-resistant cryptography.  More information on OQS can be found on our website: https://openquantumsafe.org/ and on Github at https://github.com/open-quantum-safe/.
+
+**liboqs** is an open source C library for quantum-resistant cryptographic algorithms.
+
+**open-quantum-safe/oqs-demos** is a collection of integrations of liboqs into various high-level applications requiring the use of cryptography for their core operations.  The goal of this integration is to provide easy prototyping of quantum-resistant cryptography in standard applications. The integrations should not be considered "production quality".
+
+Release notes
+=============
+
+This is the 2023-10 release of oqs-demos, which was released on October 31, 2023.  This release is intended to be used with liboqs tag/version `0.9.0`, [oqs-provider](https://github.com/open-quantum-safe/oqs-provider) version `0.5.2`, and oqs-openssh tag/version `OQS-OpenSSH-snapshot-2023-10`.
+
+What's New
+----------
+
+Since the 0.8.0 release (2023-06) the following key changes occurred:
+- General upgrade to Chromium and BoringSSL integration documentation, incl. Windows support
+- Added support for signature verification in Chromium
+- Several updates to follow upstream package changes (nginx, curl, oqs-provider, liboqs, ngtcp2)
+
+## What's Changed
+* Size optimization ngtcp2 and change to use OpenSSL3/oqsprovider by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/211
+* Update Chromium build instructions by @Raytonne in https://github.com/open-quantum-safe/oqs-demos/pull/210
+* change epiphany to use OpenSSL3/oqsprovider by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/209
+* Update ubuntu_x64_provider to large resource class in config.yml by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/212
+* Fix ngtcp2 upstream problem by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/214
+* tag github docker images by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/215
+* document DEFAULT_GROUPS env var for httpd [skip ci] by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/218
+* Update test.openquantumsafe.org & resolve some issues by @bhess in https://github.com/open-quantum-safe/oqs-demos/pull/223
+* I(ETF) interop image by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/222
+* Chromium update by @pi-314159 in https://github.com/open-quantum-safe/oqs-demos/pull/234
+* Updates docker file to create test server package by @bhess in https://github.com/open-quantum-safe/oqs-demos/pull/238
+* Specify Chromium and liboqs version by @Raytonne in https://github.com/open-quantum-safe/oqs-demos/pull/240
+* curl version change to work around bug by @baentsch in https://github.com/open-quantum-safe/oqs-demos/pull/237
+* nginx server: update to oqs-provider 0.5.2 & config update by @bhess in https://github.com/open-quantum-safe/oqs-demos/pull/241
+* Add quantum-safe certificate chain support to the test server by @pi-314159 in https://github.com/open-quantum-safe/oqs-demos/pull/242
+
+## New Contributors
+* @Raytonne made their first contribution in https://github.com/open-quantum-safe/oqs-demos/pull/210
+* @pi-314159 made their first contribution in https://github.com/open-quantum-safe/oqs-demos/pull/234
+
+**Full Changelog**: https://github.com/open-quantum-safe/oqs-demos/compare/0.8.0...0.9.0
+
+# Previous release documentation(s)
+
 oqs-demos snapshot 2023-06 (0.8.0)
 ==================================
 
