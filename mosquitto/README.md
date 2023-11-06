@@ -1,3 +1,7 @@
+## Warning
+
+This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning). Feel free to vote this back into supported state by visiting [the discussion on the topic](https://github.com/orgs/open-quantum-safe/discussions/1602).
+
 ## Purpose 
 
 This directory contains a Dockerfile that builds [Mosquitto](https://mosquitto.org) with the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows Mosquitto to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.

@@ -1,6 +1,10 @@
 OQS-OpenSSL-QUIC
 ==================================
 
+## Warning
+
+This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning). Feel free to vote this back into supported state by visiting [the discussion on the topic](https://github.com/orgs/open-quantum-safe/discussions/1602).
+
 [OpenSSL](https://openssl.org/) is an open-source implementation of the TLS protocol and various cryptographic algorithms ([View the original README for the OQS-enabled fork here](https://github.com/open-quantum-safe/openssl/blob/OQS-OpenSSL_1_1_1-stable/README).)
 
 OQS-OpenSSL\_1\_1\_1 is a fork of OpenSSL 1.1.1 that adds quantum-safe key exchange and authentication algorithms using [liboqs](https://github.com/open-quantum-safe/liboqs) for prototyping and evaluation purposes. This fork is not endorsed by the OpenSSL project.

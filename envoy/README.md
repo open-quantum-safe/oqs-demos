@@ -1,3 +1,7 @@
+## Warning
+
+This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning). Feel free to vote this back into supported state by visiting [the discussion on the topic](https://github.com/orgs/open-quantum-safe/discussions/1602).
+
 ## Purpose
 
 This directory contains a Dockerfile that builds Envoy with the [OQS BoringSSL master-with-bazel branch](https://github.com/Post-Quantum-Mesh/boringssl) modified to build the liboqs library and use the most updated BoringSSL source code.

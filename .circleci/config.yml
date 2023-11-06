@@ -570,16 +570,16 @@ workflows:
           context: openquantumsafe
       - ubuntu_x64_nginx:
           context: openquantumsafe
-      - ubuntu_x64_quic:
-          context: openquantumsafe
+      #- ubuntu_x64_quic:
+      #    context: openquantumsafe
       - ubuntu_x64_httpd:
           context: openquantumsafe
       #- ubuntu_x64_haproxy:
       #    context: openquantumsafe
       - ubuntu_x64_openvpn:
           context: openquantumsafe
-      - ubuntu_x64_mosquitto:
-          context: openquantumsafe
+      #- ubuntu_x64_mosquitto:
+      #    context: openquantumsafe
       - ubuntu_x64_ngtcp2:
           context: openquantumsafe
       - ubuntu_x64_openssh:
