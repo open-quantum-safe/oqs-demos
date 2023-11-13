@@ -32,12 +32,12 @@ tr:nth-child(even) {
 
 <p>This nginx server supports</p>
 <ul>
-<li>the TLS1.3 specification with QSC enhancement as specified in <a href="https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-00">https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-00</a></li>
-<li>Code points/curve IDs of KEM algorithms are implemented with the highest numbers available for each algorithm listed <a href="https://github.com/open-quantum-safe/openssl/blob/OQS-OpenSSL_1_1_1-stable/oqs-template/oqs-kem-info.md">here</a>. </li>
-<li>Code points/OIDs of SIG algorithms are implemented with the highest numbers available for each algorithm as listed <a href="https://github.com/open-quantum-safe/openssl/blob/OQS-OpenSSL_1_1_1-stable/oqs-template/oqs-sig-info.md">here</a>. </li>
+<li>the TLS1.3 specification with QSC enhancement as specified in <a href="https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-06">https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-06</a>.</li>
+<li>Code points/curve IDs of KEM algorithms are implemented with the highest numbers available for each algorithm listed <a href="https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md">here</a>. </li>
+<li>Code points/OIDs of SIG algorithms are implemented with the highest numbers available for each algorithm as listed <a href="https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md">here</a>. </li>
 </ul>
 
-<p>This corresponds to the OQS release version LIBOQS_RELEASE </p>
+<p>This corresponds to the OQS release version LIBOQS_RELEASE and oqs-provider version OQSPROVIDER_RELEASE.</p>
 
 <p>These specifications should not be taken as a standard, de facto and otherwise, and are subject to change at any time.</p>
 

@@ -4,45 +4,40 @@ This folder contains all scripts to [build a QSC-enabled nginx server running on
 
 *Note*: These scripts assume 
 - coherent definition of test server FQDN as TESTFQDN in `genconfig.py` and `ext-csr.conf` files: By default "test.openquantumsafe.org" is set.
-- presence of oqs-openssl common definitions file `common.py` (as stored at https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/oqs-test/common.py).
-- presence on the build machine of a writable folder `/opt/nginx` for test-build (and local testing)
+- presence of oqs-openssl common definitions file `common.py` (as stored at https://raw.githubusercontent.com/open-quantum-safe/oqs-provider/main/scripts/common.py).
+- presence of Docker on the build machine to run the build process, the guest OS needs to be able to mount host directories for Docker (i.e. on Linux, SELinux permissions might be needed).
 - presence on the target deploy server (i.e., at the machine designated at TESTFQDN) of a properly deployed [LetsEncrypt server certificate](https://letsencrypt.org/getting-started).
 
-By default, the server is built to a specific set of versions of `liboqs`, `oqs-openssl` and `nginx`. These versions are encoded in `build-ubuntu.sh` and may be changed/upgraded there.
+By default, the server is built to a specific set of versions of `liboqs`, `openssl`, `oqs-provider` and `nginx`. These versions are encoded in `build-ubuntu.sh` and may be changed/upgraded there.
 
 ### HOWTO
 
-#### Option 1: Build and test server separate
+#### Build and deploy test server
 
 On build machine run 
 
 ```
-./build-ubuntu.sh install
-./package.sh
-scp /opt/nginx/oqs-nginx.tgz yourid@yourserver:yourpath
+./build-ubuntu.sh
+scp oqs-nginx-{LIBOQS_VERSION}.tgz yourid@yourserver:yourpath
 ```
 
 At 'yourserver' run:
 ```
-cd /opt/nginx && tar xzvf yourpath/oqs-nginx.tgz
+cd / && tar xzvf yourpath/oqs-nginx-{LIBOQS_VERSION}.tgz
+cd /opt/nginx
 /opt/nginx/sbin/nginx -c interop.conf
 ```
 
-#### Option 2: Building on test server
-
-```
-./build-ubuntu.sh install
-```
-
-Leave away the `install` option to first do a test-build, e.g., if executed on a live installation.
-
-
-#### First-time execution
-
-`python3 genconfig.py` generates all required QSC certificates. Execute this at the first installation and/or if/when algorithms supported by liboqs have changed since the last installation. **This script overwrites an existing installation's configuration files. Use with care on a live server.** Be sure to have the directory `pki` available/created: For example environmental setup, see e.g., [package.sh](package.sh).
+Note that, the oqs-nginx-{LIBOQS_VERSION}.tgz package contains all required configuration files and QSC certificates. **Unpacking the archive may overwrite an existing installation's configuration files. Use with care on a live server.**
 
 #### Activation
 
-Execute `/opt/nginx/sbin/nginx -c /opt/nginx/interop.conf` to start the test server.
+Execute `OPENSSL_CONF=/opt/openssl/.openssl/ssl/openssl.cnf /opt/nginx/sbin/nginx -c /opt/nginx/interop.conf` to start the test server.
 
-*Note*: As the server opens thousands of ports, the server may need to be configured to permit this, e.g., using `ulimit -S -n 4096`.
+*Note*: From nginx version 1.25.2, nginx does not try to load OpenSSL configuration if the --with-openssl option was used to built OpenSSL. We therefore have to set the `OPENSSL_CONF` environment variable when activating nginx.
+
+*Note*: As the server many of ports, the server may need to be configured to permit this, e.g., using `ulimit -S -n 4096`.
+
+#### Test run
+
+The `testrun.sh` script runs test connections against all ports configured by the server. To run the script, execute `testrun.sh openquantumsafe/curl`.
