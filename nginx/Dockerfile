@@ -69,7 +69,7 @@ RUN mkdir -p ${OSSLDIR=}/ssl && cp /opt/openssl/apps/openssl.cnf ${OSSLDIR}/ssl/
 # build oqsprovider
 WORKDIR /opt/oqs-provider
 
-RUN ln -s /opt/nginx/include/oqs ${OSSLDIR}/include && rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OSSLDIR} -DCMAKE_PREFIX_PATH=$INSTALLDIR -S . -B build && cmake --build build && mkdir -p ${OSSLDIR}/lib64/ossl-modules && cp build/lib/oqsprovider.so ${OSSLDIR}/lib64/ossl-modules && rm -rf ${INSTALLDIR}/lib64
+RUN ln -s /opt/nginx/include/oqs ${OSSLDIR}/include && rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OSSLDIR} -DCMAKE_PREFIX_PATH=$INSTALLDIR -S . -B build && cmake --build build && export MODULESDIR=$(find ${OSSLDIR} -name ossl-modules) && cp build/lib/oqsprovider.so $MODULESDIR && mkdir -p ${OSSLDIR}/lib64 && ln -s ${OSSLDIR}/lib/ossl-modules ${OSSLDIR}/lib64 && rm -rf ${INSTALLDIR}/lib64
 
 WORKDIR ${INSTALLDIR}
 
