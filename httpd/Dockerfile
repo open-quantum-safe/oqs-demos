@@ -78,7 +78,7 @@ RUN sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqspr
 
 # build oqs-provider
 WORKDIR /opt/oqs-provider
-RUN rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OPENSSL_PATH} -DCMAKE_PREFIX_PATH=${OPENSSL_PATH} -S . -B build && cmake --build build && cp build/lib/oqsprovider.so ${OPENSSL_PATH}/lib64/ossl-modules/oqsprovider.so
+RUN rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OPENSSL_PATH} -DCMAKE_PREFIX_PATH=${OPENSSL_PATH} -S . -B build && cmake --build build && export MODULESDIR=$(find ${OPENSSL_PATH} -name ossl-modules) && cp build/lib/oqsprovider.so $MODULESDIR/oqsprovider.so
 
 # build httpd
 WORKDIR /opt
