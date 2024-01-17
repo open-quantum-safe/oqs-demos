@@ -141,7 +141,7 @@ def write_nginx_config(f, i, cf, port, _sig, k):
 
            # deactivate if you don't like tables:
            i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
-           # chromium support discontinued
+           # don't explicitly state Chromium compatibility
            #if k in chromium_algs and not ("_" in sig and (sig.startswith("p") or (sig.startswith("rsa")))):
            #    cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
@@ -151,14 +151,14 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
    port = STARTPORT
    assignments={}
    i = open(indexbasefilename, "w")
-   # chromium support discontinued
+   # don't explicitly state Chromium compatibility
    cf = None
    #cf = open(chromiumfilename, "w")
    # copy baseline templates
    with open(TEMPLATE_FILE, "r") as tf:
      for line in tf:
        i.write(line)
-   #chromium support discontinued
+   # don't explicitly state Chromium compatibility
    #with open(CHROMIUM_TEMPLATE_FILE, "r") as ctf:
    #  for line in ctf:
    #    cf.write(line)
