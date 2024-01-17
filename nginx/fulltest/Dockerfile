@@ -3,7 +3,7 @@
 # First: global build arguments:
 
 # liboqs build type variant; maximum portability of image:
-ARG LIBOQS_VERSION=0.9.0
+ARG LIBOQS_VERSION=0.9.2
 
 ARG OPENSSL_VERSION=master
 
@@ -26,15 +26,19 @@ ARG SIG_ALG="dilithium3"
 ARG DEFAULT_GROUPS=x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.25.2
+ARG NGINX_VERSION=1.25.3
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j"
+
+# Root CA directory
+ARG CAROOTDIR="/rootca"
 
 FROM ubuntu:focal-20230412 as intermediate
 # Take in global args
 ARG BASEDIR
 ARG CONFIGDIR
+ARG CAROOTDIR
 ARG LIBOQS_VERSION
 ARG OPENSSL_VERSION
 ARG OQS_PROVIDER_VERSION
@@ -100,6 +104,8 @@ COPY index-template ${CONFIGDIR}
 #COPY chromium-template ${CONFIGDIR}
 COPY success.htm ${CONFIGDIR}
 COPY OsslAlgParser.scala ${CONFIGDIR}
+# copy existing rootca directory if it exists
+COPY rootc[a] ${CAROOTDIR} 
 
 RUN for i in 128 192 256; do echo "seclevel:$i"; OPENSSL_MODULES=${OSSLDIR}/lib64/ossl-modules /opt/openssl/apps/openssl list -provider oqsprovider -propquery oqsprovider.security_bits=$i -kem-algorithms; done | scala -nobootcp -nc OsslAlgParser.scala key_exchanges >> oqsprovider_alglist.py
 RUN for i in 128 192 256; do echo "seclevel:$i"; OPENSSL_MODULES=${OSSLDIR}/lib64/ossl-modules /opt/openssl/apps/openssl list -provider oqsprovider -propquery oqsprovider.security_bits=$i -signature-algorithms; done | scala -nobootcp -nc OsslAlgParser.scala signatures >> oqsprovider_alglist.py
@@ -130,6 +136,7 @@ FROM ubuntu:focal-20230412
 ARG LIBOQS_BUILD_DEFINES
 ARG LIBOQS_VERSION
 ARG INSTALLDIR
+ARG CAROOTDIR
 ARG SIG_ALG
 ARG BASEDIR
 ARG OSSLDIR=${BASEDIR}/openssl/.openssl
@@ -143,5 +150,10 @@ RUN apt update && apt install -y libpcre3 libpcre3-dev
 # Only retain the ${*_PATH} contents in the final image
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
 COPY --from=intermediate ${OSSLDIR} ${OSSLDIR}
+COPY --from=intermediate ${CAROOTDIR} ${CAROOTDIR}
 
+# Package for deployment
 RUN tar czvf oqs-nginx-${LIBOQS_VERSION}.tgz ${BASEDIR}
+
+# Package for root CA cert and key
+RUN tar czvf oqs-testserver-rootca-${LIBOQS_VERSION}.tgz ${CAROOTDIR}
