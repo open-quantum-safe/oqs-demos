@@ -20,6 +20,14 @@ Complete information how to use the image is [available in the separate file USA
 
 The Dockerfile provided allows for significant customization of the image built:
 
+### LIBOQS_TAG
+
+Tag of `liboqs` release to be used. Default "main".
+
+### OQSPROVIDER_TAG
+
+Tag of `oqsprovider` release to be used. Default "main".
+
 ### LIBOQS_BUILD_DEFINES
 
 This permits changing the build options for the underlying library with the quantum safe algorithms. All possible options are documented [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).

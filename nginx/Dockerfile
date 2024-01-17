@@ -2,6 +2,12 @@
 
 # First: global build arguments:
 
+# define the liboqs tag to be used
+ARG LIBOQS_TAG=main
+
+# define the oqsprovider tag to be used
+ARG OQSPROVIDER_TAG=main
+
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
@@ -27,6 +33,8 @@ ARG MAKE_DEFINES="-j 18"
 FROM alpine:3.13 as intermediate
 # ToDo: Upgrade possible if https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2 addressed
 # Take in global args
+ARG LIBOQS_TAG
+ARG OQSPROVIDER_TAG
 ARG BASEDIR
 ARG LIBOQS_BUILD_DEFINES
 ARG INSTALLDIR
@@ -46,8 +54,8 @@ RUN apk add build-base linux-headers \
 
 # get OQS sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
+    git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
     git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
     wget nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar -zxvf nginx-${NGINX_VERSION}.tar.gz;
 
