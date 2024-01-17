@@ -1,6 +1,7 @@
 import common
 import os
 import json
+import oqsprovider_alglist
 
 # Script assumes nginx to have been built for this platform using build-ubuntu.sh
 
@@ -20,29 +21,31 @@ PKIPATH="pki"
 STARTPORT=6000
 
 # This is the local location of the OQS-enabled OpenSSL
-OPENSSL="/tmp/opt/openssl/apps/openssl"
+OPENSSL="/opt/openssl/apps/openssl"
 
 # This is the local OQS-OpenSSL config file
-OPENSSL_CNF="/tmp/opt/openssl/apps/openssl.cnf"
+OPENSSL_CNF="/opt/openssl/apps/openssl.cnf"
 
 # This is the fully-qualified domain name of the server to be set up
 # Ensure this is in sync with contents of ext-csr.conf file
 TESTFQDN="test.openquantumsafe.org"
 
 # This is the local folder where the root CA (key and cert) resides
-CAROOTDIR="root"
+CAROOTDIR="/rootca"
 
 # This is the file containing the SIG/KEM/port assignments
 ASSIGNMENT_FILE="assignments.json"
 
 # The list of chromium-supported KEMs:
-chromium_algs = ["p256_bikel1", "p256_frodo640aes", "p256_kyber512", "p256_ntru_hps2048509", "p256_lightsaber"]
+# TODO: this list needs to be updated after a new Chromium build
+chromium_algs = ["p256_frodo640aes"]
 
 ############# Functions starting here
 
 # Generate cert chain (server and CA for a given sig alg:
 # srv crt/key wind up in '<path>/<sigalg>_srv.crt|key
-def gen_cert(sig_alg):
+def gen_cert(_sig_alg):
+   sig_alg = _sig_alg[0]
    # first check whether we already have a root CA; if not create it
    if not os.path.exists(CAROOTDIR):
            os.mkdir(CAROOTDIR)
@@ -60,7 +63,7 @@ def gen_cert(sig_alg):
    if not os.path.exists(PKIPATH):
            os.mkdir(PKIPATH)
 
-   # now generate suitable server keys signed by that root; adapt algorithm names to std ossl 
+   # now generate suitable server keys signed by that root; adapt algorithm names to std ossl
    if sig_alg == 'rsa3072':
        ossl_sig_alg_arg = 'rsa:3072'
    elif sig_alg == 'ecdsap256':
@@ -68,6 +71,24 @@ def gen_cert(sig_alg):
        ossl_sig_alg_arg = 'ec:{}'.format(os.path.join(PKIPATH, "prime256v1.pem"))
    else:
        ossl_sig_alg_arg = sig_alg
+   # generate intermediate CA key and CSR
+   common.run_subprocess([OPENSSL, 'req', '-new',
+                              '-newkey', ossl_sig_alg_arg,
+                              '-keyout', os.path.join(PKIPATH, '{}_interm.key'.format(sig_alg)),
+                              '-out', os.path.join(PKIPATH, '{}_interm.csr'.format(sig_alg)),
+                              '-nodes',
+                              '-subj', '/CN=oqstest_intermediate_'+sig_alg,
+                              '-config', OPENSSL_CNF])
+   # sign the intermediate CA using the root
+   common.run_subprocess([OPENSSL, 'x509', '-req',
+                                  '-in', os.path.join(PKIPATH, '{}_interm.csr'.format(sig_alg)),
+                                  '-out', os.path.join(PKIPATH, '{}_interm.crt'.format(sig_alg)),
+                                  '-CA', os.path.join(CAROOTDIR, 'CA.crt'),
+                                  '-CAkey', os.path.join(CAROOTDIR, 'CA.key'),
+                                  '-CAcreateserial',
+                                  '-extfile', 'ext-csr.conf',
+                                  '-extensions', 'v3_intermediate_ca',
+                                  '-days', '366'])
    # generate server key and CSR
    common.run_subprocess([OPENSSL, 'req', '-new',
                               '-newkey', ossl_sig_alg_arg,
@@ -80,14 +101,20 @@ def gen_cert(sig_alg):
    common.run_subprocess([OPENSSL, 'x509', '-req',
                                   '-in', os.path.join(PKIPATH, '{}_srv.csr'.format(sig_alg)),
                                   '-out', os.path.join(PKIPATH, '{}_srv.crt'.format(sig_alg)),
-                                  '-CA', os.path.join(CAROOTDIR, 'CA.crt'),
-                                  '-CAkey', os.path.join(CAROOTDIR, 'CA.key'),
+                                  '-CA', os.path.join(PKIPATH, '{}_interm.crt'.format(sig_alg)),
+                                  '-CAkey', os.path.join(PKIPATH, '{}_interm.key'.format(sig_alg)),
                                   '-CAcreateserial',
-                                  '-extfile', 'ext-csr.conf', 
+                                  '-extfile', 'ext-csr.conf',
                                   '-extensions', 'v3_req',
                                   '-days', '365'])
+   # append intermediate cert to server cert
+   with open(os.path.join(PKIPATH, '{}_srv.crt'.format(sig_alg)), 'a') as srv:
+      srv.write("\n")
+      with open(os.path.join(PKIPATH, '{}_interm.crt'.format(sig_alg))) as interm:
+            srv.write(interm.read())
 
-def write_nginx_config(f, i, cf, port, sig, k):
+def write_nginx_config(f, i, cf, port, _sig, k):
+           sig = _sig[0]
            f.write("server {\n")
            f.write("    listen              0.0.0.0:"+str(port)+" ssl;\n\n")
            f.write("    server_name         "+TESTFQDN+";\n")
@@ -99,11 +126,11 @@ def write_nginx_config(f, i, cf, port, sig, k):
            if k!="*" :  
               f.write("    ssl_ecdh_curve      "+k+";\n")
            f.write("    location / {\n")
-           f.write("            ssi    on;\n")
-           if k!="*" :  
-              f.write("            set    $oqs_alg_name \""+sig+"-"+k+"\";\n")
+           f.write("            ssi    on;\n") 
+           f.write("            set    $oqs_sig_name \""+sig+"\";\n")
            f.write("            root   html;\n")
            f.write("            index  success.html;\n")
+           f.write("            keepalive_timeout 0;\n")
            f.write("    }\n\n")
 
            f.write("}\n\n")
@@ -114,8 +141,9 @@ def write_nginx_config(f, i, cf, port, sig, k):
 
            # deactivate if you don't like tables:
            i.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
-           if k in chromium_algs and not ("_" in sig and (sig.startswith("p") or (sig.startswith("rsa")))):
-               cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
+           # don't explicitly state Chromium compatibility
+           #if k in chromium_algs and not ("_" in sig and (sig.startswith("p") or (sig.startswith("rsa")))):
+           #    cf.write("<tr><td>"+sig+"</td><td>"+k+"</td><td>"+str(port)+"</td><td><a href=https://"+TESTFQDN+":"+str(port)+">"+sig+"/"+k+"</a></td></tr>\n")
 
 
 # generates nginx config
@@ -123,14 +151,17 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
    port = STARTPORT
    assignments={}
    i = open(indexbasefilename, "w")
-   cf = open(chromiumfilename, "w")
+   # don't explicitly state Chromium compatibility
+   cf = None
+   #cf = open(chromiumfilename, "w")
    # copy baseline templates
    with open(TEMPLATE_FILE, "r") as tf:
      for line in tf:
        i.write(line)
-   with open(CHROMIUM_TEMPLATE_FILE, "r") as ctf:
-     for line in ctf:
-       cf.write(line)
+   # don't explicitly state Chromium compatibility
+   #with open(CHROMIUM_TEMPLATE_FILE, "r") as ctf:
+   #  for line in ctf:
+   #    cf.write(line)
 
    with open(filename, "w") as f:
      # baseline config
@@ -170,31 +201,35 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
      f.write("}\n")
 
      f.write("\n")
-     for sig in common.signatures:
-        assignments[sig]={}
-        assignments[sig]["*"]=port
+     for sig in oqsprovider_alglist.signatures:
+        assignments[sig[0]]={}
+        assignments[sig[0]]["*"]=port
         write_nginx_config(f, i, cf, port, sig, "*")
         port = port+1
-        for kex in common.key_exchanges:
-           # replace oqs_kem_default with X25519:
-           k = "X25519" if kex=='oqs_kem_default' else kex
-           write_nginx_config(f, i, cf, port, sig, k)
-           assignments[sig][k]=port
-           port = port+1
+        for kex in oqsprovider_alglist.key_exchanges:
+            # replace oqs_kem_default with X25519:
+            if kex[0]=='oqs_kem_default':
+               write_nginx_config(f, i, cf, port, sig, "X25519")
+               assignments[sig[0]][kex[0]]=port
+               port = port+1
+            elif kex[1] == sig[1] or sig[1] == 0: # only add if the sig and kex security levels match or sig[1]==0 (rsa/ecdsa)
+               write_nginx_config(f, i, cf, port, sig, kex[0])
+               assignments[sig[0]][kex[0]]=port
+               port = port+1
      f.write("}\n")
    # deactivate if you don't like tables:
    i.write("</table>\n")
    i.write("</body></html>\n")
    i.close()
-   cf.write("</table>\n")
-   cf.write("</body></html>\n")
-   cf.close()
+   #cf.write("</table>\n")
+   #cf.write("</body></html>\n")
+   #cf.close()
    with open(ASSIGNMENT_FILE, 'w') as outfile:
       json.dump(assignments, outfile)
 
 def main():
    # first generate certs for all supported sig algs:
-   for sig in common.signatures:
+   for sig in oqsprovider_alglist.signatures:
       gen_cert(sig)
    # now do conf and HTML files
    gen_conf("interop.conf", "index-base.html", "chromium-base.html")
