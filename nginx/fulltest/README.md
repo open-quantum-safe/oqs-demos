@@ -1,6 +1,6 @@
 # Scripts to generate OQS test server
 
-This folder contains all scripts to [build a QSC-enabled nginx server running on ubuntu](build-ubuntu.sh) as well as generating all configuration files for running an interoperability test server: Running [python3 genconfig.py](genconfig.py) generates a local/self-signed root CA, all QSC certificates signed by this root CA for the currently supported list of QSC algorithms and the required nginx-server configuration file for a server running at the configured TESTFQDN server address.
+This folder contains all scripts to [build a QSC-enabled nginx server running on ubuntu](build_ubuntu.sh) as well as generating all configuration files for running an interoperability test server: Running [python3 genconfig.py](genconfig.py) generates a local/self-signed root CA, all QSC certificates signed by this root CA for the currently supported list of QSC algorithms and the required nginx-server configuration file for a server running at the configured TESTFQDN server address.
 
 *Note*: These scripts assume 
 - coherent definition of test server FQDN as TESTFQDN in `genconfig.py` and `ext-csr.conf` files: By default "test.openquantumsafe.org" is set.
