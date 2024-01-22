@@ -11,7 +11,7 @@ index cb7f229..60e0822 100755
 +    echo "Downloading oqs boringssl"
 +    git clone --branch master https://github.com/open-quantum-safe/boringssl.git
 +
-+    git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git
++    git clone --branch $LIBOQS_TAG --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git
  fi
  
  if [ -d "go" ]; then
@@ -44,7 +44,7 @@ index cb7f229..60e0822 100755
 +cd ../liboqs && mkdir build-static && cd build-static && cmake -G"Ninja" -DCMAKE_INSTALL_PREFIX=/opt/third-party/src/boringssl/oqs -DOQS_USE_OPENSSL=OFF .. && ninja && ninja install
 +cd .. && mkdir build && cd build && cmake -G"Ninja" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/third-party/src/boringssl/oqs -DOQS_USE_OPENSSL=OFF .. && ninja && ninja install
 +
-+cp /opt/third-party/src/liboqs/build/lib/liboqs.so.2 /usr/local/lib && ldconfig
++cp /opt/third-party/src/liboqs/build/lib/liboqs.so /usr/local/lib && ldconfig
 +cd ../../boringssl && mkdir build && cd build
 +
  cmake ../ -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC"

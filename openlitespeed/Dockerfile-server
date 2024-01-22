@@ -1,5 +1,8 @@
+ARG LIBOQS_TAG=main
 
 FROM ubuntu:focal as builder
+
+ARG LIBOQS_TAG
 
 ENV TZ=Europe/Zurich
 ENV DEBIAN_FRONTEND=noninteractive
@@ -22,6 +25,7 @@ COPY build_bssl.sh.patch /opt/
 RUN cd openlitespeed && git apply --reject --whitespace=fix /opt/build.sh.patch 
 
 
+ENV LIBOQS_TAG=${LIBOQS_TAG}
 # Build and install openlitespeed
 RUN cd openlitespeed && ./build.sh &&  ./install.sh
 
