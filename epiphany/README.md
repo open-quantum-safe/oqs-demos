@@ -11,3 +11,17 @@ This demo is based on work done by [Igor Barshteyn](https://www.linkedin.com/pul
 
 Information how to use the image is [available in the separate file USAGE.md](USAGE.md).
 
+## Build options
+
+The Dockerfile provided allows for significant customization of the image built:
+
+
+### LIBOQS_TAG
+
+Tag of `liboqs` release to be used. Default "main".
+
+### OQSPROVIDER_TAG
+
+Tag of `oqsprovider` release to be used. Default "main".
+
+

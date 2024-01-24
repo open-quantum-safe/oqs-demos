@@ -1,5 +1,11 @@
 # Multi-stage build: First the full builder image:
 
+# define the liboqs tag to be used
+ARG LIBOQS_TAG=main
+
+# define the oqsprovider tag to be used
+ARG OQSPROVIDER_TAG=main
+
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
 
@@ -17,6 +23,8 @@ ARG KEM_ALGLIST="kyber768:p384_kyber768"
 
 FROM debian:bullseye as intermediate
 # Take in all global args
+ARG LIBOQS_TAG
+ARG OQSPROVIDER_TAG
 ARG INSTALLDIR
 ARG LIBOQS_BUILD_DEFINES
 ARG MAKE_DEFINES
@@ -40,9 +48,9 @@ RUN apt install -y  \
 
 # get all sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
-    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
+    git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
     git clone https://github.com/OpenVPN/openvpn.git
 
 # build liboqs

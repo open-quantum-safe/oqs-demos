@@ -2,6 +2,12 @@
 
 # First: global build arguments: 
 
+# define the liboqs tag to be used
+ARG LIBOQS_TAG=main
+
+# define the oqsprovider tag to be used
+ARG OQSPROVIDER_TAG=main
+
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
@@ -35,6 +41,8 @@ FROM alpine:3.13 as intermediate
 # ToDo: Upgrade possible if https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2 addressed
 
 # Take in global args
+ARG LIBOQS_TAG
+ARG OQSPROVIDER_TAG
 ARG LIBOQS_BUILD_DEFINES
 ARG OPENSSL_PATH
 ARG HTTPD_PATH
@@ -55,9 +63,9 @@ RUN apk add build-base linux-headers \
 
 # get sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch master https://github.com/openssl/openssl ossl-src && \
-    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider && \
+    git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider && \
     wget ${APR_MIRROR}/apr/apr-${APR_VERSION}.tar.gz && tar xzvf apr-${APR_VERSION}.tar.gz && \
     wget ${APR_MIRROR}/apr/apr-util-${APRU_VERSION}.tar.gz && tar xzvf apr-util-${APRU_VERSION}.tar.gz && \
     wget --trust-server-names "https://archive.apache.org/dist/httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;

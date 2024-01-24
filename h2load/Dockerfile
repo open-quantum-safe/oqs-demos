@@ -3,6 +3,8 @@ FROM alpine as intermediate
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG LIBOQS_TAG=main
+ARG OQSPROVIDER_TAG=main
 ARG INSTALLDIR=/opt/oqssa
 
 # Update image and apt software 
@@ -16,9 +18,9 @@ RUN apk add bash git g++ make cmake ninja autoconf automake libtool \
 WORKDIR /opt
 
 # get all sources
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
-    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
+    git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
     git clone --depth 1 --branch master  https://github.com/nghttp2/nghttp2.git
 
 # build liboqs

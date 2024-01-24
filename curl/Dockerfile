@@ -1,5 +1,11 @@
 # Multi-stage build: First the full builder image:
 
+# define the liboqs tag to be used
+ARG LIBOQS_TAG=main
+
+# define the oqsprovider tag to be used
+ARG OQSPROVIDER_TAG=main
+
 # define the Curl version to be baked in
 ARG CURL_VERSION=7.81.0
 
@@ -21,6 +27,8 @@ ARG MAKE_DEFINES="-j 4"
 
 FROM alpine:3.11 as intermediate
 # Take in all global args
+ARG LIBOQS_TAG
+ARG OQSPROVIDER_TAG
 ARG CURL_VERSION
 ARG INSTALLDIR
 ARG LIBOQS_BUILD_DEFINES
@@ -43,9 +51,9 @@ RUN apk add build-base linux-headers \
 
 # get all sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs && \
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
-    git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git && \
+    git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
 
 # build liboqs

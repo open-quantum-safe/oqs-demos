@@ -1,8 +1,16 @@
+# define the liboqs tag to be used
+ARG LIBOQS_TAG=main
+
+# define the oqsprovider tag to be used
+ARG OQSPROVIDER_TAG=main
+
 # Default location where all binaries wind up:
 ARG OSSLGIODIR=/opt/ossl-gio
 
 # 2-step build: First create binaries
 FROM ubuntu as intermediate
+ARG LIBOQS_TAG
+ARG OQSPROVIDER_TAG
 ARG OSSLGIODIR
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -12,7 +20,7 @@ RUN apt update && apt upgrade -y && apt install -y build-essential clang meson g
 
 WORKDIR /opt
 
-RUN git clone --branch main https://github.com/open-quantum-safe/liboqs.git && git clone --depth 1 --branch master https://github.com/openssl/openssl ossl-src && git clone https://gitlab.gnome.org/GNOME/glib-networking.git && git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git
+RUN git clone --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs.git && git clone --depth 1 --branch master https://github.com/openssl/openssl ossl-src && git clone https://gitlab.gnome.org/GNOME/glib-networking.git && git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git
 
 # make sure the liboqs library is distributable:
 RUN cd liboqs && mkdir build && cd build && cmake -GNinja -DOQS_DIST_BUILD=ON -DCMAKE_INSTALL_PREFIX=/opt/liboqs .. && ninja && ninja install && cd ../..

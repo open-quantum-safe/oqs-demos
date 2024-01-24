@@ -49,6 +49,15 @@ Information how to use the image is [available in the separate file USAGE.md](US
 
 The Dockerfile provided allows for significant customization of the image built:
 
+
+### LIBOQS_TAG
+
+Tag of `liboqs` release to be used. Default "main".
+
+### OQSPROVIDER_TAG
+
+Tag of `oqsprovider` release to be used. Default "main".
+
 ### LIBOQS_BUILD_DEFINES
 
 This permits changing the build options for the underlying library with the quantum safe algorithms. All possible options are documented [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).
@@ -66,7 +75,6 @@ The default value is `x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:
 This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
 
 The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
-
 
 ### INSTALL_PATH
 
