@@ -1,0 +1,208 @@
+diff --git a/net/base/features.cc b/net/base/features.cc
+index 1ca71165d2..525cd9e9d5 100644
+--- a/net/base/features.cc
++++ b/net/base/features.cc
+@@ -157,7 +157,7 @@ BASE_FEATURE(kPermuteTLSExtensions,
+ 
+ BASE_FEATURE(kPostQuantumKyber,
+              "PostQuantumKyber",
+-             base::FEATURE_DISABLED_BY_DEFAULT);
++             base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kNetUnusedIdleSocketTimeout,
+              "NetUnusedIdleSocketTimeout",
+diff --git a/net/cert/cert_verify_proc.cc b/net/cert/cert_verify_proc.cc
+index 90383f320e..ce2e8cf245 100644
+--- a/net/cert/cert_verify_proc.cc
++++ b/net/cert/cert_verify_proc.cc
+@@ -97,6 +97,16 @@ const char* CertTypeToString(X509Certificate::PublicKeyType cert_type) {
+       return "DH";
+     case X509Certificate::kPublicKeyTypeECDH:
+       return "ECDH";
++    case X509Certificate::kPublicKeyTypeDilithium:
++      return "Dilithium";
++    case X509Certificate::kPublicKeyTypeFalcon:
++      return "Falcon";
++    case X509Certificate::kPublicKeyTypeMLDSA:
++      return "ML-DSA";
++    case X509Certificate::kPublicKeyTypeSPHINCSSHA2:
++      return "SPHINCSSHA2";
++    case X509Certificate::kPublicKeyTypeSPHINCSSHAKE:
++      return "SPHINCSSHAKE";
+   }
+   NOTREACHED();
+   return "Unsupported";
+@@ -309,6 +319,26 @@ void RecordTrustAnchorHistogram(const HashValueVector& spki_hashes,
+     case bssl::SignatureAlgorithm::kRsaPssSha256:
+     case bssl::SignatureAlgorithm::kRsaPssSha384:
+     case bssl::SignatureAlgorithm::kRsaPssSha512:
++    case bssl::SignatureAlgorithm::kDilithium2:
++    case bssl::SignatureAlgorithm::kMldsa44:
++    case bssl::SignatureAlgorithm::kFalcon512:
++    case bssl::SignatureAlgorithm::kSphincssha2128fsimple:
++    case bssl::SignatureAlgorithm::kSphincssha2128ssimple:
++    case bssl::SignatureAlgorithm::kSphincsshake128fsimple:
++    case bssl::SignatureAlgorithm::kSphincsshake128ssimple:
++    case bssl::SignatureAlgorithm::kDilithium3:
++    case bssl::SignatureAlgorithm::kMldsa65:
++    case bssl::SignatureAlgorithm::kSphincssha2192fsimple:
++    case bssl::SignatureAlgorithm::kSphincssha2192ssimple:
++    case bssl::SignatureAlgorithm::kSphincsshake192fsimple:
++    case bssl::SignatureAlgorithm::kSphincsshake192ssimple:
++    case bssl::SignatureAlgorithm::kDilithium5:
++    case bssl::SignatureAlgorithm::kMldsa87:
++    case bssl::SignatureAlgorithm::kFalcon1024:
++    case bssl::SignatureAlgorithm::kSphincssha2256fsimple:
++    case bssl::SignatureAlgorithm::kSphincssha2256ssimple:
++    case bssl::SignatureAlgorithm::kSphincsshake256fsimple:
++    case bssl::SignatureAlgorithm::kSphincsshake256ssimple:
+       return true;
+   }
+ 
+diff --git a/net/cert/x509_certificate.cc b/net/cert/x509_certificate.cc
+index f23121ac4a..9b213e3dcc 100644
+--- a/net/cert/x509_certificate.cc
++++ b/net/cert/x509_certificate.cc
+@@ -644,6 +644,36 @@ void X509Certificate::GetPublicKeyInfo(const CRYPTO_BUFFER* cert_buffer,
+     case EVP_PKEY_DH:
+       *type = kPublicKeyTypeDH;
+       break;
++    case EVP_PKEY_DILITHIUM2:
++    case EVP_PKEY_DILITHIUM3:
++    case EVP_PKEY_DILITHIUM5:
++      *type = kPublicKeyTypeDilithium;
++      break;
++    case EVP_PKEY_FALCON512:
++    case EVP_PKEY_FALCON1024:
++      *type = kPublicKeyTypeFalcon;
++      break;
++    case EVP_PKEY_MLDSA44:
++    case EVP_PKEY_MLDSA65:
++    case EVP_PKEY_MLDSA87:
++      *type = kPublicKeyTypeMLDSA;
++      break;
++    case EVP_PKEY_SPHINCSSHA2128FSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2128SSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2192FSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2192SSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2256FSIMPLE:
++    case EVP_PKEY_SPHINCSSHA2256SSIMPLE:
++      *type = kPublicKeyTypeSPHINCSSHA2;
++      break;
++    case EVP_PKEY_SPHINCSSHAKE128FSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE128SSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE192FSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE192SSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE256FSIMPLE:
++    case EVP_PKEY_SPHINCSSHAKE256SSIMPLE:
++      *type = kPublicKeyTypeSPHINCSSHAKE;
++      break;
+   }
+   *size_bits = base::saturated_cast<size_t>(EVP_PKEY_bits(pkey.get()));
+ }
+diff --git a/net/cert/x509_certificate.h b/net/cert/x509_certificate.h
+index ad138a534e..2749f29efe 100644
+--- a/net/cert/x509_certificate.h
++++ b/net/cert/x509_certificate.h
+@@ -47,7 +47,12 @@ class NET_EXPORT X509Certificate
+     kPublicKeyTypeDSA,
+     kPublicKeyTypeECDSA,
+     kPublicKeyTypeDH,
+-    kPublicKeyTypeECDH
++    kPublicKeyTypeECDH,
++    kPublicKeyTypeDilithium,
++    kPublicKeyTypeFalcon,
++    kPublicKeyTypeMLDSA,
++    kPublicKeyTypeSPHINCSSHA2,
++    kPublicKeyTypeSPHINCSSHAKE
+   };
+ 
+   enum Format {
+diff --git a/net/quic/quic_session_pool.cc b/net/quic/quic_session_pool.cc
+index a7e1ecbe60..3ab2c9cff7 100644
+--- a/net/quic/quic_session_pool.cc
++++ b/net/quic/quic_session_pool.cc
+@@ -347,7 +347,16 @@ QuicSessionPool::QuicCryptoClientConfigOwner::QuicCryptoClientConfigOwner(
+                           base::Unretained(this)));
+   if (quic_session_pool_->ssl_config_service_->GetSSLContextConfig()
+           .PostQuantumKeyAgreementEnabled()) {
+-    config_.set_preferred_groups({SSL_GROUP_X25519_KYBER768_DRAFT00,
++    config_.set_preferred_groups({SSL_GROUP_KYBER512, SSL_GROUP_KYBER768, SSL_GROUP_KYBER1024,
++                                  SSL_GROUP_HQC128, SSL_GROUP_HQC192, SSL_GROUP_HQC256,
++                                  SSL_GROUP_MLKEM512, SSL_GROUP_MLKEM768, SSL_GROUP_MLKEM1024,
++                                  SSL_GROUP_FRODO640AES, SSL_GROUP_FRODO640SHAKE, SSL_GROUP_FRODO976AES, SSL_GROUP_FRODO976SHAKE, SSL_GROUP_FRODO1344AES, SSL_GROUP_FRODO1344SHAKE,
++                                  SSL_GROUP_X25519_KYBER512, SSL_GROUP_X25519_KYBER768_DRAFT00, SSL_GROUP_P256_KYBER512, SSL_GROUP_P384_KYBER768, SSL_GROUP_P521_KYBER1024,
++                                  SSL_GROUP_X25519_HQC128, SSL_GROUP_P256_HQC128, SSL_GROUP_P384_HQC192, SSL_GROUP_P521_HQC256,
++                                  SSL_GROUP_X25519_MLKEM512, SSL_GROUP_P256_MLKEM512, SSL_GROUP_P384_MLKEM768, SSL_GROUP_P521_MLKEM1024,
++                                  SSL_GROUP_X25519_FRODO640AES, SSL_GROUP_X25519_FRODO640SHAKE, SSL_GROUP_P256_FRODO640AES, SSL_GROUP_P256_FRODO640SHAKE, SSL_GROUP_P384_FRODO976AES, SSL_GROUP_P384_FRODO976SHAKE, SSL_GROUP_P521_FRODO1344AES, SSL_GROUP_P521_FRODO1344SHAKE,
++                                  SSL_GROUP_BIKEL1, SSL_GROUP_BIKEL3,
++                                  SSL_GROUP_X25519_BIKEL1, SSL_GROUP_P256_BIKEL1, SSL_GROUP_P384_BIKEL3,
+                                   SSL_GROUP_X25519, SSL_GROUP_SECP256R1,
+                                   SSL_GROUP_SECP384R1});
+   }
+diff --git a/net/socket/ssl_client_socket_impl.cc b/net/socket/ssl_client_socket_impl.cc
+index 236de0c0bb..4595cccd30 100644
+--- a/net/socket/ssl_client_socket_impl.cc
++++ b/net/socket/ssl_client_socket_impl.cc
+@@ -741,8 +741,17 @@ int SSLClientSocketImpl::Init() {
+   }
+ 
+   if (context_->config().PostQuantumKeyAgreementEnabled()) {
+-    static const int kCurves[] = {NID_X25519Kyber768Draft00, NID_X25519,
+-                                  NID_X9_62_prime256v1, NID_secp384r1};
++    static const int kCurves[] = {NID_kyber512, NID_kyber768, NID_kyber1024,
++                                  NID_hqc128, NID_hqc192, NID_hqc256,
++                                  NID_mlkem512, NID_mlkem768, NID_mlkem1024,
++                                  NID_x25519_kyber512, NID_X25519Kyber768Draft00, NID_p256_kyber512, NID_p384_kyber768, NID_p521_kyber1024,
++                                  NID_x25519_hqc128, NID_p256_hqc128, NID_p384_hqc192, NID_p521_hqc256,
++                                  NID_x25519_mlkem512, NID_p256_mlkem512, NID_p384_mlkem768, NID_p521_mlkem1024,
++                                  NID_frodo640aes, NID_frodo640shake, NID_frodo976aes, NID_frodo976shake, NID_frodo1344aes, NID_frodo1344shake,
++                                  NID_x25519_frodo640aes, NID_x25519_frodo640shake, NID_p256_frodo640aes, NID_p256_frodo640shake, NID_p384_frodo976aes, NID_p384_frodo976shake, NID_p521_frodo1344aes, NID_p521_frodo1344shake,
++                                  NID_bikel1, NID_bikel3,
++                                  NID_x25519_bikel1, NID_p256_bikel1, NID_p384_bikel3,
++                                  NID_X25519, NID_X9_62_prime256v1, NID_secp384r1};
+     if (!SSL_set1_curves(ssl_.get(), kCurves, std::size(kCurves))) {
+       return ERR_UNEXPECTED;
+     }
+@@ -842,6 +851,11 @@ int SSLClientSocketImpl::Init() {
+         SSL_SIGN_RSA_PKCS1_SHA256,       SSL_SIGN_ECDSA_SECP384R1_SHA384,
+         SSL_SIGN_RSA_PSS_RSAE_SHA384,    SSL_SIGN_RSA_PKCS1_SHA384,
+         SSL_SIGN_RSA_PSS_RSAE_SHA512,    SSL_SIGN_RSA_PKCS1_SHA512,
++        SSL_SIGN_DILITHIUM2, SSL_SIGN_DILITHIUM3, SSL_SIGN_DILITHIUM5,
++        SSL_SIGN_FALCON512, SSL_SIGN_FALCON1024,
++        SSL_SIGN_MLDSA44, SSL_SIGN_MLDSA65, SSL_SIGN_MLDSA87,
++        SSL_SIGN_SPHINCSSHA2128FSIMPLE, SSL_SIGN_SPHINCSSHA2128SSIMPLE, SSL_SIGN_SPHINCSSHA2192FSIMPLE, SSL_SIGN_SPHINCSSHA2192SSIMPLE, SSL_SIGN_SPHINCSSHA2256FSIMPLE, SSL_SIGN_SPHINCSSHA2256SSIMPLE,
++        SSL_SIGN_SPHINCSSHAKE128FSIMPLE, SSL_SIGN_SPHINCSSHAKE128SSIMPLE, SSL_SIGN_SPHINCSSHAKE192FSIMPLE, SSL_SIGN_SPHINCSSHAKE192SSIMPLE, SSL_SIGN_SPHINCSSHAKE256FSIMPLE, SSL_SIGN_SPHINCSSHAKE256SSIMPLE,
+     };
+     if (!SSL_set_verify_algorithm_prefs(ssl_.get(), kVerifyPrefs,
+                                         std::size(kVerifyPrefs))) {
+diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
+index 6a0e44685b..13e61a12ef 100644
+--- a/third_party/boringssl/BUILD.gn
++++ b/third_party/boringssl/BUILD.gn
+@@ -18,7 +18,7 @@ if (enable_rust) {
+ 
+ # Config for us and everybody else depending on BoringSSL.
+ config("external_config") {
+-  include_dirs = [ "src/include" ]
++  include_dirs = [ "src/include", "src/oqs/include" ]
+   if (is_component_build) {
+     defines = [ "BORINGSSL_SHARED_LIBRARY" ]
+   }
+@@ -54,7 +54,7 @@ config("no_asm_config") {
+ # TODO(crbug.com/1496373): having the headers in all_sources is hacky and should
+ # be fixed. It is caused by issues with the fuzzer target.
+ all_sources = crypto_sources + ssl_sources + pki_sources + pki_internal_headers
+-all_headers = crypto_headers + ssl_headers + pki_headers + pki_internal_headers
++all_headers = crypto_headers + ssl_headers + pki_headers + pki_internal_headers + oqs_headers
+ 
+ if (enable_rust_boringssl) {
+   rust_bindgen("raw_bssl_sys_bindings") {
+@@ -142,6 +142,7 @@ component("boringssl") {
+   sources = all_sources
+   public = all_headers
+   friend = [ ":*" ]
++  libs = [ "//third_party/boringssl/src/oqs/lib/liboqs.a" ]
+   deps = [ "//third_party/boringssl/src/third_party/fiat:fiat_license" ]
+ 
+   # Mark boringssl_asm as a public dependency so the OPENSSL_NO_ASM
