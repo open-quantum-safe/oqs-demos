@@ -39,7 +39,7 @@ ninja && ninja install
 ```shellscript
 cd $CHROMIUM_ROOT
 wget https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/oqs-Linux.patch
-git apply oqs-changes.patch
+git apply oqs-Linux.patch
 ```
 
 ### 6. Generate BoringSSL Build Files for Chromium

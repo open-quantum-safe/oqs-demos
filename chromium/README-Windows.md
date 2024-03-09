@@ -46,7 +46,7 @@ msbuild INSTALL.vcxproj
 Download the [oqs-changes.patch](https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/oqs-Windows.patch) and save it at _%CHROMIUM_ROOT%_, then apply the patch by running
 
 ```bat
-git apply oqs-changes.patch
+git apply oqs-Windows.patch
 ```
 
 ### 6. Generate BoringSSL Build Files for Chromium
