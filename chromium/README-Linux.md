@@ -8,7 +8,7 @@ The rest of the instructions will use **$CHROMIUM_ROOT** to refer to the root di
 
 ```shellscript
 cd $CHROMIUM_ROOT
-git checkout tags/117.0.5863.0
+git checkout tags/124.0.6339.0
 gclient sync
 ```
 
@@ -20,7 +20,7 @@ gclient sync
 cd $CHROMIUM_ROOT/third_party/boringssl/src
 git remote add oqs-bssl https://github.com/open-quantum-safe/boringssl
 git fetch oqs-bssl
-git checkout -b oqs-bssl-master 1ca41b49e9198f510991fb4f350b4a5fd4c1d5ff
+git checkout -b oqs-bssl-master c0a0bb4d1243952819b983129c546f9ae1c03008
 ```
 
 ### 4. Clone and Build liboqs
@@ -28,9 +28,9 @@ git checkout -b oqs-bssl-master 1ca41b49e9198f510991fb4f350b4a5fd4c1d5ff
 Choose a directory to store the liboqs source code and use the `cd` command to move to that directory. We will use ninja to build liboqs.
 
 ```shellscript
-git clone https://github.com/open-quantum-safe/liboqs.git --branch 0.8.0 --single-branch
+git clone https://github.com/open-quantum-safe/liboqs.git && git checkout 890a6aa448598a019e72b5431d8ba8e0a5dbcc85
 cd liboqs && mkdir build && cd build
-cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=$CHROMIUM_ROOT/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF
+cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=$CHROMIUM_ROOT/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF -DCMAKE_BUILD_TYPE=Release
 ninja && ninja install
 ```
 
@@ -38,8 +38,8 @@ ninja && ninja install
 
 ```shellscript
 cd $CHROMIUM_ROOT
-wget https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/oqs-changes.patch
-git apply oqs-changes.patch
+wget https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/oqs-Linux.patch
+git apply oqs-Linux.patch
 ```
 
 ### 6. Generate BoringSSL Build Files for Chromium
@@ -70,5 +70,4 @@ If the build completes successfully, it will create _chrome_ in _$CHROMIUM_ROOT/
 
 ### 8. Miscellaneous
 
-- This guide is published on July 1, 2023, and may be outdated.
-- A certificate chain that includes quantum-safe signatures can only be validated if it terminates with a root certificate that is in the [Chrome Root Store](https://chromium.googlesource.com/chromium/src/+/main/net/data/ssl/chrome_root_store/faq.md).
+- This guide is published on March 8, 2024, and may be outdated.
