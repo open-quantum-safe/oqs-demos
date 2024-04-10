@@ -3,11 +3,11 @@
 # First: global build arguments:
 
 # liboqs build type variant; maximum portability of image:
-ARG LIBOQS_VERSION=0.9.2
+ARG LIBOQS_VERSION=0.10.0
 
 ARG OPENSSL_VERSION=master
 
-ARG OQS_PROVIDER_VERSION=0.5.2
+ARG OQS_PROVIDER_VERSION=0.6.0-rc1
 
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
@@ -26,7 +26,7 @@ ARG SIG_ALG="dilithium3"
 ARG DEFAULT_GROUPS=x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.25.3
+ARG NGINX_VERSION=1.25.4
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j"
@@ -81,7 +81,7 @@ RUN mkdir -p ${OSSLDIR}/ssl && cp /opt/openssl/apps/openssl.cnf ${OSSLDIR}/ssl/ 
 # build oqsprovider
 WORKDIR /opt/oqs-provider
 
-RUN ln -s /opt/nginx/include/oqs ${OSSLDIR}/include && rm -rf build && cmake -DCMAKE_C_STANDARD_LIBRARIES="-ldl" -DOPENSSL_ROOT_DIR=${OSSLDIR} -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B build && cmake --build build && mkdir -p ${OSSLDIR}/lib64/ossl-modules && cp build/lib/oqsprovider.so ${OSSLDIR}/lib64/ossl-modules && rm -rf ${INSTALLDIR}/lib64
+RUN ln -s /opt/nginx/include/oqs ${OSSLDIR}/include && rm -rf build && cmake -DCMAKE_C_STANDARD_LIBRARIES="-ldl -pthread" -DOPENSSL_ROOT_DIR=${OSSLDIR} -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B build && cmake --build build && mkdir -p ${OSSLDIR}/lib64/ossl-modules && cp build/lib/oqsprovider.so ${OSSLDIR}/lib64/ossl-modules && rm -rf ${INSTALLDIR}/lib64
 
 WORKDIR ${INSTALLDIR}
 

@@ -33,6 +33,7 @@ tr:nth-child(even) {
 <p>This nginx server supports</p>
 <ul>
 <li>the TLS1.3 specification with QSC enhancement as specified in <a href="https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-06">https://tools.ietf.org/html/draft-ietf-tls-hybrid-design-06</a>.</li>
+<li>The signature algorithms with prefix mldsa*_ are composite signatures as specified in <a href="https://datatracker.ietf.org/doc/draft-ounsworth-pq-composite-sigs/10">https://datatracker.ietf.org/doc/draft-ounsworth-pq-composite-sigs/10</a>.</li>
 <li>Code points/curve IDs of KEM algorithms are implemented with the highest numbers available for each algorithm listed <a href="https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md">here</a>. </li>
 <li>Code points/OIDs of SIG algorithms are implemented with the highest numbers available for each algorithm as listed <a href="https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md">here</a>. </li>
 </ul>
