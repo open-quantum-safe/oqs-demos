@@ -105,6 +105,7 @@ jobs:
                   docker tag oqs-nginx-img $TARGETNAME/nginx:latest &&
                   docker push $TARGETNAME/nginx:latest 
 
+# Not actively maintained:
   ubuntu_x64_openlitespeed:
     description: Building and pushing OQS-openlitespeed demo Docker images
     docker:
@@ -143,6 +144,7 @@ jobs:
                   docker tag oqs-openlitespeed $TARGETNAME/openlitespeed:latest &&
                   docker push $TARGETNAME/openlitespeed:latest
 
+# Not actively maintained:
   ubuntu_x64_quic:
     description: Building and pushing OQS-QUIC-nginx and OQS-msquic demo Docker images
     docker:
@@ -246,6 +248,7 @@ jobs:
                   docker tag oqs-httpd-img $TARGETNAME/httpd:latest &&
                   docker push $TARGETNAME/httpd:latest 
 
+# Not actively maintained:
   ubuntu_x64_haproxy:
     description: Building OQS-based HAproxy docker image
     docker:
@@ -284,6 +287,7 @@ jobs:
                   docker tag oqs-haproxy-img $TARGETNAME/haproxy:latest &&
                   docker push $TARGETNAME/haproxy:latest 
 
+# Not actively maintained:
   ubuntu_x64_openvpn:
     description: Building OQS-based OpenVPN docker image
     docker:
@@ -321,6 +325,7 @@ jobs:
                   docker tag oqs-openvpn $TARGETNAME/openvpn:latest &&
                   docker push $TARGETNAME/openvpn:latest 
 
+# Not actively maintained:
   ubuntu_x64_mosquitto:
     description: Building OQS-based Mosquitto docker image
     docker:
@@ -363,6 +368,7 @@ jobs:
                   docker tag oqs-mosquitto $TARGETNAME/mosquitto:latest &&
                   docker push $TARGETNAME/mosquitto:latest 
 
+# Not actively maintained:
   ubuntu_x64_wireshark:
     description: Building OQS-based wireshark docker image
     docker:
@@ -393,6 +399,7 @@ jobs:
                 command: |
                   docker push $TARGETNAME/wireshark
 
+# Not actively maintained:
   ubuntu_x64_ngtcp2:
     description: Building OQS-based ngtcp2 docker image
     docker:
@@ -439,6 +446,7 @@ jobs:
                   docker push $TARGETNAME/ngtcp2-server:latest &&
                   docker push $TARGETNAME/ngtcp2-client:latest
 
+# Not actively maintained:
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on
       Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form
@@ -471,6 +479,7 @@ jobs:
                   docker tag oqs-openssh-img $TARGETNAME/openssh:latest &&
                   docker push $TARGETNAME/openssh:latest
 
+# Not actively maintained:
   ubuntu_x64_envoy:
     description: Building and pushing OQS-enabled envoy
     docker:
@@ -525,6 +534,7 @@ jobs:
                   docker tag envoy-oqs $TARGETNAME/envoy:latest &&
                   docker push $TARGETNAME/envoy:latest 
 
+# Not actively maintained:
   ubuntu_x64_h2load:
     description: Building and pushing OQS-h2load demo Docker images
     docker:
@@ -576,22 +586,22 @@ workflows:
           context: openquantumsafe
       #- ubuntu_x64_haproxy:
       #    context: openquantumsafe
-      - ubuntu_x64_openvpn:
-          context: openquantumsafe
+      #- ubuntu_x64_openvpn:
+      #    context: openquantumsafe
       #- ubuntu_x64_mosquitto:
       #    context: openquantumsafe
-      - ubuntu_x64_ngtcp2:
-          context: openquantumsafe
-      - ubuntu_x64_openssh:
-          context: openquantumsafe
+      #- ubuntu_x64_ngtcp2:
+      #    context: openquantumsafe
+      #- ubuntu_x64_openssh:
+      #    context: openquantumsafe
       # Disabled in CI as failing to conclude test properly as per
       # https://github.com/open-quantum-safe/oqs-demos/pull/167#issuecomment-1383673300
       # - ubuntu_x64_openlitespeed:
       #     context: openquantumsafe
-      - ubuntu_x64_wireshark:
-          context: openquantumsafe
+      #- ubuntu_x64_wireshark:
+      #    context: openquantumsafe
       # Disable as it takes too long on OQS CCI plan
       #- ubuntu_x64_envoy:
       #    context: openquantumsafe
-      - ubuntu_x64_h2load:
-          context: openquantumsafe
+      #- ubuntu_x64_h2load:
+      #    context: openquantumsafe
