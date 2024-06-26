@@ -14,7 +14,7 @@ As the level of interest in providing and maintaining these integrations for pub
 
 We are explicitly soliciting contributors to maintain those integrations labelled "unsupported".
 
-Currently supported packages:
+Currently available integrations at their respective support level:
 
 |                  | **Build instructions**                 | **Pre-built Docker image or binary files**                                                                                   | Support? |
 | ---------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -47,8 +47,6 @@ All modifications to this repository are released under the same terms as [liboq
 
 ## Team
 
-The Open Quantum Safe project has been taken over by LinuxFoundation within [PQCA](https://pqca.org). 
-
 ## Contributors to oqs-demos include:
 
     Christian Paquin (Microsoft Research)
@@ -69,4 +67,5 @@ The Open Quantum Safe project has been taken over by LinuxFoundation within [PQC
 
 Most effort in this project has been provided by individual contributors working in their own time and out of personal interest to see how PQ crypto integrates into existing software stacks.
 
-Basic financial support for the development of Open Quantum Safe has been provided by various institutions such as Amazon Web Services and the Canadian Centre for Cyber Security. Also, several research institutions and companies have dedicated programmer time to contribute source code to OQS, including but not limited to University of Waterloo, Amazon Web Services, evolutionQ, Microsoft Research, Cisco Systems, wolfSSL, University of Mauritius, IBM Research, sandboxAQ and Fachhochschule Nordwestschweiz. Research projects which developed specific components of OQS have been supported by various research grants.
+This project is part of [Open Quantum Safe](https://openquantumsafe.org/news/).
+
