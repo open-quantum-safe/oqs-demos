@@ -10,31 +10,32 @@ A repository of instructions (with associated patches and scripts) to enable, th
 
 In most cases, Dockerfiles encode the instructions for ease-of-use: Just do `docker build -t <package_name> .`. For more detailed usage instructions (parameters, algorithms, etc.) refer to the README for each package.  Pre-built Docker images may also be available.
 
-Currently supported packages:
+As the level of interest in providing and maintaining these integrations for public consumption has fallen, the packages are tagged with the github monikers of the persons willing to keep supporting them or the term "unsupported". If that tag is listed, no CI and github support for the integration is available and the code shall be seen as a snapshot that once worked only. 
 
-|                  | **Build instructions**                 | **Pre-built Docker image or binary files**                                                                                   |
-| ---------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl)                             |
-| **Apache httpd** | [Github: oqs-demos/httpd](httpd)       | [Dockerhub: openquantumsafe/httpd](https://hub.docker.com/repository/docker/openquantumsafe/httpd)                           |
-| **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx)                           |
-| **Chromium** | [Github: oqs-demos/chromium](chromium) (limited support) | - |
-| **OpenSSH**      | [Github: oqs-demos/openssh](openssh)   | [Dockerhub: openquantumsafe/openssh](https://hub.docker.com/repository/docker/openquantumsafe/openssh)                       |
-| **Wireshark**    | [Github: oqs-demos/wireshark](wireshark)   | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                       |
-| **Epiphany**     | [Github: oqs-demos/epiphany](epiphany)   | [Dockerhub: openquantumsafe/epiphany](https://hub.docker.com/repository/docker/openquantumsafe/epiphany)                       |
-| **OpenVPN**      | [Github: oqs-demos/openvpn](openvpn)   | [Dockerhub: openquantumsafe/openvpn](https://hub.docker.com/repository/docker/openquantumsafe/openvpn)                       |
-| **ngtcp2**         | [Github: oqs-demos/ngtcp2](ngtcp2)       | Dockerhub: [Server: openquantumsafe/ngtcp2-server](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-server), [Client: openquantumsafe/ngtcp2-client](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-client)                       |
-| **OpenLiteSpeed**         | [Github: oqs-demos/openlitespeed](openlitespeed)       | [ Dockerhub: openquantumsafe/openlitespeed](https://hub.docker.com/repository/docker/openquantumsafe/openlitespeed)                       |
-| **h2load**         | [Github: oqs-demos/h2load](h2load)       | [ Dockerhub: openquantumsafe/h2load](https://hub.docker.com/repository/docker/openquantumsafe/h2load)                       |
+We are explicitly soliciting contributors to maintain those integrations labelled "unsupported".
 
-<!---
-| **QUIC**         | [Github: oqs-demos/quic](quic)       | Dockerhub: [Server: openquantumsafe/nginx-quic](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic), [Client: openquantumsafe/msquic](https://hub.docker.com/repository/docker/openquantumsafe/msquic-reach)                       |
-| **HAproxy**      | [Github: oqs-demos/haproxy](haproxy)   | [Dockerhub: openquantumsafe/haproxy](https://hub.docker.com/repository/docker/openquantumsafe/haproxy)                       | 
-| **Mosquitto**         | [Github: oqs-demos/mosquitto](mosquitto)       | [Dockerhub: openquantumsafe/mosquitto](https://hub.docker.com/repository/docker/openquantumsafe/mosquitto)               |
-| **Envoy**         | [Github: oqs-demos/envoy](envoy)       | [ Dockerhub: openquantumsafe/envoy](https://hub.docker.com/repository/docker/openquantumsafe/envoy)                       |
-| **Unbound**         | [Github: oqs-demos/unbound](unbound)       | [ Dockerhub: openquantumsafe/unbound](https://hub.docker.com/repository/docker/openquantumsafe/unbound)                       |
--->
+Currently available integrations at their respective support level:
 
-You can use the openssl (s_client), curl and GNOME Web/epiphany clients with all algorithm combinations available at the Open Quantum Safe TLS/X.509 interoperability test server at https://test.openquantumsafe.org (set up using `oqs-provider v0.5.2` and `liboqs v0.9.0`). Chromium and [oqs-boringssl](https://github.com/open-quantum-safe/boringssl) are no longer maintained to the same set of algorithms, so are not to be expected to (inter)operate fully with the test server.
+|                  | **Build instructions**                 | **Pre-built Docker image or binary files**                                                                                   | Support? |
+| ---------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
+| **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl)                             | @baentsch
+| **Apache httpd** | [Github: oqs-demos/httpd](httpd)       | [Dockerhub: openquantumsafe/httpd](https://hub.docker.com/repository/docker/openquantumsafe/httpd)                           | @baentsch
+| **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx)                           | @baentsch, @bhess
+| **Chromium** | [Github: oqs-demos/chromium](chromium) (limited support) | - | @pi-314159 |
+| **OpenSSH**      | [Github: oqs-demos/openssh](openssh)   | [Dockerhub: openquantumsafe/openssh](https://hub.docker.com/repository/docker/openquantumsafe/openssh)                       | unsupported
+| **Wireshark**    | [Github: oqs-demos/wireshark](wireshark)   | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                       | unsupported
+| **Epiphany**     | [Github: oqs-demos/epiphany](epiphany)   | [Dockerhub: openquantumsafe/epiphany](https://hub.docker.com/repository/docker/openquantumsafe/epiphany)                       | unsupported
+| **OpenVPN**      | [Github: oqs-demos/openvpn](openvpn)   | [Dockerhub: openquantumsafe/openvpn](https://hub.docker.com/repository/docker/openquantumsafe/openvpn)                       | unsupported
+| **ngtcp2**         | [Github: oqs-demos/ngtcp2](ngtcp2)       | Dockerhub: [Server: openquantumsafe/ngtcp2-server](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-server), [Client: openquantumsafe/ngtcp2-client](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-client)                       | unsupported
+| **OpenLiteSpeed**         | [Github: oqs-demos/openlitespeed](openlitespeed)       | [ Dockerhub: openquantumsafe/openlitespeed](https://hub.docker.com/repository/docker/openquantumsafe/openlitespeed)                       | unsupported
+| **h2load**         | [Github: oqs-demos/h2load](h2load)       | [ Dockerhub: openquantumsafe/h2load](https://hub.docker.com/repository/docker/openquantumsafe/h2load)                       | unsupported
+| **QUIC**         | [Github: oqs-demos/quic](quic)       | Dockerhub: [Server: openquantumsafe/nginx-quic](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic), [Client: openquantumsafe/msquic](https://hub.docker.com/repository/docker/openquantumsafe/msquic-reach)                       | unsupported
+| **HAproxy**      | [Github: oqs-demos/haproxy](haproxy)   | [Dockerhub: openquantumsafe/haproxy](https://hub.docker.com/repository/docker/openquantumsafe/haproxy)                       | unsupported
+| **Mosquitto**         | [Github: oqs-demos/mosquitto](mosquitto)       | [Dockerhub: openquantumsafe/mosquitto](https://hub.docker.com/repository/docker/openquantumsafe/mosquitto)               | unsupported
+| **Envoy**         | [Github: oqs-demos/envoy](envoy)       | [ Dockerhub: openquantumsafe/envoy](https://hub.docker.com/repository/docker/openquantumsafe/envoy)                       | unsupported
+| **Unbound**         | [Github: oqs-demos/unbound](unbound)       | [ Dockerhub: openquantumsafe/unbound](https://hub.docker.com/repository/docker/openquantumsafe/unbound)                       | unsupported
+
+It should be possible to use the openssl (s_client), curl and GNOME Web/epiphany clients with all algorithm combinations available at the Open Quantum Safe TLS/X.509 interoperability test server at https://test.openquantumsafe.org (set up using `oqs-provider v0.6.0` and `liboqs v0.10.0`) but no guarantees are given for software not explicitly labelled with the name of a person offering support for it. Also Chromium and [oqs-boringssl](https://github.com/open-quantum-safe/boringssl) are no longer maintained to the same set of algorithms, so are not to be expected to (inter)operate fully with the test server.
 
 ## Contributing
 
@@ -45,8 +46,6 @@ Contributions are gratefully welcomed. See our [Contributing Guide](https://gith
 All modifications to this repository are released under the same terms as [liboqs](https://github.com/open-quantum-safe/liboqs), namely as described in the file [LICENSE](https://github.com/open-quantum-safe/liboqs/blob/main/LICENSE.txt).
 
 ## Team
-
-The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.stebila.ca/research/) and [Michele Mosca](http://faculty.iqc.uwaterloo.ca/mmosca/)at the University of Waterloo.
 
 ## Contributors to oqs-demos include:
 
@@ -66,8 +65,7 @@ The Open Quantum Safe project is led by [Douglas Stebila](https://www.douglas.st
 
 ## Acknowledgments
 
-Financial support for the development of Open Quantum Safe has been provided by Amazon Web Services and the Canadian Centre for Cyber Security.
+Most effort in this project has been provided by individual contributors working in their own time and out of personal interest to see how PQ crypto integrates into existing software stacks.
 
-We'd like to make a special acknowledgement to the companies who have dedicated programmer time to contribute source code to OQS, including Amazon Web Services, evolutionQ, Microsoft Research, Cisco Systems, IBM Research and Fachhochschule Nordwestschweiz.
+This project is part of [Open Quantum Safe](https://openquantumsafe.org/news/).
 
-Research projects which developed specific components of OQS have been supported by various research grants, including funding from the Natural Sciences and Engineering Research Council of Canada (NSERC); see here and here for funding acknowledgments.
