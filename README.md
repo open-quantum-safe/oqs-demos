@@ -35,7 +35,7 @@ Currently available integrations at their respective support level:
 | **Envoy**         | [Github: oqs-demos/envoy](envoy)       | [ Dockerhub: openquantumsafe/envoy](https://hub.docker.com/repository/docker/openquantumsafe/envoy)                       | unsupported
 | **Unbound**         | [Github: oqs-demos/unbound](unbound)       | [ Dockerhub: openquantumsafe/unbound](https://hub.docker.com/repository/docker/openquantumsafe/unbound)                       | unsupported
 
-It should be possible to use the openssl (s_client), curl and GNOME Web/epiphany clients with all algorithm combinations available at the Open Quantum Safe TLS/X.509 interoperability test server at https://test.openquantumsafe.org (set up using `oqs-provider v0.6.0` and `liboqs v0.10.0`) but no guarantees are given for software not explicitly labelled with the name of a person offering support for it. Also Chromium and [oqs-boringssl](https://github.com/open-quantum-safe/boringssl) are no longer maintained to the same set of algorithms, so are not to be expected to (inter)operate fully with the test server.
+It should be possible to use the openssl (s_client), curl and GNOME Web/epiphany clients with all algorithm combinations available at the Open Quantum Safe TLS/X.509 interoperability test server at https://test.openquantumsafe.org (set up using `oqs-provider v0.6.1` and `liboqs v0.10.1`) but no guarantees are given for software not explicitly labelled with the name of a person offering support for it. Also Chromium and [oqs-boringssl](https://github.com/open-quantum-safe/boringssl) are no longer maintained to the same set of algorithms, so are not to be expected to (inter)operate fully with the test server.
 
 ## Contributing
 
