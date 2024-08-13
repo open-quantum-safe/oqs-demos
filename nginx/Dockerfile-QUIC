@@ -1,4 +1,4 @@
-FROM ubuntu:noble AS build
+FROM ubuntu:latest AS build
 
 ARG NGINX_VERSION=1.26.1
 
@@ -61,7 +61,7 @@ RUN apt update && apt upgrade -y && mkdir /home/build && cd /home/build && \
   --with-ld-opt="-L../boringssl/build/ssl -L../boringssl/build/crypto -Wl,-rpath,/usr/local/lib" && \
   make
 
-FROM ubuntu:noble
+FROM ubuntu:latest
 ARG NGINX_VERSION=1.26.1
 COPY --from=build /home/build/nginx-${NGINX_VERSION}/objs/nginx /usr/sbin/nginx
 COPY --from=build /home/build/nginx-${NGINX_VERSION}/conf /etc/nginx

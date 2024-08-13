@@ -12,10 +12,8 @@ This Docker setup provides an nginx instance configured to use OQS-BoringSSL, wh
 Build the Docker image using the provided Dockerfile:
 
 ```bash
-docker build -f Dockerfile-QUIC .
+docker build -t nginx-quic -f Dockerfile-QUIC .
 ```
-
-After building, remember the SHA256 hash of the image from the last line of the output.
 
 ### Step 2: Run the Docker Image
 
@@ -24,33 +22,64 @@ To run the image:
 - **Without Port Forwarding:**
 
   ```bash
-  docker run -d SHA256_OF_THE_IMAGE
+  docker run -d --name nginx-quic-daemon nginx-quic
   ```
 
 - **With Port Forwarding:**
 
   ```bash
-  docker run -d -p 80:80 -p 443:443 -p 443:443/udp SHA256_OF_THE_IMAGE
+  docker run -d -p 80:80 -p 443:443 -p 443:443/udp --name nginx-quic-daemon nginx-quic
   ```
 
-Replace `SHA256_OF_THE_IMAGE` with the actual SHA256 hash of the Docker image.
-
-### Step 3: Find the Container ID
-
-To find the container ID, use:
-
-```bash
-docker ps
-```
-
-### Step 4: Access the Container
+### Step 3: Access the Container
 
 To access the container, use:
 
 ```bash
-docker exec -it CONTAINER_ID bash
+docker exec -it nginx-quic-daemon bash
 ```
 
-Replace `CONTAINER_ID` with the ID obtained from the previous step.
-
 Inside the container, nginx configuration files are located in `/etc/nginx`, and the nginx executable is at `/usr/sbin/nginx`.
+
+## Configure NGINX Server Block
+
+Make sure to update `server_name`, `ssl_certificate`, `ssl_certificate_key`, and `ssl_ecdh_curve` according to your specific needs and configuration.
+
+```
+    server {
+        listen 443 ssl;
+        listen 443 quic reuseport;
+        listen [::]:443 ssl;
+        listen [::]:443 quic reuseport;
+
+        http2 on;
+        http3 on;
+        ssl_early_data on;
+        quic_retry on;
+        add_header Alt-Svc 'h3=":443"; ma=86400';
+
+        server_name EXAMPLE.COM;
+        ssl_certificate		/PATH/TO/SSL/CERT.PEM;
+        ssl_certificate_key	/PATH/TO/SSL/KEY.PEM;
+
+        # Select a subset of supported key exchange algorithms from
+        # https://github.com/open-quantum-safe/boringssl?tab=readme-ov-file#key-exchange
+        ssl_ecdh_curve 'mlkem1024:bikel3:hqc192:x25519_frodo640shake';
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+        # OPTIONAL SSL CONFIGURATION
+        ssl_session_timeout 1d;
+        ssl_session_cache shared:MozSSL:10m;
+        ssl_session_tickets off;
+        ssl_protocols TLSv1.3;
+        ssl_prefer_server_ciphers off;
+        add_header Strict-Transport-Security "max-age=63072000" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+```
