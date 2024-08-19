@@ -1,4 +1,4 @@
-This directory contains a Dockerfile that builds `curl` using OpenSSL v3 using the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows `curl` to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+This directory contains a Dockerfile that builds `curl` using OpenSSL v3 using the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows `curl` to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3. For instructions on setting up and using curl with HTTP/3 QUIC support, please refer to the [cURL QUIC README](https://github.com/open-quantum-safe/oqs-demos/blob/main/curl/README-QUIC.md).
 
 ## Quick start
 
