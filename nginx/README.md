@@ -1,6 +1,6 @@
 ## Purpose 
 
-This directory contains a Dockerfile that builds nginx using OpenSSL3 with the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows nginx to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+This directory contains a Dockerfile that builds nginx using OpenSSL3 with the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows nginx to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3. For instructions on setting up and using nginx with HTTP/3 QUIC support, please refer to the [NGINX QUIC README](https://github.com/open-quantum-safe/oqs-demos/blob/main/nginx/README-QUIC.md).
 
 ## Getting started
 
