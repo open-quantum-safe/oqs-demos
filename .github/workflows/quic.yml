@@ -23,7 +23,7 @@ jobs:
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_LOGIN }}
-        password: ${{ secrets.DOCKER_PASSORD }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
     - name: Create a shared volume
       run: docker volume create shared-1
       shell: bash
