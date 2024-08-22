@@ -1,0 +1,56 @@
+name: QUIC
+
+on:
+  push:
+    branches: ['main']
+    paths: ['.github/workflows/quic.yml', 'curl/**', 'nginx/**']
+  pull_request:
+    paths: ['.github/workflows/quic.yml', 'curl/**', 'nginx/**']
+  schedule:
+    - cron: '2 7 18,28 * *'
+  workflow_dispatch:
+
+env:
+  TARGET_NAME: openquantumsafe
+
+jobs:
+  test-push:
+    name: Test and push QUIC images
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_LOGIN }}
+        password: ${{ secrets.DOCKER_PASSORD }}
+    - name: Create a shared volume
+      run: docker volume create shared-1
+      shell: bash
+    - name: Generate a quantum-safe certificate chain
+      run: |
+        docker run -v shared-1:/certs $TARGET_NAME/oqs-ossl3 /bin/sh -c "\
+        openssl req -x509 -new -newkey p256_falcon512 -keyout /certs/CA.key -out /certs/CA.crt -nodes -subj '/C=US/O=Open Quantum Safe/CN=OQS Demos' -days 1461 && \
+        openssl req -new -newkey mldsa87 -keyout /certs/server.key -out /certs/server.csr -nodes -subj /CN=host.docker.internal && \
+        openssl x509 -req -in /certs/server.csr -out /certs/server.crt -CA /certs/CA.crt -CAkey /certs/CA.key -CAcreateserial -days 365"
+      shell: bash
+    - name: Build NGINX with QUIC support and start the server
+      working-directory: ./nginx
+      run: |
+        docker build -t $TARGET_NAME/nginx-quic:latest -f Dockerfile-QUIC . && \
+        docker run -d -p 443:443/udp -v shared-1:/certs --name nginx-quic-daemon $TARGET_NAME/nginx-quic:latest && \
+        docker cp ./nginx-conf/nginx-quic.conf nginx-quic-daemon:/etc/nginx/nginx-quic.conf && \
+        docker exec nginx-quic-daemon bash -c "cd /etc/nginx && rm nginx.conf && mv nginx-quic.conf nginx.conf && nginx -s reload"
+      shell: bash
+    - name: Build cURL with QUIC support and test it with the server that's started earlier
+      working-directory: ./curl
+      run: |
+        docker build -t $TARGET_NAME/curl-quic:latest -f Dockerfile-QUIC . && \
+        docker run -v shared-1:/certs --add-host=host.docker.internal:host-gateway $TARGET_NAME/curl-quic:latest \
+        curl --cacert /certs/CA.crt --http3-only https://host.docker.internal --curves hqc192 -vvvv
+      shell: bash
+    - name: Push Docker images to Docker Hub
+      run: |
+        docker push $TARGET_NAME/curl-quic:latest
+        docker push $TARGET_NAME/nginx-quic:latest
+      shell: bash
