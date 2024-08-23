@@ -1,11 +1,11 @@
 FROM ubuntu:latest AS build
 
-ARG NGINX_VERSION=1.26.1
+ARG NGINX_VERSION=1.26.2
 
 RUN apt update && apt upgrade -y && mkdir /home/build && cd /home/build && \
-  apt install -y g++ make git libssl-dev libpcre3 libpcre3-dev build-essential zlib1g-dev wget && \
+  apt install -y g++ make git libpcre3 libpcre3-dev build-essential zlib1g-dev wget && \
 # liboqs deps
-  liboqs_pkgs="cmake gcc ninja-build libunwind-dev pkg-config python3 python3-psutil golang-go" && apt install -y $liboqs_pkgs && \
+  liboqs_pkgs="cmake gcc ninja-build libunwind-dev pkg-config python3" && apt install -y $liboqs_pkgs && \
 # Download liboqs
   git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git && \
 # Download open-quantum-safe/boringssl
@@ -18,9 +18,9 @@ RUN apt update && apt upgrade -y && mkdir /home/build && cd /home/build && \
 # prepare dir
   cp -p ssl/libssl.so /usr/local/lib && cp -p crypto/libcrypto.so /usr/local/lib && cd ../.. && \
 # Download nginx
-  wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -O nginx.tgz && tar xvf nginx.tgz && \
+  wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -O nginx.tgz && tar xvf nginx.tgz && mv nginx-${NGINX_VERSION} nginx && \
 # build nginx
-  cd nginx-${NGINX_VERSION} && \
+  cd nginx && \
   ./configure \
   --prefix=/etc/nginx \
   --sbin-path=/usr/sbin/nginx \
@@ -62,9 +62,8 @@ RUN apt update && apt upgrade -y && mkdir /home/build && cd /home/build && \
   make
 
 FROM ubuntu:latest
-ARG NGINX_VERSION=1.26.1
-COPY --from=build /home/build/nginx-${NGINX_VERSION}/objs/nginx /usr/sbin/nginx
-COPY --from=build /home/build/nginx-${NGINX_VERSION}/conf /etc/nginx
+COPY --from=build /home/build/nginx/objs/nginx /usr/sbin/nginx
+COPY --from=build /home/build/nginx/conf /etc/nginx
 COPY --from=build /usr/local/lib /usr/local/lib
 RUN set -x \
     && apt update && apt upgrade -y && apt install --no-install-recommends --no-install-suggests -y adduser libpcre3 && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/nginx.list \
