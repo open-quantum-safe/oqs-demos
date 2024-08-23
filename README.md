@@ -19,9 +19,9 @@ Currently available integrations at their respective support level:
 
 |                  | **Build instructions**                 | **Pre-built Docker image or binary files**                                                                                   | Support? |
 | ---------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
-| **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl)                             | @baentsch, @pi-314159
+| **curl**         | [Github: oqs-demos/curl](curl)         | [Dockerhub: openquantumsafe/curl](https://hub.docker.com/repository/docker/openquantumsafe/curl), [Dockerhub: openquantumsafe/curl-quic](https://hub.docker.com/repository/docker/openquantumsafe/curl-quic) | @baentsch, @pi-314159
 | **Apache httpd** | [Github: oqs-demos/httpd](httpd)       | [Dockerhub: openquantumsafe/httpd](https://hub.docker.com/repository/docker/openquantumsafe/httpd)                           | @baentsch
-| **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx)                           | @baentsch, @bhess, @pi-314159
+| **nginx**        | [Github: oqs-demos/nginx](nginx)       | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx), [Dockerhub: openquantumsafe/nginx-quic](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic) | @baentsch, @bhess, @pi-314159
 | **Chromium** | [Github: oqs-demos/chromium](chromium) (limited support) | - | @pi-314159 |
 | **OpenSSH**      | [Github: oqs-demos/openssh](openssh)   | [Dockerhub: openquantumsafe/openssh](https://hub.docker.com/repository/docker/openquantumsafe/openssh)                       | unsupported
 | **Wireshark**    | [Github: oqs-demos/wireshark](wireshark)   | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                       | unsupported
