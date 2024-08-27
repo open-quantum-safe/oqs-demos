@@ -22,10 +22,10 @@ ARG SIG_ALG="dilithium3"
 ARG DEFAULT_GROUPS="kyber768:p384_kyber768"
 
 # define the httpd version to include
-ARG HTTPD_VERSION=2.4.57
+ARG HTTPD_VERSION=2.4.62
 
 # define the APR version to include
-ARG APR_VERSION=1.7.4
+ARG APR_VERSION=1.7.5
 
 # define the APR util version to include
 ARG APRU_VERSION=1.6.3
