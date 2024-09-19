@@ -30,8 +30,8 @@ jobs:
     - name: Generate a quantum-safe certificate chain
       run: |
         docker run -v shared-1:/certs $TARGET_NAME/openssl3 /bin/sh -c "\
-        openssl req -x509 -new -newkey p256_falcon512 -keyout /certs/CA.key -out /certs/CA.crt -nodes -subj '/C=US/O=Open Quantum Safe/CN=OQS Demos' -days 1461 && \
-        openssl req -new -newkey mldsa87 -keyout /certs/server.key -out /certs/server.csr -nodes -subj /CN=host.docker.internal && \
+        openssl req -x509 -new -newkey rsa3072_falcon512 -keyout /certs/CA.key -out /certs/CA.crt -nodes -subj '/C=US/O=Open Quantum Safe/CN=OQS Demos' -days 1461 && \
+        openssl req -new -newkey sphincssha2128fsimple -keyout /certs/server.key -out /certs/server.csr -nodes -subj /CN=host.docker.internal && \
         openssl x509 -req -in /certs/server.csr -out /certs/server.crt -CA /certs/CA.crt -CAkey /certs/CA.key -CAcreateserial -days 365"
       shell: bash
     - name: Build NGINX with QUIC support and start the server
