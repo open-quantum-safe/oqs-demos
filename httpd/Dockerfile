@@ -6,7 +6,7 @@
 ARG LIBOQS_TAG=main
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=main
+ARG OQSPROVIDER_TAG=sw-ps-testbed
 
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"

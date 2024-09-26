@@ -4,7 +4,7 @@
 ARG LIBOQS_TAG=main
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=main
+ARG OQSPROVIDER_TAG=sw-ps-testbed
 
 # define the Curl version to be baked in
 ARG CURL_VERSION=7.81.0
