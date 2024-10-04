@@ -1,10 +1,10 @@
 # Multi-stage build: First the full builder image:
 
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=main
+ARG LIBOQS_TAG=0.11.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=sw-ps-testbed
+ARG OQSPROVIDER_TAG=0.7.0-rc1-branch
 
 # define the Curl version to be baked in
 ARG CURL_VERSION=7.81.0

@@ -3,10 +3,10 @@
 # First: global build arguments:
 
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=main
+ARG LIBOQS_TAG=0.11.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=main
+ARG OQSPROVIDER_TAG=0.11.0-rc1-branch
 
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
