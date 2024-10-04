@@ -79,7 +79,7 @@ RUN apk add build-base linux-headers \
             libtool cmake ninja \
             git wget
 
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch 0.11.0-rc1-release https://github.com/open-quantum-safe/oqs-provider.git
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch 0.11.0-rc1-branch https://github.com/open-quantum-safe/oqs-provider.git
 
 # Get openssl32 and liboqs
 COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
