@@ -1,5 +1,17 @@
 # Multi-stage build: First the full builder image:
 
+# define the alpine image version to use
+ARG ALPINE_VERSION=3.20
+
+# define the openssl tag to be used
+ARG OPENSSL_TAG=openssl-3.3.2
+
+# define the liboqs tag to be used
+ARG LIBOQS_TAG=0.11.0
+
+# define the oqsprovider tag to be used
+ARG OQSPROVIDER_TAG=0.7.0
+
 ARG INSTALLDIR_OPENSSL=/opt/openssl32
 ARG INSTALLDIR_LIBOQS=/opt/liboqs
 
@@ -11,15 +23,16 @@ ARG MAKE_DEFINES="-j 8"
 
 ARG SIG_ALG="dilithium3"
 
-FROM alpine:3.13 as buildopenssl
+FROM alpine:${ALPINE_VERSION} as buildopenssl
 # Take in all global args
+ARG OPENSSL_TAG
 ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
 ARG LIBOQS_BUILD_DEFINES
 ARG MAKE_DEFINES
 ARG SIG_ALG
 
-LABEL version="1"
+LABEL version="2"
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apk update && apk upgrade
@@ -31,22 +44,26 @@ RUN apk add build-base linux-headers \
             git wget
 
 # get current openssl sources
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch master https://github.com/openssl/openssl.git
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git
 
 # build OpenSSL3
 WORKDIR /optbuild/openssl
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" ./config shared --prefix=${INSTALLDIR_OPENSSL} && \
-    make ${MAKE_DEFINES} && make install && if [ -d ${INSTALLDIR_OPENSSL}/lib64 ]; then ln -s ${INSTALLDIR_OPENSSL}/lib64 ${INSTALLDIR_OPENSSL}/lib; fi && if [ -d ${INSTALLDIR_OPENSSL}/lib ]; then ln -s ${INSTALLDIR_OPENSSL}/lib ${INSTALLDIR_OPENSSL}/lib64; fi 
+    make ${MAKE_DEFINES} && \
+    make install && \
+    if [ -d ${INSTALLDIR_OPENSSL}/lib64 ]; then ln -s ${INSTALLDIR_OPENSSL}/lib64 ${INSTALLDIR_OPENSSL}/lib; fi && \
+    if [ -d ${INSTALLDIR_OPENSSL}/lib ]; then ln -s ${INSTALLDIR_OPENSSL}/lib ${INSTALLDIR_OPENSSL}/lib64; fi
 
-FROM alpine:3.13 as buildliboqs
+FROM alpine:${ALPINE_VERSION} as buildliboqs
 # Take in all global args
+ARG LIBOQS_TAG
 ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
 ARG LIBOQS_BUILD_DEFINES
 ARG MAKE_DEFINES
 ARG SIG_ALG
 
-LABEL version="1"
+LABEL version="2"
 ENV DEBIAN_FRONTEND noninteractive
 
 # Get all software packages required for builing liboqs:
@@ -58,20 +75,24 @@ RUN apk add build-base linux-headers \
 # Get OpenSSL image (from cache)
 COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs
 
 WORKDIR /optbuild/liboqs
-RUN mkdir build && cd build && cmake -G"Ninja" .. -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && ninja install
+RUN mkdir build && \
+    cd build && \
+    cmake -G"Ninja" .. -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && \
+    ninja install
 
-FROM alpine:3.13 as buildoqsprovider
+FROM alpine:${ALPINE_VERSION} as buildoqsprovider
 # Take in all global args
+ARG OQSPROVIDER_TAG
 ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
 ARG LIBOQS_BUILD_DEFINES
 ARG MAKE_DEFINES
 ARG SIG_ALG
 
-LABEL version="1"
+LABEL version="2"
 ENV DEBIAN_FRONTEND noninteractive
 
 # Get all software packages required for builing oqsprovider
@@ -79,7 +100,7 @@ RUN apk add build-base linux-headers \
             libtool cmake ninja \
             git wget
 
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch main https://github.com/open-quantum-safe/oqs-provider.git
+RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git
 
 # Get openssl32 and liboqs
 COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
@@ -87,7 +108,14 @@ COPY --from=buildliboqs ${INSTALLDIR_LIBOQS} ${INSTALLDIR_LIBOQS}
 
 # build & install provider (and activate by default)
 WORKDIR /optbuild/oqs-provider
-RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR_OPENSSL} -S . -B _build && cmake --build _build  && cmake --install _build && cp _build/lib/oqsprovider.so ${INSTALLDIR_OPENSSL}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = kyber768/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
+RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR_OPENSSL} -S . -B _build && \
+    cmake --build _build && \
+    cmake --install _build && \
+    cp _build/lib/oqsprovider.so ${INSTALLDIR_OPENSSL}/lib64/ossl-modules && \
+    sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
+    sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
+    sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
+    sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = kyber768/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
 
 WORKDIR ${INSTALLDIR_OPENSSL}/bin
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
@@ -98,7 +126,7 @@ RUN set -x; \
     openssl req -x509 -new -newkey ${SIG_ALG} -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:3.13 as dev
+FROM alpine:${ALPINE_VERSION} as dev
 # Take in all global args
 ARG INSTALLDIR_OPENSSL
 ARG SIG_ALG
