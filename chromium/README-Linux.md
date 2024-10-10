@@ -8,33 +8,31 @@ The rest of the instructions will use **$CHROMIUM_ROOT** to refer to the root di
 
 ```shellscript
 cd $CHROMIUM_ROOT
-git checkout tags/124.0.6339.0
+git checkout tags/131.0.6767.0
 gclient sync
 ```
 
-### 2. Install Go and Perl
-
-### 3. Switch to the OQS-BoringSSL
+### 2. Switch to the OQS-BoringSSL
 
 ```shellscript
 cd $CHROMIUM_ROOT/third_party/boringssl/src
 git remote add oqs-bssl https://github.com/open-quantum-safe/boringssl
 git fetch oqs-bssl
-git checkout -b oqs-bssl-master c0a0bb4d1243952819b983129c546f9ae1c03008
+git checkout -b oqs-bssl-master 0599bb559d3be76a98f0940d494411b6a8e0b18e
 ```
 
-### 4. Clone and Build liboqs
+### 3. Clone and Build liboqs
 
 Choose a directory to store the liboqs source code and use the `cd` command to move to that directory. We will use ninja to build liboqs.
 
 ```shellscript
-git clone https://github.com/open-quantum-safe/liboqs.git && git checkout 890a6aa448598a019e72b5431d8ba8e0a5dbcc85
+git clone https://github.com/open-quantum-safe/liboqs.git && git checkout 9aa2e1481cd0c242658ec8e92776741feabec163
 cd liboqs && mkdir build && cd build
 cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=$CHROMIUM_ROOT/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF -DCMAKE_BUILD_TYPE=Release
 ninja && ninja install
 ```
 
-### 5. Enable Quantum-Safe Crypto
+### 4. Enable Quantum-Safe Crypto
 
 ```shellscript
 cd $CHROMIUM_ROOT
@@ -42,14 +40,7 @@ wget https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium
 git apply oqs-Linux.patch
 ```
 
-### 6. Generate BoringSSL Build Files for Chromium
-
-```shellscript
-cd $CHROMIUM_ROOT/third_party/boringssl
-python src/util/generate_build_files.py gn
-```
-
-### 7. Build
+### 5. Build
 
 ```shellscript
 cd $CHROMIUM_ROOT
@@ -68,6 +59,6 @@ blink_symbol_level = 0
 Save and close the configuration file. Last, run `autoninja -C out/Default chrome`.\
 If the build completes successfully, it will create _chrome_ in _$CHROMIUM_ROOT/out/Default_.
 
-### 8. Miscellaneous
+### 6. Miscellaneous
 
-- This guide is published on March 8, 2024, and may be outdated.
+- This guide is published on October 10, 2024, and may be outdated.

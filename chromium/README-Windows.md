@@ -11,13 +11,11 @@ In Command Prompt, run following commands:
 
 ```bat
 cd %CHROMIUM_ROOT%
-git checkout tags/124.0.6339.0
+git checkout tags/131.0.6769.0
 gclient sync
 ```
 
-### 2. Install Go and Perl
-
-### 3. Switch to the OQS-BoringSSL
+### 2. Switch to the OQS-BoringSSL
 
 In Command Prompt, run following commands:
 
@@ -25,40 +23,31 @@ In Command Prompt, run following commands:
 cd %CHROMIUM_ROOT%/third_party/boringssl/src
 git remote add oqs-bssl https://github.com/open-quantum-safe/boringssl
 git fetch oqs-bssl
-git checkout -b oqs-bssl-master c0a0bb4d1243952819b983129c546f9ae1c03008
+git checkout -b oqs-bssl-master 0599bb559d3be76a98f0940d494411b6a8e0b18e
 ```
 
-### 4. Clone and Build liboqs
+### 3. Clone and Build liboqs
 
 Choose a directory to store the liboqs source code and use the `cd` command to move to that directory. We will use msbuild instead of ninja to build liboqs.\
 Start _x64 Native Tools Command Prompt for VS 2022_ (usually it's in _C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC_) and run following commands:
 
 ```bat
-git clone https://github.com/open-quantum-safe/liboqs.git && git checkout 890a6aa448598a019e72b5431d8ba8e0a5dbcc85
+git clone https://github.com/open-quantum-safe/liboqs.git && git checkout 9aa2e1481cd0c242658ec8e92776741feabec163
 cd liboqs && mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=%CHROMIUM_ROOT%/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF -DCMAKE_BUILD_TYPE=Release
 msbuild ALL_BUILD.vcxproj
 msbuild INSTALL.vcxproj
 ```
 
-### 5. Enable Quantum-Safe Crypto
+### 4. Enable Quantum-Safe Crypto
 
-Download the [oqs-changes.patch](https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/oqs-Windows.patch) and save it at _%CHROMIUM_ROOT%_, then apply the patch by running
+Download the [oqs-Windows.patch](https://raw.githubusercontent.com/open-quantum-safe/oqs-demos/main/chromium/oqs-Windows.patch) and save it at _%CHROMIUM_ROOT%_, then apply the patch by running
 
 ```bat
 git apply oqs-Windows.patch
 ```
 
-### 6. Generate BoringSSL Build Files for Chromium
-
-In Command Prompt, run following commands:
-
-```bat
-cd %CHROMIUM_ROOT%/third_party/boringssl
-python src/util/generate_build_files.py gn
-```
-
-### 7. Build
+### 5. Build
 
 In Command Prompt, run following commands:
 
@@ -81,8 +70,7 @@ target_os = "win"
 Save and close the configuration file. Last, run `autoninja -C out/Default chrome` in Command Prompt.\
 If the build completes successfully, it will create _chrome.exe_ in _%CHROMIUM_ROOT%/out/Default_.
 
-### 8. Miscellaneous
+### 6. Miscellaneous
 
 - BIKE key exchange is not supported.
-- This guide was initially published on March 8, 2024, and may be outdated.
-- These instructions have been tested on 64-bit Windows 10 Enterprise with Visual Studio 2022 Community, [Go 1.20.5](https://go.dev/dl/), and [ActiveState Perl 5.36](https://www.activestate.com/products/perl/).
+- This guide was initially published on October 10, 2024, and may be outdated.
