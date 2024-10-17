@@ -37,3 +37,7 @@ Information how to use the image is [available in the separate file USAGE.md](US
 ## Disclaimer
 
 [THIS IS NOT FIT FOR PRODUCTION USE]
+
+## Contributors to oqs-demos include:
+
+
