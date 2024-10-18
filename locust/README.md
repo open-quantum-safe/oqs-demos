@@ -5,7 +5,8 @@ This directory contains a Dockerfile that builds `Locust` using OpenSSL v3 using
 
 1) Be sure to have [docker installed](https://docs.docker.com/install). 
 2) Run `docker build -t oqs-locust:0.0.1 .` to create a post quantum-enabled Locust docker image.
-3) To verify all components perform quantum-safe operations, first start the container with docker compose 
+3) In order to configure endpoints and their weight, modify the file [scerarios/locusfile.py](scenarios/locustfile.py), more information can be found in [USAGE.md](USAGE.md)
+4) To verify all components perform quantum-safe operations, first start the container with docker compose 
 
 ```LOGGER_LEVEL=DEBUG HOST=https://qsc-nginx.discovery.hi.inet:4433 docker compose  up --scale master=1 --scale worker=8```
 4) Connect to the locust web interface at `http://localhost:8189` and start a load test.
@@ -32,7 +33,7 @@ For further reference on the Locust API, please refer to the official documentat
 
 ## Usage
 
-Information how to use the image is [available in the separate file USAGE.md](USAGE.md).
+Information how to use locust: [available in the separate file USAGE.md](USAGE.md).
 
 ## Disclaimer
 
