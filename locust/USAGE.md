@@ -29,4 +29,27 @@ STATISTICS
 CHARTS
 ![img.png](images/img_charts.png)
 
+### HOW TO CREATE A PERFORMANCE TEST
 
+Using Locust, you can configure a performance scenario. For this, you can use the following structure. Note: This is just a basic example, and the real implementation might use subprocess and openssl to handle post-quantum cryptographic curves, as in the actual locustfile.py.
+
+```python
+from locust import HttpUser, TaskSet, task, between
+class UserBehavior(TaskSet):
+    # on_start is called when a Locust starts, before any task is scheduled
+    def on_start(self):
+        self.index()
+        self.about()
+
+    # tasks is a list of tasks that a Locust will choose from to execute
+    # tasks are chosen with the weighted_task_set attribute
+    @task(1)
+    def index(self):
+        self.client.get("/")
+        
+    # in this case the about task is twice as likely to be chosen as the index task 
+    @task(2)
+    def about(self):
+        self.client.get("/about/")
+
+ 
