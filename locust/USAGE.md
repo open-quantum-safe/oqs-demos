@@ -1,16 +1,17 @@
 ## Purpose 
 This directory contains a Dockerfile that builds the [OpenSSL v3](https://github.com/openssl/openssl)  [OQS provider](https://github.com/open-quantum-safe/oqs-provider), and Python3 which allows locust to negotiate quantum-safe keys in TLS 1.3.
 
-## Quick start
-Assuming Docker is [installed](https://docs.docker.com/install) the following command
-
-2) Run `docker build -t oqs-locust:0.0.1 .` to create a post quantum-enabled Locust docker image.
-3) To verify all components perform quantum-safe operations, first start the container with docker compose `LOGGER_LEVEL=DEBUG HOST=https://qsc-nginx.discovery.hi.inet:4433 docker compose  up --scale master=1 --scale worker=8`.
-4) Connect to the locust web interface at `http://localhost:8189` and start a load test.
+## Start
+1) Run `docker build -t oqs-locust:0.0.1 .` to create a post quantum-enabled Locust docker image.
+2) To verify all components perform quantum-safe operations, first start the container with docker compose, setting all environment variables as needed. For example: 
+```
+LOGGER_LEVEL=DEBUG HOST=https://YOUR_QS_HOST:4433 docker compose  up --scale master=1 --scale worker=8
+```
+3) Connect to the locust web interface at `http://localhost:8189` and start a load test.
 
 By default, Locust supports all algorithms supported by the OQS openssl.
 
-Some environments variables yo need to know
+Some environments variables you need to know
 - LOGGER_LEVEL: Set the log level for the locust master and worker. Default is ERROR.
 - HOST: Set the host to test. Default is https://test:4433
 - WORKERS: Set the number of workers. Default is 8. Ideally, the number of workers should be the same as the number of cores in the machine.
@@ -29,9 +30,9 @@ STATISTICS
 CHARTS
 ![img.png](images/img_charts.png)
 
-### HOW TO CREATE A PERFORMANCE TEST
+### HOW TO CREATE A PERFORMANCE SCENARIO IN LOCUST
 
-Using Locust, you can configure a performance scenario. For this, you can use the following structure. Note: This is just a basic example, and the real implementation might use subprocess and openssl to handle post-quantum cryptographic curves, as in the actual locustfile.py.
+Using Locust, you can configure a performance scenario. For this, you can use the following structure. Note: This is just a basic example, and the real implementation might use subprocess and openssl to handle post-quantum cryptographic curves, as in the actual [locustfile.py](scenarios/locustfile.py).
 
 ```python
 from locust import HttpUser, TaskSet, task, between
