@@ -5,25 +5,14 @@ This directory contains a Dockerfile that builds `Locust` using OpenSSL v3 using
 
 1) Be sure to have [docker installed](https://docs.docker.com/install). 
 2) Run `docker build -t oqs-locust:0.0.1 .` to create a post quantum-enabled Locust docker image.
-3) In order to configure endpoints and their weight, modify the file [scerarios/locusfile.py](scenarios/locustfile.py), more information can be found in [USAGE.md](USAGE.md)
+3) In order to configure endpoints and their weight, modify the file [scenarios/locusfile.py](scenarios/locustfile.py), more information can be found in [USAGE.md](USAGE.md)
 4) To verify all components perform quantum-safe operations, first start the container with docker compose 
 
-```LOGGER_LEVEL=DEBUG HOST=https://qsc-nginx.discovery.hi.inet:4433 docker compose  up --scale master=1 --scale worker=8```
+```
+LOGGER_LEVEL=DEBUG HOST=https://qsc-nginx.discovery.hi.inet:4433 docker compose  up --scale master=1 --scale worker=8
+```
 4) Connect to the locust web interface at `http://localhost:8189` and start a load test.
 
-
-## More details
-
-The Dockerfile 
-- Very similar to those we have for oqs-curl. 
-
-Some environments variables you need to know
-- LOGGER_LEVEL: Set the log level for the locust master and worker. Default is ERROR.
-- HOST: Set the host to test. Default is https://test:4433
-- WORKERS: Set the number of workers. The number of workers should be, at least, the same as the number of cores in the machine.
-- MASTER: Set the number of master. Only one master is supported.
-- MASTER_HTTP_PORT: Set the port for the master. Default is 8189.
-- CURVE: Set the curve to use. Default is `kyber768`.
 
 ## Notes on this Version:
 
