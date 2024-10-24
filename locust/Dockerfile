@@ -4,7 +4,7 @@ ARG LIBOQS_TAG=0.11.0
 # define the oqsprovider tag to be used
 ARG OQSPROVIDER_TAG=0.7.0
 
-# define the Curl version to be baked in
+# define the openssl version to be baked in
 ARG OPENSSL_BRANCH=openssl-3.3.2
 
 # Default location where all binaries wind up:
