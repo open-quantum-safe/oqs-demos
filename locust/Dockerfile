@@ -1,11 +1,11 @@
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=main
+ARG LIBOQS_TAG=0.11.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=main
+ARG OQSPROVIDER_TAG=0.7.0
 
 # define the Curl version to be baked in
-ARG OPENSSL_BRANCH="master"
+ARG OPENSSL_BRANCH=openssl-3.3.2
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -25,7 +25,10 @@ ARG DEFAULT_GROUPS="x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:ky
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 16"
 
-FROM alpine:3.20.3
+# Define the Alpine version to be used
+ARG ALPINE_VERSION=3.20.3
+
+FROM alpine:${ALPINE_VERSION}
 # Take in all global args
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
@@ -59,7 +62,9 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
 # build OpenSSL3
 WORKDIR /opt/openssl
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared enable-zlib no-comp --prefix=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install_sw install_ssldirs install_dev;
+    make ${MAKE_DEFINES} && make install_sw install_ssldirs install_dev && \
+    if [ -d ${INSTALLDIR}/lib64 ]; then ln -s ${INSTALLDIR}/lib64 ${INSTALLDIR}/lib; fi && \
+    if [ -d ${INSTALLDIR}/lib ]; then ln -s ${INSTALLDIR}/lib ${INSTALLDIR}/lib64; fi
 
 
 # build liboqs
@@ -96,7 +101,7 @@ RUN set -x; \
 
 # Download current test.openquantumsafe.org test CA cert
 WORKDIR ${INSTALLDIR}
-RUN wget https://test.openquantumsafe.org/CA.crt &&  \
+RUN wget --no-check-certificate https://test.openquantumsafe.org/CA.crt &&  \
     mv CA.crt oqs-testca.pem
 
 # Install Locust

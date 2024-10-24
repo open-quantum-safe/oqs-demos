@@ -9,7 +9,7 @@ This directory contains a Dockerfile that builds `Locust` using OpenSSL v3 using
 4) To verify all components perform quantum-safe operations, first start the container with docker compose 
 
 ```
-LOGGER_LEVEL=DEBUG HOST=https://qsc-nginx.discovery.hi.inet:4433 docker compose  up --scale master=1 --scale worker=8
+LOGGER_LEVEL=DEBUG HOST=https://YOUR_QS_HOST:4433 docker compose  up --scale master=1 --scale worker=8
 ```
 4) Connect to the locust web interface at `http://localhost:8189` and start a load test.
 
