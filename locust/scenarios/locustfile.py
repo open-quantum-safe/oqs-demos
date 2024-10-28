@@ -16,7 +16,7 @@ logger_level = str(os.environ.get("LOGGER_LEVEL"))
 logger = logging.getLogger(__name__)
 logger.setLevel(logger_level)
 
-curve = str(os.environ.get("CURVE"))
+group = str(os.environ.get("GROUP"))
 
 class QscNginxUser(HttpUser):
     wait_time = between(1, 2)
@@ -27,14 +27,14 @@ class QscNginxUser(HttpUser):
 
     def make_post_quantum_request_with_openssl(self, endpoint):
         try:
-            logger.debug(f"Making request to {url}{endpoint} with curve {curve}")
+            logger.debug(f"Making request to {url}{endpoint} with group {group}")
             host_and_port = host + ":" + str(port)
             http_headers="Post-quantum"
-            request_name = f"Curve {curve} {endpoint}"
+            request_name = f"Group {group} {endpoint}"
 
             start = time.time()
             result = subprocess.run(
-                ["openssl", "s_client", "-curves", curve, "-connect", host_and_port, "-ign_eof"],
+                ["openssl", "s_client", "-curves", group, "-connect", host_and_port, "-ign_eof"],
                 input=f"GET {endpoint} HTTP/1.1\r\n"
                       f"Host: {host}\r\n"
                       f"User-Agent: {http_headers}\r\n"
@@ -75,7 +75,7 @@ class QscNginxUser(HttpUser):
             logger.error(f"Error executing OpenSSL command: {e}")
 
     # Change the following methods to use the make_post_quantum_request_with_openssl method where
-    # first parameter is the endpoint and the second parameter is the curve (kyber768 by default)
+    # first parameter is the endpoint and the second parameter is the group (kyber768 by default)
     @task(1)
     def post_quantum_customers(self):
         self.make_post_quantum_request_with_openssl("/customers")

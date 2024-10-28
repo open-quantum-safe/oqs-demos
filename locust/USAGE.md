@@ -5,7 +5,7 @@ This directory contains a Dockerfile that builds the [OpenSSL v3](https://github
 1) Run `docker build -t oqs-locust:0.0.1 .` to create a post quantum-enabled Locust docker image.
 2) To verify all components perform quantum-safe operations, first start the container with docker compose, setting all environment variables as needed. For example: 
 ```
-LOGGER_LEVEL=DEBUG HOST=https://YOUR_QS_HOST:4433 docker compose  up --scale master=1 --scale worker=8
+LOGGER_LEVEL=DEBUG HOST=https://YOUR_QS_HOST:4433 GROUP=kyber1024 docker compose  up --scale worker=8
 ```
 3) Connect to the locust web interface at `http://localhost:8189` and start a load test.
 
@@ -15,8 +15,8 @@ Some environments variables you need to know
 - LOGGER_LEVEL: Set the log level for the locust master and worker. Default is ERROR.
 - HOST: Set the host to test. Default is https://test:4433
 - WORKERS: Set the number of workers. Default is 8. Ideally, the number of workers should be the same as the number of cores in the machine.
-- MASTER: Set the number of master. Default is 1.
 - MASTER_PORT: Set the port for the master. Default is 8189.
+- GROUP: Set the key exchange scheme for openssl. Default is kyber768.
 
 In Locust web server, you need to set 2 variables:
 - Number of users to simulate: The number of users to simulate that will hit the server.

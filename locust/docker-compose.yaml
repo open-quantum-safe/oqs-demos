@@ -9,6 +9,7 @@ services:
      - ${MASTER_HTTP_PORT:-8189}:8089
     environment:
       - LOGGER_LEVEL=${LOGGER_LEVEL:-ERROR}
+      - GROUP=${GROUP:-kyber768}
     logging:
         options:
             max-size: "50m"
@@ -20,7 +21,7 @@ services:
       - .:/mnt/locust
     environment:
       - LOGGER_LEVEL=${LOGGER_LEVEL:-ERROR}
-      - CURVE=${CURVE:-kyber768}
+      - GROUP=${GROUP:-kyber768}
       - HOST=${HOST:-https://test:4433}
     logging:
         options:
