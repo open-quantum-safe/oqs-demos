@@ -34,7 +34,7 @@ class QscNginxUser(HttpUser):
 
             start = time.time()
             result = subprocess.run(
-                ["openssl", "s_client", "-curves", group, "-connect", host_and_port, "-ign_eof"],
+                ["openssl", "s_client", "-groups", group, "-connect", host_and_port, "-ign_eof"],
                 input=f"GET {endpoint} HTTP/1.1\r\n"
                       f"Host: {host}\r\n"
                       f"User-Agent: {http_headers}\r\n"
