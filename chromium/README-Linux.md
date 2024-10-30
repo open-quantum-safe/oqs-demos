@@ -26,8 +26,8 @@ git checkout -b oqs-bssl-master 0599bb559d3be76a98f0940d494411b6a8e0b18e
 Choose a directory to store the liboqs source code and use the `cd` command to move to that directory. We will use ninja to build liboqs.
 
 ```shellscript
-git clone https://github.com/open-quantum-safe/liboqs.git && git checkout 9aa2e1481cd0c242658ec8e92776741feabec163
-cd liboqs && mkdir build && cd build
+git clone https://github.com/open-quantum-safe/liboqs.git && cd liboqs && git checkout 9aa2e1481cd0c242658ec8e92776741feabec163
+mkdir build && cd build
 cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=$CHROMIUM_ROOT/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF -DCMAKE_BUILD_TYPE=Release
 ninja && ninja install
 ```
