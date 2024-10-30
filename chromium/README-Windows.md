@@ -32,8 +32,8 @@ Choose a directory to store the liboqs source code and use the `cd` command to m
 Start _x64 Native Tools Command Prompt for VS 2022_ (usually it's in _C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC_) and run following commands:
 
 ```bat
-git clone https://github.com/open-quantum-safe/liboqs.git && git checkout 9aa2e1481cd0c242658ec8e92776741feabec163
-cd liboqs && mkdir build && cd build
+git clone https://github.com/open-quantum-safe/liboqs.git && cd liboqs && git checkout 9aa2e1481cd0c242658ec8e92776741feabec163
+mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=%CHROMIUM_ROOT%/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF -DCMAKE_BUILD_TYPE=Release
 msbuild ALL_BUILD.vcxproj
 msbuild INSTALL.vcxproj
