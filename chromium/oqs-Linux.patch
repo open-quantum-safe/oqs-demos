@@ -7,7 +7,7 @@ index d3a3436e3d..d7e949a474 100644
  const int kEcdsaKeySizes[] = {163, 192, 224, 233, 256, 283, 384, 409, 521, 571};
  
 +template<typename C, typename T>
-+bool ArrayContains(C && c, T t) { 
++bool ArrayContains(C && c, T t) {
 +    return std::find(std::begin(c), std::end(c), t) != std::end(c);
 +}
 +const X509Certificate::PublicKeyType OqsSigTypes[] = {
