@@ -1,56 +1,40 @@
 # Define the wireshark version to be baked in.
-ARG WIRESHARK_VERSION=3.4.9
+ARG WIRESHARK_VERSION=4.4.1
 
 # Define the SSL naming convention: One of "wolfssl" and "oqs"
 ARG QSC_SSL_FLAVOR="oqs"
 
-FROM ubuntu as intermediate
+FROM ubuntu:24.04 AS intermediate
 ENV DEBIAN_FRONTEND noninteractive
 
 ARG WIRESHARK_VERSION
 ARG QSC_SSL_FLAVOR
 
-RUN apt update && apt upgrade -y
-
 # Get all software packages required for building wireshark:
-RUN apt install -y gcc g++ \
-            libtool \
-            automake \
-            autoconf \
-            cmake \
-            ninja-build \
-            git \
-            curl \
-            perl \
-            flex \
-            bison \
-            2to3 python2-minimal python2 dh-python python-is-python3 \
-            python3 \
-            libssl-dev \
-            libgcrypt-dev \
-            libpcap-dev \
-            libc-ares-dev \
-            qtbase5-dev qttools5-dev-tools qttools5-dev qtmultimedia5-dev \
-            wget \
-            libssh-dev
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        gcc g++ libtool automake autoconf cmake ninja-build git curl perl flex bison \
+        python2-minimal python3 libssl-dev libgcrypt-dev libpcap-dev libc-ares-dev \
+        qtbase5-dev qttools5-dev-tools qtmultimedia5-dev libssh-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Get the source and unpack it.
+# Download and extract Wireshark source
 WORKDIR /tmp
-RUN curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/all-versions/wireshark-${WIRESHARK_VERSION}.tar.xz && tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
+RUN curl -sLO "https://2.na.dl.wireshark.org/src/all-versions/wireshark-${WIRESHARK_VERSION}.tar.xz" && \
+    tar -xf "wireshark-${WIRESHARK_VERSION}.tar.xz"
 
-WORKDIR /tmp/wireshark-${WIRESHARK_VERSION} 
+WORKDIR /tmp/wireshark-${WIRESHARK_VERSION}
 
 COPY wolfssl-qsc.h wolfssl-qsc.h
 
 # Decide on QSC naming/ID mapping
-RUN if [ "x$QSC_SSL_FLAVOR" = "xoqs" ] ; then \
-   wget https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/qsc.h; \
-elif [ "x$QSC_SSL_FLAVOR" = "xwolfssl" ]; then \
-   mv wolfssl-qsc.h qsc.h; \
-else \
-   echo "Unknown naming convention in QSC_SSL_FLAVOR ($QSC_SSL_FLAVOR). Exiting."; \
-   exit 1; \
-fi
+RUN if [ "x$QSC_SSL_FLAVOR" = "xoqs" ]; then \
+       curl -sLO https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/qsc.h; \
+    elif [ "x$QSC_SSL_FLAVOR" = "xwolfssl" ]; then \
+       mv wolfssl-qsc.h qsc.h; \
+    else \
+       echo "Unknown naming convention in QSC_SSL_FLAVOR ($QSC_SSL_FLAVOR). Exiting."; exit 1; \
+    fi
 
 # Patch QSC-specific ids into wireshark code base
 RUN cp qsc.h epan/dissectors && \
@@ -60,16 +44,22 @@ RUN cp qsc.h epan/dissectors && \
    sed -i "s/    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\//    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\/\nQSC_KEMS/g" epan/dissectors/packet-tls-utils.c && \
    sed -i "s/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,\nQSC_SIG_CPS/g" epan/dissectors/packet-tls-utils.c
 
-# Build wireshark
-RUN mkdir -p build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/wireshark .. && ninja && ninja install
+# Build Wireshark
+WORKDIR /tmp/wireshark-${WIRESHARK_VERSION}/build
+RUN cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/wireshark .. && \
+    ninja && ninja install
 
-FROM ubuntu
-ENV DEBIAN_FRONTEND noninteractive
+# Final stage - reduce image size by only copying essential files
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && apt upgrade -y && apt install -y qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools libc-ares2 libqt5multimedia5 pcaputils libssh-dev
+# Install runtime dependencies
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        qt5-qmake qtchooser libqt5multimedia5 libc-ares2 libpcap-dev libssh-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Only retain the ${INSTALLDIR} contents in the final image
+# Copy compiled Wireshark from intermediate stage
 COPY --from=intermediate /opt/wireshark /opt/wireshark
 
-
-CMD /opt/wireshark/bin/wireshark
+CMD ["/opt/wireshark/bin/wireshark"]
