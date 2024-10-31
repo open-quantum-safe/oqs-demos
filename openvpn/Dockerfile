@@ -1,4 +1,4 @@
-# Multi-stage build: First the full builder image:
+# Multi-stage build: First the full builder image
 
 # define the liboqs tag to be used
 ARG LIBOQS_TAG=main
@@ -21,7 +21,7 @@ ARG MAKE_DEFINES="-j 4"
 # Default KEM algorithms to be utilized
 ARG KEM_ALGLIST="kyber768:p384_kyber768"
 
-FROM debian:bullseye as intermediate
+FROM debian:bullseye AS intermediate
 # Take in all global args
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
@@ -35,10 +35,8 @@ LABEL version="2"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update && apt -y upgrade
-
 # Get all software packages required for builing all components:
-RUN apt install -y  \
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
             libtool automake autoconf cmake ninja-build \
             make \
             openssl libssl-dev pkg-config libcap-ng-dev \
@@ -54,8 +52,8 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
     git clone https://github.com/OpenVPN/openvpn.git
 
 # build liboqs
-WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
+WORKDIR /opt/liboqs/build
+RUN cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
 
 # build OpenSSL3
 WORKDIR /opt/openssl
@@ -86,7 +84,7 @@ ARG INSTALLDIR
 ARG OPENVPNDIR
 
 # install basics to run executable and enable network control
-RUN apt update && apt upgrade -y && apt install -y liblzo2-2 libnl-3-200 libnl-genl-3-200 procps net-tools iputils-ping && mkdir -p ${OPENVPNDIR}
+RUN apt-get update && apt-get install -y --no-install-recommends liblzo2-2 libnl-3-200 libnl-genl-3-200 procps net-tools iputils-ping && rm -rf /var/lib/apt/lists/* && mkdir -p ${OPENVPNDIR}
 
 # Only retain the ${INSTALLDIR} contents in the final image
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
