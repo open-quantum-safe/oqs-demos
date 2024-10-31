@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  master:
+    image: oqs-locust:0.0.1
+    volumes:
+      - .:/mnt/locust
+    ports:
+     - ${MASTER_HTTP_PORT:-8189}:8089
+    environment:
+      - LOGGER_LEVEL=${LOGGER_LEVEL:-ERROR}
+      - GROUP=${GROUP:-kyber768}
+    logging:
+        options:
+            max-size: "50m"
+    command: locust -f /mnt/locust/scenarios/locustfile.py --master --host ${HOST:-https://test:4433}
+
+  worker:
+    image: oqs-locust:0.0.1
+    volumes:
+      - .:/mnt/locust
+    environment:
+      - LOGGER_LEVEL=${LOGGER_LEVEL:-ERROR}
+      - GROUP=${GROUP:-kyber768}
+      - HOST=${HOST:-https://test:4433}
+    logging:
+        options:
+            max-size: "50m"
+    command: locust -f /mnt/locust/scenarios/locustfile.py --worker --master-host ${MASTER_HOST:-master}
