@@ -7,7 +7,7 @@ ARG LIBOQS_TAG=main
 ARG OQSPROVIDER_TAG=main
 
 # define the Curl version to be baked in
-ARG CURL_VERSION=7.81.0
+ARG CURL_VERSION=8.10.1
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -40,10 +40,10 @@ LABEL version="4"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apk update && apk upgrade
+RUN apk update
 
 # Get all software packages required for builing all components:
-RUN apk add build-base linux-headers \
+RUN apk add --no-cache build-base linux-headers \
             libtool automake autoconf cmake ninja \
             make \
             openssl openssl-dev \
@@ -57,8 +57,8 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
 
 # build liboqs
-WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
+WORKDIR /opt/liboqs/build
+RUN cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && ninja install
 
 # build OpenSSL3
 WORKDIR /opt/openssl
