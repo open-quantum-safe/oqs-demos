@@ -1,0 +1,376 @@
+diff --git a/content/browser/webauth/virtual_authenticator.cc b/content/browser/webauth/virtual_authenticator.cc
+index 15976ea80e7d6..2d7f9202e99f9 100644
+--- a/content/browser/webauth/virtual_authenticator.cc
++++ b/content/browser/webauth/virtual_authenticator.cc
+@@ -151,10 +151,12 @@ VirtualAuthenticator::ConstructDevice() {
+           attachment_ == device::AuthenticatorAttachment::kPlatform;
+       config.user_verification_succeeds = is_user_verified_;
+       config.advertised_algorithms = {
++          device::CoseAlgorithmIdentifier::kCryDi3,
+           device::CoseAlgorithmIdentifier::kEdDSA,
+           device::CoseAlgorithmIdentifier::kEs256,
+           device::CoseAlgorithmIdentifier::kRs256,
+       };
++      config.none_attestation = true;
+       return std::make_unique<device::VirtualCtap2Device>(state_, config);
+     }
+     default:
+diff --git a/device/fido/BUILD.gn b/device/fido/BUILD.gn
+index e1caf28db8772..285e62c3f790f 100644
+--- a/device/fido/BUILD.gn
++++ b/device/fido/BUILD.gn
+@@ -28,6 +28,8 @@ component("fido") {
+     "cable/websocket_adapter.cc",
+     "cable/websocket_adapter.h",
+     "cbor_extract.cc",
++    "dilithium3_public_key.cc",
++    "dilithium3_public_key.h",
+     "discoverable_credential_metadata.cc",
+     "discoverable_credential_metadata.h",
+     "ed25519_public_key.cc",
+diff --git a/device/fido/attested_credential_data.cc b/device/fido/attested_credential_data.cc
+index 8e00ce77041f7..25e3378605aee 100644
+--- a/device/fido/attested_credential_data.cc
++++ b/device/fido/attested_credential_data.cc
+@@ -12,6 +12,7 @@
+ #include "components/cbor/reader.h"
+ #include "components/device_event_log/device_event_log.h"
+ #include "device/fido/cbor_extract.h"
++#include "device/fido/dilithium3_public_key.h"
+ #include "device/fido/ed25519_public_key.h"
+ #include "device/fido/fido_constants.h"
+ #include "device/fido/fido_parsing_utils.h"
+@@ -153,6 +154,14 @@ AttestedCredentialData::ConsumeFromCtapResponse(
+       return std::nullopt;
+     }
+     public_key = std::move(rsa_key);
++  } else if (key_type == static_cast<int64_t>(CoseKeyTypes::kPQC)) {
++    auto dilithium3_key = Dilithium3PublicKey::ExtractFromCOSEKey(
++        algorithm, public_key_cbor_bytes, public_key_map);
++      if (!dilithium3_key) {
++        FIDO_LOG(ERROR) << "Invalid Dilithium3 public key";
++        return std::nullopt;
++      }
++      public_key = std::move(dilithium3_key);
+   }
+ 
+   if (!public_key) {
+diff --git a/device/fido/dilithium3_public_key.cc b/device/fido/dilithium3_public_key.cc
+new file mode 100644
+index 0000000000000..dd4848efcef66
+--- /dev/null
++++ b/device/fido/dilithium3_public_key.cc
+@@ -0,0 +1,82 @@
++// Copyright 2020 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "device/fido/dilithium3_public_key.h"
++
++#include <utility>
++
++#include "base/memory/raw_ptr_exclusion.h"
++#include "components/cbor/writer.h"
++#include "components/device_event_log/device_event_log.h"
++#include "device/fido/cbor_extract.h"
++#include "device/fido/fido_constants.h"
++#include "third_party/boringssl/src/include/openssl/bn.h"
++#include "third_party/boringssl/src/include/openssl/bytestring.h"
++#include "third_party/boringssl/src/include/openssl/evp.h"
++#include "third_party/boringssl/src/include/openssl/mem.h"
++#include "third_party/boringssl/src/include/openssl/obj.h"
++#include "third_party/boringssl/src/include/openssl/rsa.h"
++
++using device::cbor_extract::IntKey;
++using device::cbor_extract::Is;
++using device::cbor_extract::StepOrByte;
++using device::cbor_extract::Stop;
++
++namespace device {
++
++// static
++std::unique_ptr<PublicKey> Dilithium3PublicKey::ExtractFromCOSEKey(
++    int32_t algorithm,
++    base::span<const uint8_t> cbor_bytes,
++    const cbor::Value::MapValue& map) {
++  // See https://tools.ietf.org/html/rfc8152#section-13.2
++  struct COSEKey {
++    // All the fields below are not a raw_ptr<,,,>, because ELEMENT() treats the
++    // raw_ptr<T> as a void*, skipping AddRef() call and causing a ref-counting
++    // mismatch.
++    RAW_PTR_EXCLUSION const int64_t* kty;
++    // TODO: Only using x for compatibility with existing Sandbox demo. Rename.
++    RAW_PTR_EXCLUSION const std::vector<uint8_t>* x;
++  } cose_key;
++
++  static constexpr cbor_extract::StepOrByte<COSEKey> kSteps[] = {
++      // clang-format off
++      ELEMENT(Is::kRequired, COSEKey, kty),
++      IntKey<COSEKey>(static_cast<int>(CoseKeyKey::kKty)),
++
++      ELEMENT(Is::kRequired, COSEKey, x),
++      IntKey<COSEKey>(static_cast<int>(CoseKeyKey::kEllipticX)),
++
++      Stop<COSEKey>(),
++      // clang-format on
++  };
++
++  if (!cbor_extract::Extract<COSEKey>(&cose_key, kSteps, map) ||
++      *cose_key.kty != static_cast<int64_t>(CoseKeyTypes::kPQC) ||
++      cose_key.x->size() != 1952) { // TODO don't hardcode
++    return nullptr;
++  }
++
++  bssl::UniquePtr<EVP_PKEY> pkey(
++      EVP_PKEY_new_raw_public_key(EVP_PKEY_DILITHIUM3, /*engine=*/nullptr,
++                                  cose_key.x->data(), cose_key.x->size()));
++  if (!pkey) {
++    return nullptr;
++  }
++
++  bssl::ScopedCBB cbb;
++  uint8_t* der_bytes = nullptr;
++  size_t der_bytes_len = 0;
++  CHECK(CBB_init(cbb.get(), /* initial size */ 128) &&
++        EVP_marshal_public_key(cbb.get(), pkey.get()) &&
++        CBB_finish(cbb.get(), &der_bytes, &der_bytes_len));
++
++  std::vector<uint8_t> der_bytes_vec(der_bytes, der_bytes + der_bytes_len);
++  OPENSSL_free(der_bytes);
++
++  return std::make_unique<PublicKey>(algorithm, cbor_bytes,
++                                     std::move(der_bytes_vec));
++}
++
++}  // namespace device
+diff --git a/device/fido/dilithium3_public_key.h b/device/fido/dilithium3_public_key.h
+new file mode 100644
+index 0000000000000..04a28b50e8086
+--- /dev/null
++++ b/device/fido/dilithium3_public_key.h
+@@ -0,0 +1,28 @@
++// Copyright 2020 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef DEVICE_FIDO_DILITHIUM3_PUBLIC_KEY_H_
++#define DEVICE_FIDO_DILITHIUM3_PUBLIC_KEY_H_
++
++#include <stdint.h>
++#include <memory>
++
++#include "base/component_export.h"
++#include "base/containers/span.h"
++#include "components/cbor/values.h"
++#include "device/fido/public_key.h"
++
++namespace device {
++
++class COMPONENT_EXPORT(DEVICE_FIDO) Dilithium3PublicKey {
++ public:
++  static std::unique_ptr<PublicKey> ExtractFromCOSEKey(
++      int32_t algorithm,
++      base::span<const uint8_t> cbor_bytes,
++      const cbor::Value::MapValue& map);
++};
++
++}  // namespace device
++
++#endif  // DEVICE_FIDO_DILITHIUM3_PUBLIC_KEY_H_
+diff --git a/device/fido/fido_constants.h b/device/fido/fido_constants.h
+index 2337b2eeba670..e5948372d1888 100644
+--- a/device/fido/fido_constants.h
++++ b/device/fido/fido_constants.h
+@@ -280,6 +280,7 @@ enum class CoseKeyTypes : int {
+   kOKP = 1,
+   kEC2 = 2,
+   kRSA = 3,
++  kPQC = 7,
+   // kInvalidForTesting is a random 32-bit number used to test unknown key
+   // types.
+   kInvalidForTesting = 146919568,
+@@ -295,6 +296,9 @@ enum class CoseCurves : int {
+ enum class CoseAlgorithmIdentifier : int {
+   kEs256 = -7,
+   kEdDSA = -8,
++  kCryDi2 = -87,
++  kCryDi3 = -88,
++  kCryDi5 = -89,
+   kRs256 = -257,
+   // kInvalidForTesting is a random 32-bit number used to test unknown
+   // algorithms.
+diff --git a/device/fido/virtual_ctap2_device.cc b/device/fido/virtual_ctap2_device.cc
+index 23d52f8ce6643..f5c2904cbcc5c 100644
+--- a/device/fido/virtual_ctap2_device.cc
++++ b/device/fido/virtual_ctap2_device.cc
+@@ -22,6 +22,7 @@
+ #include "components/apdu/apdu_response.h"
+ #include "components/cbor/reader.h"
+ #include "components/cbor/writer.h"
++#include "components/device_event_log/device_event_log.h"
+ #include "crypto/ec_private_key.h"
+ #include "device/fido/authenticator_get_assertion_response.h"
+ #include "device/fido/authenticator_make_credential_response.h"
+@@ -1182,6 +1183,9 @@ std::optional<CtapDeviceResponseCode> VirtualCtap2Device::OnMakeCredential(
+     }
+ 
+     switch (param.algorithm) {
++      case static_cast<int32_t>(CoseAlgorithmIdentifier::kCryDi3):
++        private_key = PrivateKey::FreshDilithium3Key();
++        break;
+       case static_cast<int32_t>(CoseAlgorithmIdentifier::kEs256):
+         private_key = PrivateKey::FreshP256Key();
+         break;
+diff --git a/device/fido/virtual_ctap2_device.h b/device/fido/virtual_ctap2_device.h
+index d3736e90fc6fc..a1f3d5699a1cf 100644
+--- a/device/fido/virtual_ctap2_device.h
++++ b/device/fido/virtual_ctap2_device.h
+@@ -98,7 +98,7 @@ class COMPONENT_EXPORT(DEVICE_FIDO) VirtualCtap2Device
+     bool cred_blob_support = false;
+     // none_attestation causes a "none" attestation statement to be returned
+     // from makeCredential calls.
+-    bool none_attestation = false;
++    bool none_attestation = true;
+     // include_transports_in_attestation_certificate controls whether a
+     // transports extension will be included in the attestation certificate
+     // returned from a makeCredential operation.
+@@ -190,7 +190,6 @@ class COMPONENT_EXPORT(DEVICE_FIDO) VirtualCtap2Device
+     // empty in which case all algorithms except for |kInvalidForTesting| are
+     // enabled.
+     std::vector<device::CoseAlgorithmIdentifier> advertised_algorithms = {
+-        device::CoseAlgorithmIdentifier::kEs256,
+     };
+ 
+     // support_enterprise_attestation indicates whether enterprise attestation
+diff --git a/device/fido/virtual_fido_device.cc b/device/fido/virtual_fido_device.cc
+index 71fa246282170..3dcba485d0163 100644
+--- a/device/fido/virtual_fido_device.cc
++++ b/device/fido/virtual_fido_device.cc
+@@ -14,6 +14,7 @@
+ #include "base/strings/string_number_conversions.h"
+ #include "components/cbor/values.h"
+ #include "components/cbor/writer.h"
++#include "components/device_event_log/device_event_log.h"
+ #include "crypto/ec_private_key.h"
+ #include "crypto/ec_signature_creator.h"
+ #include "crypto/openssl_util.h"
+@@ -103,8 +104,17 @@ class EVPBackedPrivateKey : public VirtualFidoDevice::PrivateKey {
+     size_t sig_len = ret.size();
+     // Ed25519 does not separate out the hash function as an independent
+     // variable so it must be nullptr in that case.
+-    const EVP_MD* digest =
+-        EVP_PKEY_id(pkey_.get()) == EVP_PKEY_ED25519 ? nullptr : EVP_sha256();
++    const EVP_MD* digest;
++    switch (EVP_PKEY_id(pkey_.get())) {
++      case EVP_PKEY_DILITHIUM2:
++      case EVP_PKEY_DILITHIUM3:
++      case EVP_PKEY_DILITHIUM5:
++      case EVP_PKEY_ED25519:
++        digest = nullptr;
++        break;
++      default:
++        digest = EVP_sha256();
++    }
+     CHECK(EVP_DigestSignInit(md_ctx.get(), /*pctx=*/nullptr, digest,
+                              /*e=*/nullptr, pkey_.get()) &&
+           EVP_DigestSign(md_ctx.get(), ret.data(), &sig_len, msg.data(),
+@@ -232,7 +242,47 @@ class Ed25519PrivateKey : public EVPBackedPrivateKey {
+                             EVP_marshal_public_key>(pkey_.get()));
+ 
+     return std::make_unique<PublicKey>(
+-        static_cast<int32_t>(CoseAlgorithmIdentifier::kRs256), *cbor_bytes,
++        static_cast<int32_t>(CoseAlgorithmIdentifier::kEdDSA), *cbor_bytes,
++        std::move(der_bytes));
++  }
++
++ private:
++  static int ConfigureKeyGen(EVP_PKEY_CTX* ctx) { return 1; }
++};
++
++class Dilithium3PrivateKey : public EVPBackedPrivateKey {
++ public:
++  Dilithium3PrivateKey()
++      : EVPBackedPrivateKey(EVP_PKEY_DILITHIUM3, ConfigureKeyGen) {}
++
++  explicit Dilithium3PrivateKey(bssl::UniquePtr<EVP_PKEY> pkey)
++      : EVPBackedPrivateKey(std::move(pkey)) {}
++
++  std::unique_ptr<PublicKey> GetPublicKey() const override {
++    uint8_t public_key[1952]; // TODO don't hardcode
++    size_t public_key_len = sizeof(public_key);
++
++    CHECK(
++        EVP_PKEY_get_raw_public_key(pkey_.get(), public_key, &public_key_len) &&
++        public_key_len == sizeof(public_key));
++
++    cbor::Value::MapValue map;
++    map.emplace(static_cast<int64_t>(CoseKeyKey::kAlg),
++                static_cast<int64_t>(CoseAlgorithmIdentifier::kCryDi3));
++    map.emplace(static_cast<int64_t>(CoseKeyKey::kKty),
++                static_cast<int64_t>(CoseKeyTypes::kPQC));
++    map.emplace(static_cast<int64_t>(CoseKeyKey::kEllipticX),
++                base::span<const uint8_t>(public_key, sizeof(public_key)));
++
++    std::optional<std::vector<uint8_t>> cbor_bytes(
++        cbor::Writer::Write(cbor::Value(std::move(map))));
++
++    std::vector<uint8_t> der_bytes(
++        CBBFunctionToVector<decltype(&EVP_marshal_public_key),
++                            EVP_marshal_public_key>(pkey_.get()));
++
++    return std::make_unique<PublicKey>(
++        static_cast<int32_t>(CoseAlgorithmIdentifier::kCryDi3), *cbor_bytes,
+         std::move(der_bytes));
+   }
+ 
+@@ -311,6 +361,10 @@ VirtualFidoDevice::PrivateKey::FromPKCS8(
+       return std::unique_ptr<PrivateKey>(
+           new Ed25519PrivateKey(std::move(pkey)));
+ 
++    case EVP_PKEY_DILITHIUM3:
++      return std::unique_ptr<PrivateKey>(
++          new Dilithium3PrivateKey(std::move(pkey)));
++
+     default:
+       return std::nullopt;
+   }
+@@ -334,6 +388,12 @@ VirtualFidoDevice::PrivateKey::FreshEd25519Key() {
+   return std::make_unique<Ed25519PrivateKey>();
+ }
+ 
++// static
++std::unique_ptr<VirtualFidoDevice::PrivateKey>
++VirtualFidoDevice::PrivateKey::FreshDilithium3Key() {
++  return std::make_unique<Dilithium3PrivateKey>();
++}
++
+ // static
+ std::unique_ptr<VirtualFidoDevice::PrivateKey>
+ VirtualFidoDevice::PrivateKey::FreshInvalidForTestingKey() {
+diff --git a/device/fido/virtual_fido_device.h b/device/fido/virtual_fido_device.h
+index 22094982e3275..7ad8231961ad8 100644
+--- a/device/fido/virtual_fido_device.h
++++ b/device/fido/virtual_fido_device.h
+@@ -62,6 +62,9 @@ class COMPONENT_EXPORT(DEVICE_FIDO) VirtualFidoDevice : public FidoDevice {
+     // FreshEd25519Key returns a randomly generated Ed25519 PrivateKey.
+     static std::unique_ptr<PrivateKey> FreshEd25519Key();
+ 
++    // FreshDilithium3Key returns a randomly generated Dilithium3 PrivateKey.
++    static std::unique_ptr<PrivateKey> FreshDilithium3Key();
++
+     // FreshInvalidForTestingKey returns a dummy |PrivateKey| with a special
+     // algorithm number that is used to test that unknown public keys are
+     // handled correctly.
+diff --git a/device/fido/win/fake_webauthn_api.cc b/device/fido/win/fake_webauthn_api.cc
+index 699972fffb7b3..7b76fe3afa226 100644
+--- a/device/fido/win/fake_webauthn_api.cc
++++ b/device/fido/win/fake_webauthn_api.cc
+@@ -64,6 +64,8 @@ std::unique_ptr<VirtualFidoDevice::PrivateKey> MakePrivateKey(
+         return VirtualFidoDevice::PrivateKey::FreshRSAKey();
+       case static_cast<LONG>(CoseAlgorithmIdentifier::kEdDSA):
+         return VirtualFidoDevice::PrivateKey::FreshEd25519Key();
++      case static_cast<LONG>(CoseAlgorithmIdentifier::kCryDi3):
++        return VirtualFidoDevice::PrivateKey::FreshDilithium3Key();
+     }
+   }
+   return nullptr;
