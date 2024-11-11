@@ -1,0 +1,49 @@
+#ifndef QSC_H
+#define QSC_H
+
+// (QSC_KEMS)
+#define QSC_KEMS \
+{%- for kem in data.kems if kem.nid and kem.name_group %}
+    { {{- kem.nid -}},"{{- kem.name_group -}}"},\  {# Notice the removal of space before `}` #}
+    {%- if kem.nid_hybrid %}
+    { {{- kem.nid_hybrid -}},"p{{- kem.nid_hybrid|int('16')|length * 64 -}}_{{- kem.name_group -}}"},\
+    {%- endif %}
+    {%- if kem.extra_nids %}
+        {%- for extra in kem.extra_nids.current if extra.nid and extra.hybrid_group %}
+    { {{- extra.nid -}},"{{- extra.hybrid_group -}}_{{- kem.name_group -}}"},\
+        {%- endfor %}
+        {%- for extra in kem.extra_nids.old if extra.nid and extra.hybrid_group %}
+    { {{- extra.nid -}},"{{- extra.hybrid_group -}}_{{- kem.name_group -}}"},\
+        {%- endfor %}
+    {%- endif %}
+{%- endfor %}
+
+
+// (QSC_SIGS)
+#define QSC_SIGS \
+{%- for sig in data.sigs %}
+    {%- for variant in sig.variants if variant.oid and variant.name %}
+    oid_add_from_string("{{- variant.name -}}","{{- variant.oid -}}");\
+    {%- if variant.mix_with %}
+        {%- for mix in variant.mix_with if mix.oid and mix.name %}
+    oid_add_from_string("{{- mix.name -}}_{{- variant.name -}}","{{- mix.oid -}}");\
+        {%- endfor %}
+    {%- endif %}
+    {%- endfor %}
+{%- endfor %}
+
+
+// (QSC_SIG_CPS)
+#define QSC_SIG_CPS \
+{%- for sig in data.sigs %}
+    {%- for variant in sig.variants if variant.code_point and variant.name %}
+    { {{- variant.code_point -}},"{{- variant.name -}}"},\
+    {%- endfor %}
+    {%- for variant in sig.variants if variant.mix_with %}
+        {%- for mix in variant.mix_with if mix.code_point and mix.name %}
+    { {{- mix.code_point -}},"{{- mix.name -}}_{{- variant.name -}}"},\
+        {%- endfor %}
+    {%- endfor %}
+{%- endfor %}
+
+#endif // QSC_H
