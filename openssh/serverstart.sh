@@ -4,7 +4,7 @@
 
 OPTIONS=${OPTIONS:=""}
 
-SIG=${SIG_ALG:="ecdsa-nistp384-dilithium3"}
+SIG=${SIG_ALG:="ecdsa-nistp384-mldsa65"}
 KEM=${KEM_ALG:="ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org"}
 
 # Optionally set port

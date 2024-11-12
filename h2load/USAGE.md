@@ -58,4 +58,4 @@ More information can be found at https://nghttp2.org/documentation/h2load.1.html
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/liboqs#limitations-and-security).

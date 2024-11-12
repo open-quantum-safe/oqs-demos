@@ -18,10 +18,10 @@
 KexAlgorithms ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org
 
 # Host key algorithms, these determine the generated host keys
-HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3
+HostKeyAlgorithms ssh-ecdsa-nistp384-mldsa65
 
 # Those determine the accepted public keys for public key authentication
-PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-mldsa65
 
 # The port sshd is listening on
 Port 2222
@@ -35,7 +35,7 @@ Port 2222
 
 #HostKey /opt/oqs-ssh/ssh_host_ssh-falcon512_key
 
-HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-dilithium3_key
+HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-mldsa65_key
 #HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp256-falcon512_key
 
 #HostKey /opt/oqs-ssh/ssh_host_ssh-rsa3072-falcon512_key

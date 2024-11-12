@@ -2,11 +2,17 @@
 
 # First: global build arguments:
 
+# define the alpine image version to use
+ARG ALPINE_VERSION=3.20
+
+# define the openssl tag to be used
+ARG OPENSSL_TAG=openssl-3.3.2
+
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=main
+ARG LIBOQS_TAG=0.11.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=main
+ARG OQSPROVIDER_TAG=0.7.0
 
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
@@ -24,15 +30,15 @@ ARG SIG_ALG="dilithium3"
 ARG DEFAULT_GROUPS=x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.25.2
+ARG NGINX_VERSION=1.27.2
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j 18"
 
 
-FROM alpine:3.13 as intermediate
-# ToDo: Upgrade possible if https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2 addressed
+FROM alpine:${ALPINE_VERSION} as intermediate
 # Take in global args
+ARG OPENSSL_TAG
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
 ARG BASEDIR
@@ -56,7 +62,7 @@ RUN apk add build-base linux-headers \
 WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
-    git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
+    git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git && \
     wget nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && tar -zxvf nginx-${NGINX_VERSION}.tar.gz;
 
 # build liboqs (static only)
@@ -72,12 +78,25 @@ RUN ./configure --prefix=${INSTALLDIR} \
     make ${MAKE_DEFINES} && make install;
 
 # create openssl.cnf activating oqsprovider & setting default groups
-RUN mkdir -p ${OSSLDIR=}/ssl && cp /opt/openssl/apps/openssl.cnf ${OSSLDIR}/ssl/ && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${OSSLDIR}/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${OSSLDIR}/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${OSSLDIR}/ssl/openssl.cnf && sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" ${OSSLDIR}/ssl/openssl.cnf
+RUN mkdir -p ${OSSLDIR=}/ssl && \
+    cp /opt/openssl/apps/openssl.cnf ${OSSLDIR}/ssl/ && \
+    sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${OSSLDIR}/ssl/openssl.cnf && \
+    sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${OSSLDIR}/ssl/openssl.cnf && \
+    sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${OSSLDIR}/ssl/openssl.cnf && \
+    sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" ${OSSLDIR}/ssl/openssl.cnf
 
 # build oqsprovider
 WORKDIR /opt/oqs-provider
 
-RUN ln -s /opt/nginx/include/oqs ${OSSLDIR}/include && rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OSSLDIR} -DCMAKE_PREFIX_PATH=$INSTALLDIR -S . -B build && cmake --build build && export MODULESDIR=$(find ${OSSLDIR} -name ossl-modules) && cp build/lib/oqsprovider.so $MODULESDIR && mkdir -p ${OSSLDIR}/lib64 && ln -s ${OSSLDIR}/lib/ossl-modules ${OSSLDIR}/lib64 && rm -rf ${INSTALLDIR}/lib64
+RUN ln -s /opt/nginx/include/oqs ${OSSLDIR}/include && \
+    rm -rf build && \
+    cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OSSLDIR} -DCMAKE_PREFIX_PATH=$INSTALLDIR -S . -B build && \
+    cmake --build build && \
+    export MODULESDIR=$(find ${OSSLDIR} -name ossl-modules) && \
+    cp build/lib/oqsprovider.so $MODULESDIR && \
+    mkdir -p ${OSSLDIR}/lib64 && \
+    ln -s ${OSSLDIR}/lib/ossl-modules ${OSSLDIR}/lib64 && \
+    rm -rf ${INSTALLDIR}/lib64
 
 WORKDIR ${INSTALLDIR}
 
@@ -100,7 +119,7 @@ RUN set -x && \
 RUN rm ${OSSLDIR}/bin/*
 
 # second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:3.13
+FROM alpine:${ALPINE_VERSION}
 # Take in global args
 ARG LIBOQS_BUILD_DEFINES
 ARG INSTALLDIR
@@ -108,7 +127,7 @@ ARG SIG_ALG
 ARG BASEDIR
 ARG OSSLDIR=${BASEDIR}/openssl/.openssl
 
-LABEL version="2"
+LABEL version="3"
 
 RUN apk add pcre-dev
 

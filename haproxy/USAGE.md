@@ -1,16 +1,18 @@
-## Purpose 
+## Purpose
 
-This is an [haproxy](https://www.haproxy.org) docker image building on the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows haproxy to negotiate quantum-safe keys and use quantum-safe authentication using TLS 1.3.
+This docker image contains a version of [haproxy](https://www.haproxy.org) configured to also utilize quantum-safe crypto (QSC) operations.
 
-If you built the docker image yourself following the instructions [here](https://github.com/open-quantum-safe/oqs-demos/tree/main/haproxy), exchange the  name of the image from 'openquantumsafe/haproxy' in the examples below suitably.
+To this end, it contains [oqs-provider](https://github.com/open-quantum-safe/oqs-provider) from the [OpenQuantumSafe](https://openquantumsafe.org) project together with the latest OpenSSL v3 code.
+
+As different images providing the same base functionality may be available, e.g., for debug or performance-optimized operations, the image name `openquantumsafe/haproxy` is consistently used in the description below. Be sure to adapt it to the image you want to use.
 
 This image has a built-in non-root user to permit execution without particular [docker privileges](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) such as to allow installation in all types of Kubernetes clusters.
 
 Also built-in is a backend server whose content is served via the load-balancing features of HAproxy. This is a standard lighttpd without any special configuration settings.
 
-## Quick start 
+## Quick start
 
-Assuming Docker is [installed](https://docs.docker.com/install) the following command 
+Assuming Docker is [installed](https://docs.docker.com/install) the following command
 
 ```
 docker run -p 4433:4433 openquantumsafe/haproxy
@@ -18,7 +20,7 @@ docker run -p 4433:4433 openquantumsafe/haproxy
 
 will start up the QSC-enabled haproxy running and listening for quantum-safe crypto protected TLS 1.3 connections on port 4433.
 
-To retrieve a test page, a quantum-safe crypto client program is required. For the most simple use case, use the [docker image for curl](https://hub.docker.com/r/openquantumsafe/curl) with the required quantum-safe crypto enablement. 
+To retrieve a test page, a quantum-safe crypto client program is required. For the most simple use case, use the [docker image for curl](https://hub.docker.com/r/openquantumsafe/curl) with the required quantum-safe crypto enablement.
 
 If you started the OQS-haproxy image on a machine with a registered IP name the required command is simply
 
@@ -36,11 +38,13 @@ docker run --network haproxy-test -it openquantumsafe/curl curl -k https://oqs-h
 
 ## Slightly more advanced usage options
 
-This haproxy image supports all quantum-safe key exchange algorithms [presently supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl#key-exchange). If you want to control with algorithm is actually used, you can request one from the list above to the curl command with the '--curves' parameter, e.g., requesting the hybrid Frodo976Shake variant also configured into the default 'haproxy.cfg' file:
+This haproxy image is capable of supporting all quantum-safe key exchange algorithms listed [here](https://github.com/open-quantum-safe/oqs-provider#algorithms). By default the image is built supporting p384_kyber768 and kyber768. You can select a specific curve on the curl command
 
 ```
-docker run -it openquantumsafe/curl curl -k https://oqs-haproxy:4433  --curves p384_frodo976shake
+docker run -it openquantumsafe/curl curl -k https://oqs-haproxy:4433 --curves kyber768
 ```
+
+You can also change the key exchange mechanisms supported by haproxy when you build the image by setting the KEM_ALGLIST build argument
 
 
 ## Seriously more advanced usage options
@@ -85,14 +89,14 @@ docker run -p 4433:4433 -v `pwd`/server-pki:/opt/haproxy/pki openquantumsafe/hap
 
 ### Creating (test) CA and server certificates
 
-For creating the required keys and certificates, it is also possible to utilize the [openquantumsafe/curl](https://hub.docker.com/r/openquantumsafe/curl) image using standard `openssl` commands. 
+For creating the required keys and certificates, it is also possible to utilize the [openquantumsafe/curl](https://hub.docker.com/r/openquantumsafe/curl) image using standard `openssl` commands.
 
-An example sequence is shown below, using 
+An example sequence is shown below, using
 - 'qteslapi' for signing the CA certificate,
 - 'dilithium2' for signing the server certificate,
 - 'haproxy.server.my.org' as the address of the server for which the certificate is intended.
 
-Instead of 'qteslapi' or 'dilithium2' any of the [quantum safe authentication algorithms presently supported](https://github.com/open-quantum-safe/openssl#authentication) can be used.
+Instead of 'qteslapi' or 'dilithium2' any of the [quantum safe authentication algorithms presently supported](https://github.com/open-quantum-safe/oqs-provider#algorithms) can be used.
 
 ```
 # create and enter directory to contain keys and certificates
@@ -161,8 +165,8 @@ docker run -v `pwd`/server-pki:/opt/tmp -it openquantumsafe/curl \
            curl --cacert /opt/tmp/CA.crt https://haproxy.server.my.org:4433
 ```
 
-Again, if you don't have your own server and want to test on a local machine, start both of them in a docker network (adding the option `--network haproxy-test`). 
+Again, if you don't have your own server and want to test on a local machine, start both of them in a docker network (adding the option `--network haproxy-test`).
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/oqs-provider#component-disclaimer).

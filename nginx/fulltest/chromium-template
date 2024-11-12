@@ -50,7 +50,7 @@ tr:nth-child(even) {
 <h4> Caveats </h4>
 
 <ol>
-<li>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/openssl#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</li>
+<li>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/liboqs#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</li>
 
 </ol>
 

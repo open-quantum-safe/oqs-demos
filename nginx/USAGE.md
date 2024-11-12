@@ -201,4 +201,4 @@ Again, if you don't have your own server and want to test on a local machine, st
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTIVE USE](https://github.com/open-quantum-safe/liboqs#limitations-and-security).

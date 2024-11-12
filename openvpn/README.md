@@ -7,7 +7,7 @@ This directory contains a Dockerfile that builds [OpenVPN](https://openvpn.net) 
 [Install Docker](https://docs.docker.com/install) and run the following commands in this directory:
 
 1. `docker build -t oqs-openvpn .` 
-2. `./test.sh`
+2. `sh ./test.sh`
 
 This will create an image for creating configurations, keys and certificates as well as running openvpn server(s) and client(s) within a docker network performing a quantum-safe key exchange via the Kyber768 (plain and hybrid) KEM algorithm. Any of the other [supported quantum safe KEM algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms) can be set via the parameter `--tls-groups` in the server and client startup scripts, e.g., by setting the "TLS_GROUPS" environment variable.
 
@@ -46,4 +46,4 @@ The default is conservative and known not to overload normal machines. If one ha
 
 Defines the list of QSC KEM algorithms to be supported by default. This value is colon separated and inserted into the system-wide `openssl.cnf` configuration file defining the behaviour of the OpenSSL3 library embedded into the OpenVPN code base.
 
-The default value is "kyber768:p384_kyber768". Any algorithm name(s) [supported by OQS-OpenSSL](https://github.com/open-quantum-safe/openssl/tree/OQS-OpenSSL_1_1_1-stable#key-exchange) can be chosen instead.
+The default value is "kyber768:p384_kyber768". Any algorithm name(s) [supported by OQS OpenSSL 3 provider](https://github.com/open-quantum-safe/oqs-provider#algorithms) can be chosen instead.

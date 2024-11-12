@@ -25,10 +25,10 @@
 KexAlgorithms ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org
 
 # The host key algorithms ssh accepts
-HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3
+HostKeyAlgorithms ssh-ecdsa-nistp384-mldsa65
 
 # The algorithms used for public key authentication
-PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-mldsa65
 
 # Define how unknown host keys should be handled
 #StrictHostKeyChecking ask
@@ -45,7 +45,7 @@ Port 2222
 
 #IdentityFile ~/.ssh/id_ssh-falcon512
 
-IdentityFile ~/.ssh/id_ssh-ecdsa-nistp384-dilithium3
+IdentityFile ~/.ssh/id_ssh-ecdsa-nistp384-mldsa65
 #IdentityFile ~/.ssh/id_ssh-ecdsa-nistp256-falcon512
 
 #IdentityFile ~/.ssh/id_ssh-rsa3072-falcon512

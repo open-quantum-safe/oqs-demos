@@ -1,13 +1,19 @@
 # Multi-stage build: First the full builder image:
 
+# define the alpine image version to use
+ARG ALPINE_VERSION=3.20
+
+# define the openssl tag to be used
+ARG OPENSSL_TAG=openssl-3.3.2
+
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=main
+ARG LIBOQS_TAG=0.11.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=main
+ARG OQSPROVIDER_TAG=0.7.0
 
 # define the Curl version to be baked in
-ARG CURL_VERSION=7.81.0
+ARG CURL_VERSION=8.10.0
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -25,8 +31,9 @@ ARG DEFAULT_GROUPS="x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:ky
 ARG MAKE_DEFINES="-j 4"
 
 
-FROM alpine:3.11 as intermediate
+FROM alpine:${ALPINE_VERSION} as intermediate
 # Take in all global args
+ARG OPENSSL_TAG
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
 ARG CURL_VERSION
@@ -36,7 +43,7 @@ ARG SIG_ALG
 ARG DEFAULT_GROUPS
 ARG MAKE_DEFINES
 
-LABEL version="4"
+LABEL version="5"
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -52,7 +59,7 @@ RUN apk add build-base linux-headers \
 # get all sources
 WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
+    git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
     wget https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxvf curl-${CURL_VERSION}.tar.gz;
 
@@ -62,7 +69,9 @@ RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAK
 
 # build OpenSSL3
 WORKDIR /opt/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
+RUN if [ -d ${INSTALLDIR}/lib64 ]; then ln -s ${INSTALLDIR}/lib64 ${INSTALLDIR}/lib; fi && \
+    if [ -d ${INSTALLDIR}/lib ]; then ln -s ${INSTALLDIR}/lib ${INSTALLDIR}/lib64; fi && \
+    LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
     make ${MAKE_DEFINES} && make install_sw install_ssldirs;
 
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
@@ -70,7 +79,13 @@ ENV PATH="${INSTALLDIR}/bin:${PATH}"
 
 # build & install provider (and activate by default)
 WORKDIR /opt/oqs-provider
-RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && cmake --build _build  && cp _build/lib/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM groups if not set via environment variable\nKDEFAULT_GROUPS = $DEFAULT_GROUPS\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" /opt/oqssa/ssl/openssl.cnf
+RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && cmake --build _build && \
+    cp _build/lib/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && \
+    sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${INSTALLDIR}/ssl/openssl.cnf && \
+    sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${INSTALLDIR}/ssl/openssl.cnf && \
+    sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${INSTALLDIR}/ssl/openssl.cnf && \
+    sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM groups if not set via environment variable\nKDEFAULT_GROUPS = $DEFAULT_GROUPS\n\n# Use this in order to automatically load providers/g" ${INSTALLDIR}/ssl/openssl.cnf && \
+    sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" ${INSTALLDIR}/ssl/openssl.cnf
 
 # generate certificates for openssl s_server, which is what we will test curl against
 ENV OPENSSL=${INSTALLDIR}/bin/openssl
@@ -93,7 +108,8 @@ RUN wget https://letsencrypt.org/certs/isrgrootx1.pem -O oqs-bundle.pem && cat $
 RUN env LDFLAGS=-Wl,-R${INSTALLDIR}/lib64  \
         ./configure --prefix=${INSTALLDIR} \
                     --with-ca-bundle=${INSTALLDIR}/oqs-bundle.pem \
-                    --with-ssl=${INSTALLDIR} && \
+                    --with-ssl=${INSTALLDIR} \
+                    --without-libpsl && \
     make ${MAKE_DEFINES} && make install && mv oqs-bundle.pem ${INSTALLDIR};
 
 # Download current test.openquantumsafe.org test CA cert
@@ -107,7 +123,7 @@ COPY serverstart.sh ${INSTALLDIR}/bin
 CMD ["serverstart.sh"]
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:3.11 as dev
+FROM alpine:${ALPINE_VERSION} as dev
 # Take in all global args
 ARG INSTALLDIR
 ARG SIG_ALG
