@@ -1,10 +1,24 @@
 # Multi-stage build: First the full builder image:
-FROM alpine as intermediate
+
+# define the alpine image version to use
+ARG ALPINE_VERSION=3.20
+
+FROM alpine:${ALPINE_VERSION} as intermediate
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG LIBOQS_TAG=main
-ARG OQSPROVIDER_TAG=main
+# define the openssl tag to be used
+ARG OPENSSL_TAG=openssl-3.3.2
+
+# define the liboqs tag to be used
+ARG LIBOQS_TAG=0.11.0
+
+# define the oqsprovider tag to be used
+ARG OQSPROVIDER_TAG=0.7.0
+
+# define the nghttp2 tag to be used
+ARG NGHTTP2_TAG=v1.64.0
+
 ARG INSTALLDIR=/opt/oqssa
 
 # Update image and apt software 
@@ -19,9 +33,9 @@ WORKDIR /opt
 
 # get all sources
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch master https://github.com/openssl/openssl.git && \
+    git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
-    git clone --depth 1 --branch master  https://github.com/nghttp2/nghttp2.git
+    git clone --depth 1 --branch ${NGHTTP2_TAG} https://github.com/nghttp2/nghttp2.git
 
 # build liboqs
 WORKDIR /opt/liboqs
@@ -30,11 +44,20 @@ RUN mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=${INSTALLDIR
 # build openssl 3
 WORKDIR /opt/openssl
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install_sw install_ssldirs
+    make ${MAKE_DEFINES} && make install_sw install_ssldirs && \
+    if [ -d ${INSTALLDIR}/lib64 ]; then ln -s ${INSTALLDIR}/lib64 ${INSTALLDIR}/lib; fi && \
+    if [ -d ${INSTALLDIR}/lib ]; then ln -s ${INSTALLDIR}/lib ${INSTALLDIR}/lib64; fi
 
 # build & install provider (and activate by default)
 WORKDIR /opt/oqs-provider
-RUN ln -s ../openssl . && cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && cmake --build _build  && cp _build/lib/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:KEM_ALG\n/g" /opt/oqssa/ssl/openssl.cnf && sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = kyber512\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
+RUN ln -s ../openssl . && \
+    cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR} -S . -B _build && \
+    cmake --build _build && \
+    cp _build/lib/oqsprovider.so ${INSTALLDIR}/lib64/ossl-modules && \
+    sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && \
+    sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && \
+    sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:KEM_ALG\n/g" /opt/oqssa/ssl/openssl.cnf && \
+    sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = kyber512\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
 
 
 # build nghttp2
@@ -52,7 +75,7 @@ RUN mkdir /opt/lib && cd /opt/lib && \
         cp /usr/lib/libgcc_s.so.* .
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine as dev
+FROM alpine:${ALPINE_VERSION} as dev
 ENV DEBIAN_FRONTEND=noninteractive
 
 # copy executable
@@ -63,3 +86,5 @@ COPY check_algorithms.sh /usr/local/bin
 COPY --from=intermediate /opt/lib /usr/local/lib
 COPY --from=intermediate /opt/oqssa/lib64/ossl-modules/oqsprovider.so /opt/oqssa/lib64/ossl-modules/oqsprovider.so
 COPY --from=intermediate /opt/oqssa/ssl/openssl.cnf /opt/oqssa/ssl/openssl.cnf
+
+RUN ln -s /opt/oqssa/lib64 /opt/oqssa/lib;

@@ -1,18 +1,21 @@
 # Multi-stage build: First the full builder image:
 
+# define the alpine image version to use
+ARG ALPINE_VERSION=3.20
+
 # Default location where all binaries wind up:
 ARG DEFAULT_INSTALL_DIR=/opt/oqs-ssh
 ARG INSTALL_DIR=${DEFAULT_INSTALL_DIR}
 
 # liboqs version
 # ATTENTION: Changing this could mean that further adaptions in sshd_config and ssh_config are required
-ARG LIBOQS_RELEASE="main"
+ARG LIBOQS_TAG="0.11.0"
 
 # liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
 ARG LIBOQS_BUILD_DEFINES=
 
 # Open quantum safe OpenSSH release
-ARG OQS_OPENSSH_RELEASE="OQS-v8"
+ARG OQS_OPENSSH_RELEASE="OQS-v9"
 
 # openssh build defines (https://github.com/open-quantum-safe/openssh#step-2-build-the-fork)
 ARG OPENSSH_BUILD_OPTIONS=
@@ -25,10 +28,10 @@ ARG MAKE_INSTALL="install-nokeys"
 ARG OQS_USER="oqs"
 ARG OQS_PASSWORD="Pa55W0rd"
 
-FROM alpine:3.13 as intermediate
+FROM alpine:${ALPINE_VERSION} as intermediate
 # Take in all global args
 ARG INSTALL_DIR
-ARG LIBOQS_RELEASE
+ARG LIBOQS_TAG
 ARG LIBOQS_BUILD_DEFINES
 ARG OQS_OPENSSH_RELEASE
 ARG OPENSSH_BUILD_OPTIONS
@@ -36,7 +39,7 @@ ARG MAKE_DEFINES
 ARG MAKE_INSTALL
 ARG OQS_USER
 
-LABEL version="2"
+LABEL version="3"
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -53,13 +56,17 @@ RUN apk add gcc musl-dev linux-headers \
 
 # get all sources
 WORKDIR /opt
-RUN git clone --depth 1 --branch ${LIBOQS_RELEASE} https://github.com/open-quantum-safe/liboqs && \
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OQS_OPENSSH_RELEASE} https://github.com/open-quantum-safe/openssh ossh-src;
 
 # build liboqs static (does not work with shared lib!)
 WORKDIR /opt/liboqs
 # RUN mkdir build && cd build && cmake .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossh-src/oqs && make ${MAKE_DEFINES} && make install
-RUN mkdir build-static && cd build-static && cmake .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossh-src/oqs && make ${MAKE_DEFINES} && make install
+RUN mkdir build-static && \
+    cd build-static && \
+    cmake .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossh-src/oqs && \
+    make ${MAKE_DEFINES} && \
+    make install
 
 # builds and installs OQS-OpenSSH
 WORKDIR /opt/ossh-src
@@ -78,7 +85,7 @@ STOPSIGNAL SIGTERM
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 
-FROM alpine:3.13 as dev
+FROM alpine:${ALPINE_VERSION} as dev
 # Take in all global args
 ARG DEFAULT_INSTALL_DIR
 ARG INSTALL_DIR
@@ -93,7 +100,9 @@ RUN apk update \
 COPY --from=intermediate ${INSTALL_DIR} ${INSTALL_DIR}
 
 # Create a normal user to be able to log into the system via ssh
-RUN addgroup --gid 1000 --system ${OQS_USER} && adduser --uid 1000 --system ${OQS_USER} --ingroup ${OQS_USER} --shell /bin/sh && echo -e -e "${OQS_PASSWORD}\n${OQS_PASSWORD}\n" | passwd ${OQS_USER}
+RUN addgroup --gid 1000 --system ${OQS_USER} && \
+    adduser --uid 1000 --system ${OQS_USER} --ingroup ${OQS_USER} --shell /bin/sh && \
+    echo -e -e "${OQS_PASSWORD}\n${OQS_PASSWORD}\n" | passwd ${OQS_USER}
 
 # Set up login shell: Add ssh-binaries to path for ssh login shell, fix /etc/profile not executing /etc/profile.d/*
 RUN sed -i "s|PATH=|PATH=${INSTALL_DIR}/bin:|;s|/etc/profile.d/\*\.sh|/etc/profile.d/\*|" /etc/profile

@@ -15,10 +15,10 @@ will run the container for the quantum-safe crypto (QSC) protected ngtcp2 client
 ### ngtcp2 client
 To interact with the ngtcp2 server, run
 ```
-client <address> <port> [<URI>][--groups <groups>]
+qtlsclient <address> <port> [<URI>][--groups <groups>]
 ```
 
-For example, `client ngtcp2server 6000 https://ngtcp2server --groups kyber512`
+For example, `qtlsclient ngtcp2server 6000 https://ngtcp2server --groups kyber512`
 
 By default the ngtcp2 client supports X25519, P-256, P-384 and P-521 for key exchange but any plain or hybrid QSC (Quantum-Safe Cryptography) algorithm can be selected. [See list of supported key exchange algorithms here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
@@ -27,8 +27,8 @@ If multiple algorithms are selected, they are separated with colons.
 For example, `--groups=kyber512:p256_bikel1`
 
 
-For more options, run `client --help`
+For more options, run `qtlsclient --help`
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/liboqs#limitations-and-security).

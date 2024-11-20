@@ -8,7 +8,7 @@ rc-service oqs-sshd stop
 # default options
 OPTIONS=${OPTIONS:="-q -o BatchMode=yes -o StrictHostKeyChecking=no"}
 
-SIG=${SIG_ALG:="ecdsa-nistp384-dilithium3"}
+SIG=${SIG_ALG:="ecdsa-nistp384-mldsa65"}
 KEM=${KEM_ALG:="ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org"}
 
 # Generate new identity keys, overwrite old keys

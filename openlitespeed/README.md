@@ -1,3 +1,8 @@
+# DEPRECATED
+
+> [!Warning]
+> This integration is longer supported due to lack of interest and support, if you're interested in revitalizing this demo please submit a PR. A previous update attempt can be found [here](https://github.com/open-quantum-safe/oqs-demos/commit/864f56e0015886e1ad931f82a0bbe93a5045eb1d)
+
 OpenLiteSpeed
 ===============
 [OpenLiteSpeed](https://github.com/litespeedtech/openlitespeed) is the Open Source edition of [LiteSpeed Web Server Enterprise](https://www.litespeedtech.com/). 
@@ -42,4 +47,4 @@ Documentation for using the client docker image is contained in the separate [US
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/liboqs#limitations-and-security).

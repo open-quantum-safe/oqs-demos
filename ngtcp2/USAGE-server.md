@@ -30,11 +30,11 @@ docker exec -it ngtcp2server sh
 
 Once inside the container, start the server using
 ```
-server <address> <port> <private key file> <certificate key file>  --groups=<groups>
+qtlsserver <address> <port> <private key file> <certificate key file>  --groups=<groups>
 ```
 For example,
 ```sh
-server "*" 6000  /certs/server.key /certs/server.crt --groups=kyber512
+qtlsserver "*" 6000  /certs/server.key /certs/server.crt --groups=kyber512
 ```
 
 By default the ngtcp2 server supports X25519, P-256, P-384 and P-521 for key exchange but any plain or hybrid QSC (Quantum-Safe Cryptography) algorithm can be selected. [See list of supported key exchange algorithms here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
@@ -42,9 +42,9 @@ By default the ngtcp2 server supports X25519, P-256, P-384 and P-521 for key exc
 
 If multiple algorithms are selected, they are separated with colons. For example `--groups=kyber512:p256_bikel1`
 
-For more options, run `server --help`
+For more options, run `qtlsserver --help`
 
 
 ## Disclaimer
 
-[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/openssl#limitations-and-security).
+[THIS IS NOT FIT FOR PRODUCTION USE](https://github.com/open-quantum-safe/liboqs#limitations-and-security).

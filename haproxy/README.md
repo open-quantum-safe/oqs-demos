@@ -1,17 +1,11 @@
-## Warning
-
-This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning). Feel free to vote this back into supported state by visiting [the discussion on the topic](https://github.com/orgs/open-quantum-safe/discussions/1602).
-
-## Purpose 
-
-This directory contains a Dockerfile that builds [haproxy](https://www.haproxy.org) with the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows haproxy to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+This directory contains a Dockerfile that builds `haproxy` using OpenSSL v3 using the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows `haproxy` to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
 
 ## Getting started
 
 [Install Docker](https://docs.docker.com/install) and run the following commands in this directory:
 
-1. `docker build --build-arg SIG_ALG=<SIG> --tag oqs-haproxy-img .` (`<SIG>` can be any of the authentication algorithms listed [here](https://github.com/open-quantum-safe/openssl#authentication)). An alternative, simplified build instruction is `docker build -t oqs-haproxy-img .`: This will generate the image with a default QSC algorithm (dilithium3 -- see Dockerfile to change this).
-2. `docker run --detach --rm --name oqs-haproxy -p 4433:4433 oqs-haproxy-img`
+1. `docker build --build-arg SIG_ALG=<SIG> --build-arg KEM_ALGLIST=<KEMS> --tag oqs-haproxy .` (`<SIG>` can be any of the signature authentication algorithms and `<KEMS>` can be a colon separated list of the Key exchange mechanisms listed [here](https://github.com/open-quantum-safe/oqs-provider#algorithms)). An alternative, simplified build instruction is `docker build -t oqs-haproxy .`: This will generate the image with a default QSC algorithm and KEMs (dilithium3, p384_kyber768:kyber768 -- see Dockerfile to change this).
+2. `docker run --detach --rm --name oqs-haproxy -p 4433:4433 oqs-haproxy`
 
 This will start a docker container that has haproxy listening for TLS 1.3 connections on port 4433. Actual data will be served via a load-balanced `lighttpd` server running on ports 8181 and 8182.
 
@@ -24,6 +18,18 @@ Complete information how to use the image is [available in the separate file USA
 
 The Dockerfile provided allows for significant customization of the image built:
 
+### OPENSSL_TAG
+
+Tag of `openssl` release to be used.
+
+### LIBOQS_TAG
+
+Tag of `liboqs` release to be used.
+
+### OQSPROVIDER_TAG
+
+Tag of `oqsprovider` release to be used.
+
 ### LIBOQS_BUILD_DEFINES
 
 This permits changing the build options for the underlying library with the quantum safe algorithms. All possible options are documented [here](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs).
@@ -34,24 +40,14 @@ By default, the image is built such as to have maximum portability regardless of
 
 This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
 
-The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
+The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
+### KEM_ALGLIST
 
-### HAPROXY_PATH
+This defines the quantum-safe key exchange mechanisms to be supported.
 
-This defines the resultant location of the haproxy installation.
+The default value is `p384_kyber768:kyber768` but can be set to any set of colon separated values documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
-By default this is '/opt/haproxy'. It is recommended to not change this. Also, all [usage documentation](USAGE.md) assumes this path.
+### HAPROXY_RELEASE and HAPROXY_MICRO
 
-### HAPROXY_VERSION
-
-This defines the haproxy software version to be build into the image. By default, this is an LTS version.
-
-The default version set is known to work OK but one could try any value available [for download](https://www.haproxy.org/#down).
-
-### MAKE_DEFINES
-
-Allow setting parameters to `make` operation, e.g., '-j nnn' where nnn defines the number of jobs run in parallel during build.
-
-The default is conservative and known not to overload normal machines. If one has a very powerful (many cores, >64GB RAM) machine, passing larger numbers (or only '-j' for maximum parallelism) speeds up building considerably.
-
+These define the version of HAPROXY to use with the default set to 3.0 and 5 respectively to represent haproxy version 3.0.5.

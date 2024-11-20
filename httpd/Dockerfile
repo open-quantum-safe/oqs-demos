@@ -2,11 +2,17 @@
 
 # First: global build arguments: 
 
+# define the alpine image version to use
+ARG ALPINE_VERSION=3.20
+
+# define the openssl tag to be used
+ARG OPENSSL_TAG=openssl-3.3.2
+
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=main
+ARG LIBOQS_TAG=0.11.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=main
+ARG OQSPROVIDER_TAG=0.7.0
 
 # liboqs build type variant; maximum portability of image:
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
@@ -37,10 +43,9 @@ ARG APR_MIRROR="https://dlcdn.apache.org"
 ARG MAKE_DEFINES="-j 2"
 
 
-FROM alpine:3.13 as intermediate
-# ToDo: Upgrade possible if https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2 addressed
-
+FROM alpine:${ALPINE_VERSION} as intermediate
 # Take in global args
+ARG OPENSSL_TAG
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
 ARG LIBOQS_BUILD_DEFINES
@@ -64,29 +69,32 @@ RUN apk add build-base linux-headers \
 # get sources
 WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
-    git clone --depth 1 --branch master https://github.com/openssl/openssl ossl-src && \
+    git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl ossl-src && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider && \
     wget ${APR_MIRROR}/apr/apr-${APR_VERSION}.tar.gz && tar xzvf apr-${APR_VERSION}.tar.gz && \
     wget ${APR_MIRROR}/apr/apr-util-${APRU_VERSION}.tar.gz && tar xzvf apr-util-${APRU_VERSION}.tar.gz && \
     wget --trust-server-names "https://archive.apache.org/dist/httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
-# build OpenSSL3 (latest); make libs detectable to old (APRU) tooling not knowing about lib64
+# build OpenSSL3
 WORKDIR /opt/ossl-src
-RUN ./config no-shared --prefix=${OPENSSL_PATH} && \
+RUN LDFLAGS="-Wl,-rpath -Wl,${OPENSSL_PATH}/lib64" ./config no-shared --prefix=${OPENSSL_PATH} && \
     make ${MAKE_DEFINES} && make install_sw install_ssldirs && \
-    ln -s ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib;
+    if [ -d ${OPENSSL_PATH}/lib64 ]; then ln -s ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib; fi && \
+    if [ -d ${OPENSSL_PATH}/lib ]; then ln -s ${OPENSSL_PATH}/lib ${OPENSSL_PATH}/lib64; fi
 
 # build liboqs (shared lib only for oqsprovider)
 WORKDIR /opt/liboqs
 RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${OPENSSL_PATH} && ninja && ninja install
 
-# create openssl.cnf activating oqsprovider & setting default groups
-RUN sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${OPENSSL_PATH}/ssl/openssl.cnf && sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" ${OPENSSL_PATH}/ssl/openssl.cnf
-
-
 # build oqs-provider
 WORKDIR /opt/oqs-provider
 RUN rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OPENSSL_PATH} -DCMAKE_PREFIX_PATH=${OPENSSL_PATH} -S . -B build && cmake --build build && export MODULESDIR=$(find ${OPENSSL_PATH} -name ossl-modules) && cp build/lib/oqsprovider.so $MODULESDIR/oqsprovider.so
+
+# create openssl.cnf activating oqsprovider & setting default groups
+RUN sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${OPENSSL_PATH}/ssl/openssl.cnf && \
+    sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && \
+    sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && \
+    sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" ${OPENSSL_PATH}/ssl/openssl.cnf
 
 # build httpd
 WORKDIR /opt
@@ -120,9 +128,9 @@ RUN set -x && \
 RUN rm -rf ${HTTPD_PATH}/bin/ab
 
 # second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:3.13
+FROM alpine:${ALPINE_VERSION}
 
-LABEL version="2"
+LABEL version="3"
 
 # Take in global args
 ARG HTTPD_PATH
@@ -138,6 +146,8 @@ COPY --from=intermediate /usr/local/apr/lib  /usr/local/apr/lib
 # Need to copy over OpenSSL3 libs and conf for oqsprovider use
 COPY --from=intermediate ${OPENSSL_PATH}/ssl ${OPENSSL_PATH}/ssl
 COPY --from=intermediate ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib64
+
+RUN ln -s ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib;
 
 COPY httpd-conf/httpd-ssl.conf ${HTTPD_PATH}/httpd-conf/httpd-ssl.conf
 COPY httpd-conf/httpd.conf ${HTTPD_PATH}/httpd-conf/httpd.conf

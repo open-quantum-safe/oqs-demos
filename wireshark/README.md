@@ -1,3 +1,8 @@
+# DEPRECATED
+
+> [!Warning]
+> This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning).
+
 This directory contains a Dockerfile that builds wireshark that is patched to understand the OIDs and codepoints in TLS 1.3 that are supported by OQS-OpenSSL.
 
 ## Quick start

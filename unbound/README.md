@@ -1,6 +1,7 @@
-## Warning
+# DEPRECATED
 
-This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning). Feel free to vote this back into supported state by visiting [the discussion on the topic](https://github.com/orgs/open-quantum-safe/discussions/1602).
+> [!Warning]
+> This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning).
 
 # Unbound(DNS-over-Tls)
 

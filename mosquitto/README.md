@@ -1,16 +1,4 @@
-## Warning
-
-This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning). Feel free to vote this back into supported state by visiting [the discussion on the topic](https://github.com/orgs/open-quantum-safe/discussions/1602).
-
-## Purpose 
-
-This directory contains a Dockerfile that builds [Mosquitto](https://mosquitto.org) with the [OQS OpenSSL 1.1.1 fork](https://github.com/open-quantum-safe/openssl), which allows Mosquitto to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
-
-Work to further experiment with the quantum-safe algorithms using the MQTT protocol is ongoing. Questions, comments, corrections, improvements, and other contributions are welcome, e.g., via issues to this project.
-
-Thanks,
-
---Chia-Chin Chung
+This directory contains a Dockerfile that builds [Mosquitto](https://mosquitto.org) using OpenSSL v3 using the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows `Moquitto` to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
 
 ## Background
 
@@ -22,14 +10,14 @@ The following provides some introduction to Mosquitto:
 
 - Introduction: [Beginners Guide To The MQTT Protocol](http://www.steves-internet-guide.com/mqtt/)
 - Usage: [Mosquitto MQTT Broker](http://www.steves-internet-guide.com/mosquitto-broker/), [Using The Mosquitto_pub and Mosquitto_sub MQTT Client Tools- Examples](http://www.steves-internet-guide.com/mosquitto_pub-sub-clients/)
-- Man pages: [Mosquitto Man Pages](https://mosquitto.org/documentation/) 
+- Man pages: [Mosquitto Man Pages](https://mosquitto.org/documentation/)
 
 ## Getting started
 
 [Install Docker](https://docs.docker.com/install) and run the following simplified commands in this directory:
 
-1. `docker build -t oqs-mosquitto-img .` This will generate the image with a default QSC algorithm (key exchange: kyber512, authentication: dilithium2 -- see Dockerfile to change).
-2. `docker run -it --rm --name oqs-mosquitto -p 8883:8883 oqs-mosquitto-img`
+1. `docker build -t oqs-mosquitto .` This will generate the image with a default QSC algorithm (key exchange: kyber768:p384_kyber768, authentication: dilithium3 -- see Dockerfile to change).
+2. `docker run -it --rm --name oqs-mosquitto -p 8883:8883 oqs-mosquitto`
 
 This will start a docker container that has mosquitto MQTT broker listening for TLS 1.3 connections on port 8883.
 
@@ -41,17 +29,17 @@ Complete information on how to use the image is [available in the separate file 
 
 The Dockerfile allows for significant customization of the built image:
 
-### SOURCE_PATH
+### OPENSSL_TAG
 
-This defines the resultant location of the OQS-OpenSSL, liboqs and Mosquitto installatiions.
+Tag of `openssl` release to be used.
 
-By default this is '/usr/local/src'.
+### LIBOQS_TAG
 
-### OPENSSL_LIB_PATH
+Tag of `liboqs` release to be used.
 
-This defines the resultant location of the OQS-OpenSSL library installatiion.
+### OQSPROVIDER_TAG
 
-By default this is '/usr/local/ssl'.
+Tag of `oqsprovider` release to be used.
 
 ### LIBOQS_BUILD_DEFINES
 
@@ -59,23 +47,21 @@ This permits changing the build options for the underlying library with the quan
 
 By default, the image is built such as to have maximum portability regardless of CPU type and optimizations available, i.e. to run on the widest possible range of cloud machines.
 
-### OPENSSL_BUILD_DEFINES
-
-This permits changing the build options for the underlying openssl library containing the quantum safe algorithms. 
-
-The default setting defines a range of default algorithms suggested for key exchange. For more information see [the documentation](https://github.com/open-quantum-safe/openssl#default-algorithms-announced).
-
-### KEM_ALG
-
-This defines the quantum-safe cryptographic key exchange algorithm.
-
-The default value is 'kyber512', but this value can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#key-exchange).
-
 ### SIG_ALG
 
-This defines the quantum-safe cryptographic signature algorithm for the internally generated server and client certificates.
+This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
 
-The default value is 'dilithium2' but can be set to any value documented [here](https://github.com/open-quantum-safe/openssl#authentication).
+The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
+
+### KEM_ALGLIST
+
+This defines the quantum-safe key exchange mechanisms to be supported.
+
+The default value is `p384_kyber768:kyber768` but can be set to any set of colon separated values documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
+
+### MOSQUITTO_TAG
+
+These define the version of Mosquitto to use, currently set to v2.0.20
 
 ### BROKER_IP
 
@@ -100,7 +86,3 @@ By default this is 'localhost'.
 This defines which shell script to use. There are three shell scripts(broker-start.sh, publisher-start.sh, and subscriber-start.sh) that can be used in this directory.
 
 By default this is 'broker-start.sh'.
-
-## License
-
-All modifications to this repository are released under the same terms as OpenSSL, namely as described in the file [LICENSE](https://github.com/open-quantum-safe/openssl/blob/OQS-OpenSSL_1_1_1-stable/LICENSE).

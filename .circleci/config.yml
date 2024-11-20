@@ -35,13 +35,19 @@ jobs:
       - run:
           name: Build Provider
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . 
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-ossl3-img . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main -t oqs-ossl3-img-main .
           working_directory: openssl3
       - run:
           name: Spot-test Provider -- One baseline and one hybrid QSC alg
           command: |
             docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "openssl list -providers; /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber768 --CAfile /opt/openssl32/bin/CA.crt" &&
             docker run --rm --name oqs-ossl3 oqs-ossl3-img sh -c "KEM_ALG=p521_frodo1344aes /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/openssl32/bin/CA.crt"
+      - run:
+          name: Spot-test Provider -- One baseline and one hybrid QSC alg (main/master)
+          command: |
+            docker run --rm --name oqs-ossl3-main oqs-ossl3-img-main sh -c "openssl list -providers; /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber768 --CAfile /opt/openssl32/bin/CA.crt" &&
+            docker run --rm --name oqs-ossl3-main oqs-ossl3-img-main sh -c "KEM_ALG=p521_frodo1344aes /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/openssl32/bin/CA.crt"
       - when:
           condition:
             or:
@@ -73,17 +79,23 @@ jobs:
       - run:
           name: Build OQS nginx
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-nginx-img . 
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-nginx-img . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main -t oqs-nginx-img-main . 
           working_directory: nginx
       - run:
           name: Build curl with generic liboqs
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic" -t oqs-curl-generic . 
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic" -t oqs-curl-generic . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main -t oqs-curl-generic-main . 
           working_directory: curl
       - run:
           name: Test Curl with generic liboqs
           command: |
-            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl-generic perftest.sh 
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl-generic perftest.sh
+      - run:
+          name: Test Curl with generic liboqs (main/master)
+          command: |
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl-generic-main perftest.sh 
       - run:
           name: Test nginx and curl generic
           command: |
@@ -91,6 +103,13 @@ jobs:
             docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx-img &&
             sleep 2 &&
             docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
+      - run:
+          name: Test nginx and curl generic (main/master)
+          command: |
+            docker network create nginx-test-main &&
+            docker run --network nginx-test-main --detach --rm --name oqs-nginx-main oqs-nginx-img-main &&
+            sleep 2 &&
+            docker run --network nginx-test-main oqs-curl-generic-main curl -k https://oqs-nginx-main:4433
       - when:
           condition:
             or:
@@ -211,7 +230,8 @@ jobs:
       - run:
           name: Build Apache httpd
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-httpd-img . 
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-httpd-img . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main -t oqs-httpd-img-main .
           working_directory: httpd
       - run:
           name: Build Curl (dev)
@@ -219,12 +239,17 @@ jobs:
             # The CircleCI executor offers 35 cores, but using
             # all of them might exhaust memory
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-curl . &&
-            docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . 
+            docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main -t oqs-curl-main . &&
           working_directory: curl
       - run:
           name: Test Curl (dev)
           command: |
-            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh 
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl perftest.sh
+      - run:
+          name: Test Curl (dev) (main/master)
+          command: |
+            docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it oqs-curl-main perftest.sh
       - run:
           name: Test httpd using curl (dev)
           command: |
@@ -232,6 +257,13 @@ jobs:
             docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd-img &&
             sleep 2 &&
             docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433 --curves kyber768
+      - run:
+          name: Test httpd using curl (dev) (main/master)
+          command: |
+            docker network create httpd-test-main &&
+            docker run --network httpd-test-main --detach --rm --name oqs-httpd-main oqs-httpd-img-main &&
+            sleep 2 &&
+            docker run --network httpd-test-main oqs-curl-main curl -k https://oqs-httpd:4433 --curves kyber768
       - when:
           condition:
             or:
@@ -287,7 +319,6 @@ jobs:
                   docker tag oqs-haproxy-img $TARGETNAME/haproxy:latest &&
                   docker push $TARGETNAME/haproxy:latest 
 
-# Not actively maintained:
   ubuntu_x64_openvpn:
     description: Building OQS-based OpenVPN docker image
     docker:
@@ -304,9 +335,19 @@ jobs:
           command: echo $DOCKER_PASSWORD | docker login --username $DOCKER_LOGIN
             --password-stdin
       - run:
+          name: Build OpenVPN (main/master)
+          command: |
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main --build-arg OPENVPN_TAG=master -t oqs-openvpn . 
+          working_directory: openvpn
+      - run:
+          name: Test OpenVPN using local docker network (main/master)
+          command: |
+            ./test.sh dilithium5 p521_kyber1024
+          working_directory: openvpn
+      - run:
           name: Build OpenVPN
           command: |
-            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-openvpn . 
+            docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-openvpn .
           working_directory: openvpn
       - run:
           name: Test OpenVPN using local docker network
@@ -399,7 +440,6 @@ jobs:
                 command: |
                   docker push $TARGETNAME/wireshark
 
-# Not actively maintained:
   ubuntu_x64_ngtcp2:
     description: Building OQS-based ngtcp2 docker image
     docker:
@@ -421,6 +461,12 @@ jobs:
             docker build -t oqs-ngtcp2-client -f Dockerfile-client . 
           working_directory: ngtcp2
       - run:
+          name: Build ngtcp2 server and client (main/master)
+          command: |
+            docker build --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main --build-arg NGHTTP3_TAG=main --build-arg NGTCP2_TAG=main -t oqs-ngtcp2-server-main -f Dockerfile-server . &&
+            docker build --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main --build-arg NGHTTP3_TAG=main --build-arg NGTCP2_TAG=main -t oqs-ngtcp2-client-main -f Dockerfile-client . 
+          working_directory: ngtcp2
+      - run:
           name: Test ngtcp2 using local docker network
           command: |
             docker network create ngtcp2-test
@@ -431,6 +477,18 @@ jobs:
             docker stop oqs-ngtcp2server
             docker rm oqs-ngtcp2server
             docker network rm ngtcp2-test
+          working_directory: ngtcp2
+      - run:
+          name: Test ngtcp2 using local docker network (main/master)
+          command: |
+            docker network create ngtcp2-test-main
+            docker run --network ngtcp2-test-main --name oqs-ngtcp2server-main oqs-ngtcp2-server-main &
+            docker run --network ngtcp2-test-main -it --name oqs-ngtcp2client-main oqs-ngtcp2-client-main sh -c 'qtlsclient --exit-on-first-stream-close --groups kyber512 oqs-ngtcp2server-main 6000'
+            docker logs oqs-ngtcp2client | grep "QUIC handshake has been confirmed"
+            docker rm oqs-ngtcp2client-main
+            docker stop oqs-ngtcp2server-main
+            docker rm oqs-ngtcp2server-main
+            docker network rm ngtcp2-test-main
           working_directory: ngtcp2
       - when:
           condition:
@@ -446,7 +504,6 @@ jobs:
                   docker push $TARGETNAME/ngtcp2-server:latest &&
                   docker push $TARGETNAME/ngtcp2-client:latest
 
-# Not actively maintained:
   ubuntu_x64_openssh:
     description: A template for building and pushing OQS demo Docker images on
       Ubuntu that do not use OQS-OpenSSL, but rather liboqs in another form
@@ -468,6 +525,12 @@ jobs:
           command: |
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-openssh-img . &&
             docker run --rm --name oqs-openssh oqs-openssh-img connect-test.sh
+          working_directory: openssh
+      - run:
+          name: Test OpenSSH (main/master)
+          command: |
+            docker build --build-arg LIBOQS_RELEASE=main --build-arg MAKE_DEFINES="-j 18" -t oqs-openssh-img-main . &&
+            docker run --rm --name oqs-openssh-main oqs-openssh-img-main connect-test.sh
           working_directory: openssh
       - when:
           condition:
@@ -534,7 +597,6 @@ jobs:
                   docker tag envoy-oqs $TARGETNAME/envoy:latest &&
                   docker push $TARGETNAME/envoy:latest 
 
-# Not actively maintained:
   ubuntu_x64_h2load:
     description: Building and pushing OQS-h2load demo Docker images
     docker:
@@ -555,11 +617,22 @@ jobs:
             docker build -t oqs-h2load .
           working_directory: h2load
       - run:
-          name: Test oqs-h2load using public oqs-nginx and oqs-nginx-quic
+          name: Build h2load with liboqs (main/master)
+          command: |
+            docker build --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main --build-arg NGHTTP2_TAG=master -t oqs-h2load-main .
+          working_directory: h2load
+      - run:
+          name: Test oqs-h2load using public oqs-nginx
           command: |
             docker network create h2load-test &&
             docker run --network h2load-test --detach --rm --name oqs-nginx openquantumsafe/nginx &&
             docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups kyber512"
+      - run:
+          name: Test oqs-h2load using public oqs-nginx (main/master)
+          command: |
+            docker network create h2load-test-main &&
+            docker run --network h2load-test-main --detach --rm --name oqs-nginx-main openquantumsafe/nginx &&
+            docker run --network h2load-test-main oqs-h2load-main sh -c "h2load -n 100 -c 10 https://oqs-nginx-main:4433 --groups kyber512"
       - when:
           condition:
             or:
@@ -586,14 +659,14 @@ workflows:
           context: openquantumsafe
       #- ubuntu_x64_haproxy:
       #    context: openquantumsafe
-      #- ubuntu_x64_openvpn:
-      #    context: openquantumsafe
+      - ubuntu_x64_openvpn:
+         context: openquantumsafe
       #- ubuntu_x64_mosquitto:
       #    context: openquantumsafe
-      #- ubuntu_x64_ngtcp2:
-      #    context: openquantumsafe
-      #- ubuntu_x64_openssh:
-      #    context: openquantumsafe
+      - ubuntu_x64_ngtcp2:
+         context: openquantumsafe
+      - ubuntu_x64_openssh:
+         context: openquantumsafe
       # Disabled in CI as failing to conclude test properly as per
       # https://github.com/open-quantum-safe/oqs-demos/pull/167#issuecomment-1383673300
       # - ubuntu_x64_openlitespeed:
@@ -603,5 +676,5 @@ workflows:
       # Disable as it takes too long on OQS CCI plan
       #- ubuntu_x64_envoy:
       #    context: openquantumsafe
-      #- ubuntu_x64_h2load:
-      #    context: openquantumsafe
+      - ubuntu_x64_h2load:
+         context: openquantumsafe

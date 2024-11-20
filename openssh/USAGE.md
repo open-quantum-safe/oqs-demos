@@ -1,6 +1,6 @@
 # Purpose 
 
-This is an [opensshd](https://https.openssh.com) docker image based on the [OQS OpenSSH 7.9 fork](https://github.com/open-quantum-safe/openssh), which allows ssh to quantum-safely negotiate session keys and use quantum-safe authentication with algorithms from the [Post-Quantum Cryptography Project by NIST](https://csrc.nist.gov/projects/post-quantum-cryptography).
+This is an [opensshd](https://https.openssh.com) docker image based on the [OQS OpenSSH 9.7 fork](https://github.com/open-quantum-safe/openssh), which allows ssh to quantum-safely negotiate session keys and use quantum-safe authentication with algorithms from the [Post-Quantum Cryptography Project by NIST](https://csrc.nist.gov/projects/post-quantum-cryptography).
 
 This image has a built-in non-root user to permit execution without particular [docker privileges](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities). This is necessary as logging in as root in ssh is not recommended practice. But it is worth to note that this user, per default called `oqs`, is not set as the default user when the image starts. The reason for that is that the the start up script needs root permissions to generate all host keys and start the sshd service. This means that when executing a command as the user `oqs`, the `docker exec` command needs to be used together with the option `--user oqs`.
 
@@ -175,7 +175,7 @@ docker exec -it <name-or-hash-of-container> /opt/oqs-ssh/scripts/key-gen.sh
 
 For a list of all signature and key exchange algorithms see [here](https://github.com/open-quantum-safe/openssh#supported-algorithms). Be aware that there is a limitation of what algorithms are enabled in PQS-OpenSSH per default, more information in the section **Enabling additional PQC algorithms** below. It is recommended to only use the hybrid variants to maintain established classical security. The post-quantum safe algorithms have not yet received enough confidence to be relied on as the only security mechanism.
 
-The image's default key exchange algorithm is `ecdh-nistp384-kyber-768-sha384`. For host and identity keys (server and client authentication, respectively) the `ssh-ecdsa-nistp384-dilithium3` algorithm is used. Those algorithms may be changed by adjusting the files `ssh_config` and `sshd_config` respectively.
+The image's default key exchange algorithm is `ecdh-nistp384-kyber-768-sha384`. For host and identity keys (server and client authentication, respectively) the `ssh-ecdsa-nistp384-mldsa65` algorithm is used. Those algorithms may be changed by adjusting the files `ssh_config` and `sshd_config` respectively.
 
 **In `ssh_config` (client side)**
 - `KexAlgorithms`: Comma-separated list of enabled key-exchange algorithms. Priority given by order. Names according to [this KEX naming scheme](https://github.com/open-quantum-safe/openssh#key-exchange).
@@ -203,9 +203,9 @@ The generation of the host and identity keys happens via the script [key-gen.sh]
 Which keys to generate is determined using the configuration files (`ssh_config` and `sshd_config`). The need for a specific key is determined based on the following parameters:
 1. `IdentityFile` (in `ssh_config`) for **identity keys**: For every entry (there may be multiple) the corresponding identity key is generated.
    - e.g. `IdentityFile ~/.ssh/id_ed25519` or
-   - `IdentityFile ~/.ssh/id_ssh-ecdsa-nistp384-dilithium3`
+   - `IdentityFile ~/.ssh/id_ssh-ecdsa-nistp384-mldsa65`
 2. `HostKey` (in `sshd_config`) for **host keys**: For every entry (there may be multiple) the corresponding host key is generated.
-   - e.g. `HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-dilithium3_key` or
+   - e.g. `HostKey /opt/oqs-ssh/ssh_host_ssh-ecdsa-nistp384-mldsa65_key` or
    - `HostKey /opt/oqs-ssh/ssh_host_ssh-falcon512_key`
 
 In order to generate the host keys and start the `sshd` the image needs to be run as the `root` user, meaning the `docker run` command shall not contain the `--user oqs` option.
@@ -218,10 +218,10 @@ The location where `key-gen.sh` is looking for `ssh_config`/`sshd_config` is the
 
 Post-quantum safe algorithms must (in theory) be enabled at docker image build time when compiling [OQS-OpenSSH](https://github.com/open-quantum-safe/openssh). For this reason, in this pre-built image on Dockerhub no more algorithms can be enabled. However, before jumping over to the [build instructions](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh), please continue reading as there is a big BUT.
 
-Long story short: Thus far, no more algorithms may be enabled for this Docker image than described [here](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2020-08#supported-algorithms). Find out **More details on the why** below.
+Long story short: Thus far, no more algorithms may be enabled for this Docker image than described [here](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2024-08#supported-algorithms). Find out **More details on the why** below.
 
 ### More details on the why
-It is not quite straight forward how to figure out what PQC algorithms are actually enabled, where to enable them and how. The supported algorithms in release `OQS-OpenSSH-snapshot-2020-08` (the one used when building this Docker image) are listed [in this section](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2020-08#supported-algorithms). Be especially aware of the limitation for the signature algorithms, where only all L1 signature algorithms and all **Rainbow Classic** variants are enabled by default. **Classic** rainbow only, documentation has it slightly wrong there. This is corrected and clarified in more detail [in newer releases](https://github.com/open-quantum-safe/openssh#digital-signature).
+It is not quite straight forward how to figure out what PQC algorithms are actually enabled, where to enable them and how. The supported algorithms in release `OQS-OpenSSH-snapshot-2024-08` (the one used when building this Docker image) are listed [in this section](https://github.com/open-quantum-safe/openssh/tree/OQS-OpenSSH-snapshot-2024-08#supported-algorithms). Be especially aware of the limitation for the signature algorithms, where only all L1 signature algorithms and all **Rainbow Classic** variants are enabled by default. **Classic** rainbow only, documentation has it slightly wrong there. This is corrected and clarified in more detail [in newer releases](https://github.com/open-quantum-safe/openssh#digital-signature).
 
 Enabling more algorithms would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) according to [this documentation](https://github.com/open-quantum-safe/openssh/wiki/Using-liboqs-supported-algorithms-in-the-fork#code-generation). Additionally, you need to make sure that the algorithms are enabled in [liboqs](https://github.com/open-quantum-safe/liboqs) as well (see [here for more information](https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs#oqs_enable_kem_algoqs_enable_sig_alg)). Enabling more algorithms in `liboqs` can be done at Docker build time using the build option `LIBOQS_BUILD_DEFINES`. But enabling them in `OpenSSH` would require changing [openssh/oqs_templates/generate.yml](https://github.com/open-quantum-safe/openssh/blob/OQS-master/oqs-template/generate.yml) after checking out `openssh` in the [Dockerfile](https://github.com/open-quantum-safe/oqs-demos/tree/main/openssh/Dockerfile), and in this docker image this is just not implemented at this moment in time.
 
@@ -234,9 +234,9 @@ To enable classical SSH support on client side, edit/add lines in [ssh_config]([
 ```
 KexAlgorithms ecdh-nistp384-kyber-768-sha384@openquantumsafe.org,curve25519-sha256@libssh.org
 
-HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
+HostKeyAlgorithms ssh-ecdsa-nistp384-mldsa65,ssh-ed25519
 
-PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-mldsa65,ssh-ed25519
 
 IdentityFile ~/.ssh/id_ed25519
 ```
@@ -246,9 +246,9 @@ For adding support for classical SSH on server side, edit/add lines in [sshd_con
 ```
 KexAlgorithms ecdh-nistp384-kyber-768-sha384@openquantumsafe.org,curve25519-sha256
 
-HostKeyAlgorithms ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
+HostKeyAlgorithms ssh-ecdsa-nistp384-mldsa65,ssh-ed25519
 
-PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-dilithium3,ssh-ed25519
+PubkeyAcceptedKeyTypes ssh-ecdsa-nistp384-mldsa65,ssh-ed25519
 
 HostKey /opt/oqs-ssh/ssh_host_ed25519_key
 ```

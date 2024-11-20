@@ -47,7 +47,7 @@ tr:nth-child(even) {
 <h4> Caveats </h4>
 
 <ol>
-<li>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/openssl#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</li>
+<li>This test server by no means should be taken as containing production-ready software. See <a href="https://github.com/open-quantum-safe/liboqs#limitations-and-security">disclaimer</a>. Its purpose is simply to provide a best-effort facility to allow anyone to "test-drive" QSC software packages including testing protocol level interoperability.</li>
 
 <li>When using the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/main/chromium">OQS-enabled Chromium build</a> to access this web site, please heed its <a href="https://github.com/open-quantum-safe/oqs-demos/blob/main/chromium/USAGE.md">usage instructions</a>.
 <li>When using the <a href="https://github.com/open-quantum-safe/oqs-demos/tree/main/epiphany">OQS-enabled GNOME Web/epiphany browser</a> to access this web site, all ports can be accessed, provided the browser is suitably started enabling the algorithms of interest. Please <a href="https://hub.docker.com/repository/docker/openquantumsafe/epiphany">read the documentation</a> how to do this.
