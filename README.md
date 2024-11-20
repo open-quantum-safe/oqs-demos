@@ -13,7 +13,7 @@ In most cases, Dockerfiles encode the instructions for ease-of-use: Just do `doc
 
 As the level of interest in providing and maintaining these integrations for public consumption has fallen, the packages are tagged with the github monikers of the persons willing to keep supporting them or the term "Unmaintained". If that tag is listed, no CI and github support for the integration is available and the code shall be seen as a snapshot that once worked only. 
 
-We are explicitly soliciting contributors to maintain those integrations labelled "unsupported".
+We are explicitly soliciting contributors to maintain those integrations labelled "Unmaintained".
 
 Currently available integrations at their respective support level:
 
