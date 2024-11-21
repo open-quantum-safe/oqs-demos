@@ -261,7 +261,7 @@ jobs:
           name: Test httpd using curl (dev) (main/master)
           command: |
             docker network create httpd-test-main &&
-            docker run --network httpd-test-main --detach --rm --name oqs-httpd-main oqs-httpd-img-main &&
+            docker run --network httpd-test-main --detach --rm --name oqs-httpd oqs-httpd-img-main &&
             sleep 2 &&
             docker run --network httpd-test-main oqs-curl-main curl -k https://oqs-httpd:4433 --curves kyber768
       - when:
