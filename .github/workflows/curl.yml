@@ -8,6 +8,17 @@ on:
     branches: [ 'main' ]
     paths: ['.github/workflows/curl.yml', 'curl/**']
   workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    OQSPROVIDER_TAG=main
 
 jobs:
   build:
@@ -18,12 +29,6 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
-        build:
-          - name: release
-          - name: latest
-            build-args: |
-              LIBOQS_TAG=main
-              OQSPROVIDER_TAG=main
     steps:
       - uses: actions/checkout@v3
       - uses: docker/setup-qemu-action@v3
@@ -42,7 +47,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ matrix.build.build-args }}
+            ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
           tags: oqs-curl
 
       - name: Build the Docker image (dev)
@@ -53,7 +58,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ matrix.build.build-args }}
+            ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
           target: dev
           tags: oqs-curl-dev
 
