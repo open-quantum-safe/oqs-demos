@@ -56,7 +56,7 @@ jobs:
             ${{ matrix.build.build-args }}
           tags: oqs-curl
 
-      - name: Spot-test - One baseline and one hybrid QSC alg
+      - name: Test httpd using curl
         run: |
           docker network create httpd-test &&
           docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd &&

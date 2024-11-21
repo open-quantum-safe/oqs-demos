@@ -57,6 +57,6 @@ jobs:
           target: dev
           tags: oqs-curl-dev
 
-      - name: Spot-test - One baseline and one hybrid QSC alg
+      - name: Test curl
         run: |
           docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 oqs-curl perftest.sh
