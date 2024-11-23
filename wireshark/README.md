@@ -1,31 +1,81 @@
-# DEPRECATED
+This project provides a Docker image to build [Wireshark](https://www.wireshark.org/) with quantum-safe cryptography
+support through the [Open Quantum Safe (OQS) provider](https://github.com/open-quantum-safe/oqs-provider). This Docker
+image allows Wireshark to analyze network traffic encrypted with post-quantum cryptographic protocols.
 
-> [!Warning]
-> This integration is currently not supported due to [the end of life of oqs-openssl111](https://github.com/open-quantum-safe/openssl#warning).
+## System Requirements
 
-This directory contains a Dockerfile that builds wireshark that is patched to understand the OIDs and codepoints in TLS 1.3 that are supported by OQS-OpenSSL.
+- **Docker**: Ensure [Docker](https://docs.docker.com/get-docker/) is installed and running on your system.
+- **X-Window System (for GUI Display)**:
+    - **Linux**:
+        - Run the following commands to allow Docker to access the display:
+          ```
+          xhost +local
+          export DISPLAY=:0
+          ```
+    - **Windows**:
+        - Install an X server such as [VcXsrv](https://sourceforge.net/projects/vcxsrv/) and configure it with the
+          following options:
+            - **Disable access control**
+            - **Disable native OpenGL**
+        - In PowerShell, set the display environment variable:
+          ```
+          $env:DISPLAY="<your_host_ip>:0"
+          ```
+    - **macOS**:
+      - Install an X server, such as [XQuartz](https://www.xquartz.org), and start it.
+      - Run the following command in the terminal to allow Docker to access the display:
+        ```
+        xhost +
+        ```
+      - Set the display environment variable in the terminal:
+        ```
+        export DISPLAY=<your_host_ip>:0
+        ```
 
-## Quick start
+**Notes**:
 
-1) Be sure to have [docker installed](https://docs.docker.com/install).
-2) Run `docker build -t openquantumsafe/wireshark .` to create an QSC-enabled (codepoint and OID aware) wireshark docker image.
+- **macOS** support has not been tested yet. We welcome your feedback and suggestions. Please reach us through
+  the [oqs-demos issue section](https://github.com/open-quantum-safe/oqs-demos/issues).
+- Replace `<your_host_ip>` with your system's IP address. Use `:0` as the default display port unless configured
+  otherwise.
+
+## Building Instructions
+
+Run the following commands to build and launch Wireshark with OQS support:
+
+```
+git clone https://github.com/open-quantum-safe/oqs-demos
+cd oqs-demos/wireshark
+docker build -t oqs-wireshark .
+docker run --rm -it --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix oqs-wireshark
+```
+
+### Explanation of Docker Options
+
+- `--net=host`: Shares the host network with the container.
+- `-e DISPLAY`: Sets the display variable for GUI.
+- `-v /tmp/.X11-unix:/tmp/.X11-unix`: Mounts the X11 Unix socket for GUI access.
+
+## Project Components
+
+1. **Dockerfile**: Builds Wireshark with OpenSSL, liboqs, and OQS provider.
+2. **generate_qsc_header.py**: Processes `oqs-provider/oqs-template/generate.yml` with the `qsc_template.jinja2` to
+   generate `qsc.h`,
+   defining post-quantum KEMs and SIGs for Wireshark.
 
 ## Usage
 
-Information how to use the image is [available in the separate file USAGE.md](USAGE.md).
+For detailed usage instructions, refer to [USAGE.md](USAGE.md).
 
-## Build options
+## Build Configuration and Updates
 
-The Dockerfile provided allows for customization of the image built:
+Customize the build using the following Dockerfile arguments:
 
-### WIRESHARK_VERSION
+- **`UBUNTU_VERSION`**: Specifies the Ubuntu version.
+- **`WIRESHARK_VERSION`**: Defines the Wireshark version to build.
+- **`OPENSSL_TAG`**: Sets the OpenSSL version to build.
+- **`LIBOQS_TAG`**: Specifies the liboqs version to include.
+- **`OQSPROVIDER_TAG`**: Defines the Open Quantum Safe provider version.
+- **`INSTALLDIR`**: Sets the installation path for OQS libraries.
 
-This permits changing the wireshark code base to be used. 
-
-Tested default value is "3.4.9".
-
-### QSC_SSL_FLAVOR
-
-Different quantum-safe TLS implementations have different names for the same algorithms. This option permits switching between them. Permitted values are "oqs" and "wolfssl".
-
-Default is "oqs".
+To keep the build up-to-date, update the  arguments as needed to include the latest versions.
