@@ -1,75 +1,156 @@
-# Define the wireshark version to be baked in.
-ARG WIRESHARK_VERSION=3.4.9
+# This Dockerfile builds a Wireshark image with Open Quantum Safe (OQS) support.
+# By integrating OQS, the resulting Wireshark build is capable of
+# analyzing and handling post-quantum cryptographic protocols.
 
-# Define the SSL naming convention: One of "wolfssl" and "oqs"
-ARG QSC_SSL_FLAVOR="oqs"
+# Define the base versions and tags for dependencies
+ARG UBUNTU_VERSION=24.04
+ARG WIRESHARK_VERSION=4.4.1
+ARG OPENSSL_TAG=3.4.0
+ARG LIBOQS_TAG=0.11.0
+ARG OQSPROVIDER_TAG=0.7.0
 
-FROM ubuntu as intermediate
-ENV DEBIAN_FRONTEND noninteractive
+# Define Installation directory
+ARG INSTALLDIR=/opt/oqs
 
+# Stage 1: Building stage
+FROM ubuntu:${UBUNTU_VERSION} AS build
+
+LABEL version="2"
+
+ENV DEBIAN_FRONTEND=noninteractive
 ARG WIRESHARK_VERSION
-ARG QSC_SSL_FLAVOR
+ARG OPENSSL_TAG
+ARG LIBOQS_TAG
+ARG OQSPROVIDER_TAG
+ARG INSTALLDIR
 
-RUN apt update && apt upgrade -y
+# Install essential build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libtool automake autoconf cmake ninja-build \
+    openssl libssl-dev git wget ca-certificates  \
+    python3 python3-pip python3-venv && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Get all software packages required for building wireshark:
-RUN apt install -y gcc g++ \
-            libtool \
-            automake \
-            autoconf \
-            cmake \
-            ninja-build \
-            git \
-            curl \
-            perl \
-            flex \
-            bison \
-            2to3 python2-minimal python2 dh-python python-is-python3 \
-            python3 \
-            libssl-dev \
-            libgcrypt-dev \
-            libpcap-dev \
-            libc-ares-dev \
-            qtbase5-dev qttools5-dev-tools qttools5-dev qtmultimedia5-dev \
-            wget \
-            libssh-dev
+WORKDIR /opt
+# Set up isolated directories
+# src for source files, build for compiling, and install for final binaries
+RUN mkdir -p src/liboqs src/openssl src/oqs-provider src/wireshark \
+    build/liboqs build/openssl build/oqs-provider build/wireshark \
+    ${INSTALLDIR}/lib ${INSTALLDIR}/bin ${INSTALLDIR}/ssl
 
-# Get the source and unpack it.
-WORKDIR /tmp
-RUN curl --output wireshark-${WIRESHARK_VERSION}.tar.xz https://2.na.dl.wireshark.org/src/all-versions/wireshark-${WIRESHARK_VERSION}.tar.xz && tar xmvf wireshark-${WIRESHARK_VERSION}.tar.xz
+# Download sources
+WORKDIR /opt/src
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs.git liboqs && \
+    git clone --depth 1 --branch openssl-${OPENSSL_TAG} https://github.com/openssl/openssl.git openssl && \
+    git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git oqs-provider && \
+    wget -O wireshark.tar.xz https://www.wireshark.org/download/src/all-versions/wireshark-${WIRESHARK_VERSION}.tar.xz && \
+    tar -xf wireshark.tar.xz --strip-components=1 -C wireshark && \
+    rm wireshark.tar.xz
 
-WORKDIR /tmp/wireshark-${WIRESHARK_VERSION} 
+# Build and install liboqs
+WORKDIR /opt/build/liboqs
+RUN cmake -G Ninja /opt/src/liboqs \
+    -D CMAKE_INSTALL_PREFIX=${INSTALLDIR}/liboqs \
+    -D BUILD_SHARED_LIBS=ON \
+    -D OQS_USE_OPENSSL=OFF \
+    -D OQS_MINIMAL_BUILD="KEM_kyber_512;KEM_kyber_768;KEM_kyber_1024" \
+    -D CMAKE_INSTALL_RPATH="${INSTALLDIR}/liboqs/lib" && \
+    ninja -j$(nproc) && ninja install
 
-COPY wolfssl-qsc.h wolfssl-qsc.h
+# Build OpenSSL integrated with liboqs
+WORKDIR /opt/build/openssl
+RUN LDFLAGS="-Wl,-rpath,${INSTALLDIR}/liboqs/lib" \
+    /opt/src/openssl/config \
+        --prefix=${INSTALLDIR}/openssl \
+        --openssldir=${INSTALLDIR}/ssl \
+        shared && \
+    make -j$(nproc) && \
+    make install_sw install_ssldirs
 
-# Decide on QSC naming/ID mapping
-RUN if [ "x$QSC_SSL_FLAVOR" = "xoqs" ] ; then \
-   wget https://raw.githubusercontent.com/open-quantum-safe/openssl/OQS-OpenSSL_1_1_1-stable/qsc.h; \
-elif [ "x$QSC_SSL_FLAVOR" = "xwolfssl" ]; then \
-   mv wolfssl-qsc.h qsc.h; \
-else \
-   echo "Unknown naming convention in QSC_SSL_FLAVOR ($QSC_SSL_FLAVOR). Exiting."; \
-   exit 1; \
-fi
+# Build OQS provider for OpenSSL integration
+WORKDIR /opt/build/oqs-provider
+RUN cmake -G Ninja \
+    -D OPENSSL_ROOT_DIR=${INSTALLDIR}/openssl \
+    -D CMAKE_PREFIX_PATH="${INSTALLDIR}/openssl;${INSTALLDIR}/liboqs" \
+    -D CMAKE_INSTALL_PREFIX=${INSTALLDIR}/oqs-provider \
+    -D CMAKE_INSTALL_RPATH="${INSTALLDIR}/openssl/lib:${INSTALLDIR}/liboqs/lib" \
+    /opt/src/oqs-provider && \
+    ninja -j$(nproc) && \
+    mkdir -p ${INSTALLDIR}/openssl/lib/ossl-modules && \
+    cp /opt/build/oqs-provider/lib/oqsprovider.so ${INSTALLDIR}/openssl/lib/ossl-modules
 
-# Patch QSC-specific ids into wireshark code base
-RUN cp qsc.h epan/dissectors && \
-   sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-pkcs1.c && \
-   sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-tls-utils.c && \
-   sed -i "s/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");\nQSC_SIGS/g" epan/dissectors/packet-pkcs1.c && \
-   sed -i "s/    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\//    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\/\nQSC_KEMS/g" epan/dissectors/packet-tls-utils.c && \
-   sed -i "s/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,\nQSC_SIG_CPS/g" epan/dissectors/packet-tls-utils.c
+# Set up OpenSSL to load the OQS provider
+RUN CONFIG_FILE="${INSTALLDIR}/ssl/openssl.cnf" && \
+    sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" "$CONFIG_FILE" && \
+    sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" "$CONFIG_FILE"
 
-# Build wireshark
-RUN mkdir -p build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=/opt/wireshark .. && ninja && ninja install
+# Using a script from Wireshark to install required build dependencies
+WORKDIR /opt/src/wireshark
+RUN ./tools/debian-setup.sh -y
 
-FROM ubuntu
-ENV DEBIAN_FRONTEND noninteractive
+# Generate `qsc.h`
+WORKDIR ${INSTALLDIR}
+RUN cp /opt/src/oqs-provider/oqs-template/generate.yml ${INSTALLDIR}
+COPY generate_qsc_header.py ${INSTALLDIR}
+COPY qsc_template.jinja2 ${INSTALLDIR}
+COPY requirements.txt ${INSTALLDIR}
 
-RUN apt update && apt upgrade -y && apt install -y qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools libc-ares2 libqt5multimedia5 pcaputils libssh-dev
+RUN python3 -m venv ${INSTALLDIR}/venv && \
+    . ${INSTALLDIR}/venv/bin/activate && \
+    pip install -r requirements.txt && \
+    python ${INSTALLDIR}/generate_qsc_header.py && \
+    deactivate
 
-# Only retain the ${INSTALLDIR} contents in the final image
-COPY --from=intermediate /opt/wireshark /opt/wireshark
+RUN cp ${INSTALLDIR}/qsc.h /opt/src/wireshark/epan/dissectors/
 
+# Modify Wireshark source files for post-quantum definitions
+WORKDIR /opt/src/wireshark
+RUN sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-pkcs1.c && \
+    sed -i "s/#include \"config.h\"/#include \"config.h\"\n#include \"qsc.h\"/g" epan/dissectors/packet-tls-utils.c && \
+    sed -i "s/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");/oid_add_from_string(\"sha224\", \"2.16.840.1.101.3.4.2.4\");\nQSC_SIGS/g" epan/dissectors/packet-pkcs1.c && \
+    sed -i "s/    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\//    { 260\, \"ffdhe8192\" }\, \/\* RFC 7919 \*\/\nQSC_KEMS/g" epan/dissectors/packet-tls-utils.c && \
+    sed -i "s/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,/ { 0x080b\, \"rsa_pss_pss_sha512\" }\,\nQSC_SIG_CPS/g" epan/dissectors/packet-tls-utils.c
 
-CMD /opt/wireshark/bin/wireshark
+# Build and install Wireshark
+WORKDIR /opt/build/wireshark
+RUN cmake -G Ninja /opt/src/wireshark \
+    -D QT5=OFF \
+    -D QT6=ON \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D CMAKE_INSTALL_PREFIX=${INSTALLDIR}/wireshark \
+    -D CMAKE_PREFIX_PATH="${INSTALLDIR}/openssl;${INSTALLDIR}/liboqs" \
+    -D CMAKE_INSTALL_RPATH="${INSTALLDIR}/openssl/lib:${INSTALLDIR}/liboqs/lib" && \
+    ninja -j$(nproc) && ninja install
+
+# Test integration of OQS provider with OpenSSL
+WORKDIR /opt/src/oqs-provider
+ENV OPENSSL_CONF=${INSTALLDIR}/ssl/openssl.cnf
+ENV OPENSSL_MODULES=${INSTALLDIR}/openssl/lib/ossl-modules
+RUN mkdir -p _build
+RUN ./scripts/runtests.sh -j$(nproc)
+
+# Stage 2: Minimal runtime image
+FROM ubuntu:${UBUNTU_VERSION} AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+ARG INSTALLDIR
+
+# Install necessary runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libc-ares2 pcaputils libssh-4 libgcrypt20 \
+    libglib2.0-0 libpcap0.8 libspeexdsp1 zlib1g \
+    libqt6core6 libqt6gui6 libqt6widgets6 libqt6printsupport6 \
+    libqt6core5compat6 libqt6dbus6 libqt6multimedia6 libgpg-error0 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="${INSTALLDIR}/wireshark/bin:${INSTALLDIR}/openssl/bin:${PATH}"
+ENV OPENSSL_CONF=${INSTALLDIR}/ssl/openssl.cnf
+ENV OPENSSL_MODULES=${INSTALLDIR}/openssl/lib/ossl-modules
+
+# Copy essential files from build stage
+COPY --from=build ${INSTALLDIR}/wireshark ${INSTALLDIR}/wireshark
+COPY --from=build ${INSTALLDIR}/openssl ${INSTALLDIR}/openssl
+COPY --from=build ${INSTALLDIR}/liboqs ${INSTALLDIR}/liboqs
+COPY --from=build ${INSTALLDIR}/ssl ${INSTALLDIR}/ssl
+
+CMD ["wireshark"]
