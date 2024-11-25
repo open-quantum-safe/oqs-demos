@@ -20,59 +20,59 @@ jobs:
   curl:
     uses: ./.github/workflows/curl.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   h2load:
     uses: ./.github/workflows/h2load.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   haproxy:
     uses: ./.github/workflows/haproxy.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   httpd:
     uses: ./.github/workflows/httpd.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   locust:
     uses: ./.github/workflows/locust.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   mosquitto:
     uses: ./.github/workflows/mosquitto.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   nginx:
     uses: ./.github/workflows/nginx.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   ngtcp2:
     uses: ./.github/workflows/ngtcp2.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   openssh:
     uses: ./.github/workflows/openssh.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   openssl3:
     uses: ./.github/workflows/openssl3.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   openvpn:
     uses: ./.github/workflows/openvpn.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
 
   wireshark:
     uses: ./.github/workflows/wireshark.yml
     with:
-      build_main: ${{ github.event.inputs.build_main }}
+      build_main: ${{ github.event.inputs.build_main == 'true' }}
