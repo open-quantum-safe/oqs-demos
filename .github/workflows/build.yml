@@ -56,3 +56,8 @@ jobs:
     uses: ./.github/workflows/openssl3.yml
     with:
       build_main: ${{ github.event.inputs.build_main }}
+
+  wireshark:
+    uses: ./.github/workflows/wireshark.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
