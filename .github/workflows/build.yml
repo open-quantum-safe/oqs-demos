@@ -52,6 +52,11 @@ jobs:
     with:
       build_main: ${{ github.event.inputs.build_main }}
 
+  ngtcp2:
+    uses: ./.github/workflows/ngtcp2.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
   openssh:
     uses: ./.github/workflows/openssh.yml
     with:
