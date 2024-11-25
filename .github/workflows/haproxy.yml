@@ -1,4 +1,4 @@
-name: Build & Test - haproxy
+name: haproxy
 
 on:
   push:
@@ -8,6 +8,13 @@ on:
     branches: [ 'main' ]
     paths: ['.github/workflows/haproxy.yml', 'haproxy/**']
   workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
     inputs:
       build_main:
         description: "Build using liboqs and oqsprovider main branches"

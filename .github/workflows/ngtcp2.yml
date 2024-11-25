@@ -1,4 +1,4 @@
-name: Build & Test - ngtcp2
+name: ngtcp2
 
 on:
   push:
@@ -8,6 +8,13 @@ on:
     branches: [ 'main' ]
     paths: ['.github/workflows/ngtcp2.yml', 'ngtcp2/**']
   workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
     inputs:
       build_main:
         description: "Build using liboqs and oqsprovider main branches"
