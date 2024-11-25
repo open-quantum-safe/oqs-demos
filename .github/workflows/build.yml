@@ -32,6 +32,11 @@ jobs:
     with:
       build_main: ${{ github.event.inputs.build_main }}
 
+  haproxy:
+    uses: ./.github/workflows/haproxy.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
   nginx:
     uses: ./.github/workflows/nginx.yml
     with:

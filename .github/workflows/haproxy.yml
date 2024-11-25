@@ -1,0 +1,69 @@
+name: Build & Test - haproxy
+
+on:
+  push:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/haproxy.yml', 'haproxy/**']
+  pull_request:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/haproxy.yml', 'haproxy/**']
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    OQSPROVIDER_TAG=main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: haproxy
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
+          tags: oqs-haproxy
+
+      - name: Build the curl Docker image
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: curl
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
+          tags: oqs-curl
+
+      - name: Test haproxy using curl
+        run: |
+          docker network create haproxy-test &&
+          docker run --network haproxy-test --detach --rm --name oqs-haproxy oqs-haproxy &&
+          sleep 4 &&
+          docker run --network haproxy-test oqs-curl curl -k https://oqs-haproxy:4433
