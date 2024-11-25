@@ -1,12 +1,12 @@
-name: Build & Test - curl
+name: Build & Test - nginx
 
 on:
   push:
     branches: [ 'main' ]
-    paths: ['.github/workflows/curl.yml', 'curl/**']
+    paths: ['.github/workflows/nginx.yml', 'nginx/**']
   pull_request:
     branches: [ 'main' ]
-    paths: ['.github/workflows/curl.yml', 'curl/**']
+    paths: ['.github/workflows/nginx.yml', 'nginx/**']
   workflow_dispatch:
     inputs:
       build_main:
@@ -43,26 +43,14 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           load: true
-          context: curl
+          context: nginx
           platforms: ${{ matrix.platform }}
           build-args: |
             MAKE_DEFINES=-j4
             ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
-          tags: oqs-curl
+          tags: oqs-nginx
 
-      - name: Build the Docker image (dev)
-        uses: docker/build-push-action@v6
-        with:
-          load: true
-          context: curl
-          platforms: ${{ matrix.platform }}
-          build-args: |
-            MAKE_DEFINES=-j4
-            ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
-          target: dev
-          tags: oqs-curl-dev
-
-      - name: Build the Docker image (with generic liboqs)
+      - name: Build the curl Docker image (with generic liboqs)
         uses: docker/build-push-action@v6
         with:
           load: true
@@ -74,7 +62,9 @@ jobs:
             ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
           tags: oqs-curl-generic
 
-      - name: Test curl and curl generic
+      - name: Test nginx with curl generic
         run: |
-          docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 oqs-curl perftest.sh &&
-          docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 oqs-curl-generic perftest.sh
+          docker network create nginx-test &&
+          docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx &&
+          sleep 2 &&
+          docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
