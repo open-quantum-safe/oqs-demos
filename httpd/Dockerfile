@@ -40,7 +40,8 @@ ARG APRU_VERSION=1.6.3
 ARG APR_MIRROR="https://dlcdn.apache.org"
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j 2"
+# A CI system with less than 4 cores should be avoided
+ARG MAKE_DEFINES="-j 4"
 
 
 FROM alpine:${ALPINE_VERSION} as intermediate
