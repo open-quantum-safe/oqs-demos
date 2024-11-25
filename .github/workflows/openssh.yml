@@ -1,12 +1,12 @@
-name: Build & Test - openssl3
+name: Build & Test - openssh
 
 on:
   push:
     branches: [ 'main' ]
-    paths: ['.github/workflows/openssl3.yml', 'openssl3/**']
+    paths: ['.github/workflows/openssh.yml', 'openssh/**']
   pull_request:
     branches: [ 'main' ]
-    paths: ['.github/workflows/openssl3.yml', 'openssl3/**']
+    paths: ['.github/workflows/openssh.yml', 'openssh/**']
   workflow_dispatch:
     inputs:
       build_main:
@@ -43,14 +43,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           load: true
-          context: openssl3
+          context: openssh
           platforms: ${{ matrix.platform }}
           build-args: |
             MAKE_DEFINES=-j4
             ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
-          tags: oqs-ossl3
+          tags: oqs-openssh
 
-      - name: Test openssl3 with provider - one baseline and one hybrid QSC algorithm
+      - name: Test openssh
         run: |
-          docker run --rm --name oqs-ossl3 oqs-ossl3 sh -c "openssl list -providers; /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber768 --CAfile /opt/openssl32/bin/CA.crt" &&
-          docker run --rm --name oqs-ossl3 oqs-ossl3 sh -c "KEM_ALG=p521_frodo1344aes /opt/openssl32/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups p521_frodo1344aes --CAfile /opt/openssl32/bin/CA.crt"
+          docker run --rm --name oqs-openssh oqs-openssh connect-test.sh
