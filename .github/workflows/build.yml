@@ -22,11 +22,6 @@ jobs:
     with:
       build_main: ${{ github.event.inputs.build_main }}
 
-  httpd:
-    uses: ./.github/workflows/httpd.yml
-    with:
-      build_main: ${{ github.event.inputs.build_main }}
-
   h2load:
     uses: ./.github/workflows/h2load.yml
     with:
@@ -34,6 +29,16 @@ jobs:
 
   haproxy:
     uses: ./.github/workflows/haproxy.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
+  httpd:
+    uses: ./.github/workflows/httpd.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
+  locust:
+    uses: ./.github/workflows/locust.yml
     with:
       build_main: ${{ github.event.inputs.build_main }}
 
