@@ -240,7 +240,7 @@ jobs:
             # all of them might exhaust memory
             docker build --build-arg MAKE_DEFINES="-j 18" -t oqs-curl . &&
             docker build --build-arg MAKE_DEFINES="-j 18" --target dev -t oqs-curl-dev . &&
-            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main -t oqs-curl-main . &&
+            docker build --build-arg MAKE_DEFINES="-j 18" --build-arg OPENSSL_TAG=master --build-arg LIBOQS_TAG=main --build-arg OQSPROVIDER_TAG=main -t oqs-curl-main .
           working_directory: curl
       - run:
           name: Test Curl (dev)
@@ -261,9 +261,9 @@ jobs:
           name: Test httpd using curl (dev) (main/master)
           command: |
             docker network create httpd-test-main &&
-            docker run --network httpd-test-main --detach --rm --name oqs-httpd-main oqs-httpd-img-main &&
+            docker run --network httpd-test-main --detach --rm --name oqs-httpd2 oqs-httpd-img-main &&
             sleep 2 &&
-            docker run --network httpd-test-main oqs-curl-main curl -k https://oqs-httpd:4433 --curves kyber768
+            docker run --network httpd-test-main oqs-curl-main curl -k https://oqs-httpd2:4433 --curves kyber768
       - when:
           condition:
             or:
@@ -659,12 +659,12 @@ workflows:
           context: openquantumsafe
       #- ubuntu_x64_haproxy:
       #    context: openquantumsafe
-      - ubuntu_x64_openvpn:
-         context: openquantumsafe
+      # - ubuntu_x64_openvpn:
+      #    context: openquantumsafe
       #- ubuntu_x64_mosquitto:
       #    context: openquantumsafe
-      - ubuntu_x64_ngtcp2:
-         context: openquantumsafe
+      # - ubuntu_x64_ngtcp2:
+      #    context: openquantumsafe
       - ubuntu_x64_openssh:
          context: openquantumsafe
       # Disabled in CI as failing to conclude test properly as per
@@ -676,5 +676,5 @@ workflows:
       # Disable as it takes too long on OQS CCI plan
       #- ubuntu_x64_envoy:
       #    context: openquantumsafe
-      - ubuntu_x64_h2load:
-         context: openquantumsafe
+      # - ubuntu_x64_h2load:
+      #    context: openquantumsafe

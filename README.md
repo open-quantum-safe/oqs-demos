@@ -13,7 +13,7 @@ In most cases, Dockerfiles encode the instructions for ease-of-use: Just do `doc
 
 As the level of interest in providing and maintaining these integrations for public consumption has fallen, the packages are tagged with the github monikers of the persons willing to keep supporting them or the term "Unmaintained". If that tag is listed, no CI and github support for the integration is available and the code shall be seen as a snapshot that once worked only. 
 
-We are explicitly soliciting contributors to maintain those integrations labelled "unsupported".
+We are explicitly soliciting contributors to maintain those integrations labelled "Unmaintained".
 
 Currently available integrations at their respective support level:
 
@@ -24,6 +24,7 @@ Currently available integrations at their respective support level:
 | **nginx**         | [Github: oqs-demos/nginx](nginx)                         | [Dockerhub: openquantumsafe/nginx](https://hub.docker.com/repository/docker/openquantumsafe/nginx), [Dockerhub: openquantumsafe/nginx-quic](https://hub.docker.com/repository/docker/openquantumsafe/nginx-quic)                            | Maintained: @baentsch, @bhess, @pi-314159
 | **Chromium**      | [Github: oqs-demos/chromium](chromium) (limited support) | -                                                                                                                                                                                                                                           | Maintained: @pi-314159
 | **Locust**        | [Github: oqs-demos/locust](locust)                       | -                                                                                                                                                                                                                                           | Maintained: @davidgca
+| **Wireshark**     | [Github: oqs-demos/wireshark](wireshark)                 | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                                                                                                                                  | Maintained: @hayyaaf
 | **OpenSSH**       | [Github: oqs-demos/openssh](openssh)                     | [Dockerhub: openquantumsafe/openssh](https://hub.docker.com/repository/docker/openquantumsafe/openssh)                                                                                                                                      | Unmaintained
 | **OpenVPN**       | [Github: oqs-demos/openvpn](openvpn)                     | [Dockerhub: openquantumsafe/openvpn](https://hub.docker.com/repository/docker/openquantumsafe/openvpn)                                                                                                                                      | Unmaintained
 | **ngtcp2**        | [Github: oqs-demos/ngtcp2](ngtcp2)                       | Dockerhub: [Server: openquantumsafe/ngtcp2-server](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-server), [Client: openquantumsafe/ngtcp2-client](https://hub.docker.com/repository/docker/openquantumsafe/ngtcp2-client) | Unmaintained
@@ -32,7 +33,6 @@ Currently available integrations at their respective support level:
 | **Mosquitto**     | [Github: oqs-demos/mosquitto](mosquitto)                 | [Dockerhub: openquantumsafe/mosquitto](https://hub.docker.com/repository/docker/openquantumsafe/mosquitto)                                                                                                                                  | Unmaintained
 | **Epiphany**      | [Github: oqs-demos/epiphany](epiphany)                   | [Dockerhub: openquantumsafe/epiphany](https://hub.docker.com/repository/docker/openquantumsafe/epiphany)                                                                                                                                    | Deprecated
 | **OpenLiteSpeed** | [Github: oqs-demos/openlitespeed](openlitespeed)         | [ Dockerhub: openquantumsafe/openlitespeed](https://hub.docker.com/repository/docker/openquantumsafe/openlitespeed)                                                                                                                         | Deprecated
-| **Wireshark**     | [Github: oqs-demos/wireshark](wireshark)                 | [Dockerhub: openquantumsafe/wireshark](https://hub.docker.com/repository/docker/openquantumsafe/wireshark)                                                                                                                                  | Deprecated
 | **Envoy**         | [Github: oqs-demos/envoy](envoy)                         | [ Dockerhub: openquantumsafe/envoy](https://hub.docker.com/repository/docker/openquantumsafe/envoy)                                                                                                                                         | Deprecated
 | **Unbound**       | [Github: oqs-demos/unbound](unbound)                     | [ Dockerhub: openquantumsafe/unbound](https://hub.docker.com/repository/docker/openquantumsafe/unbound)                                                                                                                                     | Deprecated
 
@@ -64,6 +64,7 @@ All modifications to this repository are released under the same terms as [liboq
     Dan Rouhana (University of Washington)
     JT (Henan Raytonne Trading Company)
     David Gomez-Cambronero (Telefonica Innovacion digital)
+    Khalid Alraddady (linkedin.com/in/khalid-alraddady)
 
 ## Acknowledgments
 
