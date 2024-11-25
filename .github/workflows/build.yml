@@ -1,0 +1,43 @@
+name: Build & Test - all
+
+on:
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  curl:
+    uses: ./.github/workflows/curl.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
+  httpd:
+    uses: ./.github/workflows/httpd.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
+  nginx:
+    uses: ./.github/workflows/nginx.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
+  openssh:
+    uses: ./.github/workflows/openssh.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
+  openssl3:
+    uses: ./.github/workflows/openssl3.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
