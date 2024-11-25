@@ -67,6 +67,11 @@ jobs:
     with:
       build_main: ${{ github.event.inputs.build_main }}
 
+  openvpn:
+    uses: ./.github/workflows/openvpn.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
   wireshark:
     uses: ./.github/workflows/wireshark.yml
     with:
