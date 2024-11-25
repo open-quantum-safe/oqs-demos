@@ -42,6 +42,11 @@ jobs:
     with:
       build_main: ${{ github.event.inputs.build_main }}
 
+  mosquitto:
+    uses: ./.github/workflows/mosquitto.yml
+    with:
+      build_main: ${{ github.event.inputs.build_main }}
+
   nginx:
     uses: ./.github/workflows/nginx.yml
     with:
