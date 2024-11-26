@@ -28,7 +28,7 @@ ARG MAKE_INSTALL="install-nokeys"
 ARG OQS_USER="oqs"
 ARG OQS_PASSWORD="Pa55W0rd"
 
-FROM alpine:${ALPINE_VERSION} as intermediate
+FROM alpine:${ALPINE_VERSION} AS intermediate
 # Take in all global args
 ARG INSTALL_DIR
 ARG LIBOQS_TAG
@@ -85,7 +85,7 @@ STOPSIGNAL SIGTERM
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
 
-FROM alpine:${ALPINE_VERSION} as dev
+FROM alpine:${ALPINE_VERSION} AS dev
 # Take in all global args
 ARG DEFAULT_INSTALL_DIR
 ARG INSTALL_DIR
