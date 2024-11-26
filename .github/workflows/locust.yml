@@ -55,4 +55,51 @@ jobs:
           build-args: |
             MAKE_DEFINES=-j4
             ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
-          tags: oqs-locust
+          tags: |
+            oqs-locust
+            oqs-locust:0.0.1
+
+      # Launch the Locust environment with a single worker for this test case.
+      - name: Launch Locust in Docker Compose
+        working-directory: ./locust
+        run: |
+          LOGGER_LEVEL=DEBUG HOST=https://localhost:4433 GROUP=kyber768 docker compose up -d --scale worker=1
+      - run: sleep 10
+
+      # Start the OpenSSL quantum-safe server inside the Locust worker container.
+      - name: Start OpenSSL server
+        working-directory: ./locust
+        run: |
+          docker exec -d locust-worker-1 openssl s_server \
+            -cert bin/CA.crt \
+            -key bin/CA.key \
+            -www \
+            -tls1_3 \
+            -groups kyber768
+      - run: sleep 10
+
+      # Trigger the Locust load test by sending a POST request to the Locust master API.
+      - name: Run Locust load test
+        working-directory: ./locust
+        run: |
+          curl -X POST -H 'content-type: application/x-www-form-urlencoded' \
+            --data-raw 'user_count=1&spawn_rate=1&host=https%3A%2F%2Flocalhost%3A4433&run_time=30s' \
+            http://localhost:8189/swarm
+
+      # Allow the test to complete by waiting longer than the specified run-time.
+      - name: Wait for test to finish
+        run: sleep 70
+
+      # Fetch the Locust test results in CSV format using the /stats/requests API.
+      - name: Download and Check JSON report
+        working-directory: ./locust
+        run: |
+          curl 'http://localhost:8189/stats/requests/csv'  -o results.out &&
+          cat results.out | grep kyber768
+
+      # Save the JSON report as an artifact so it can be downloaded after the workflow completes.
+      - name: Upload JSON report
+        uses: actions/upload-artifact@v4
+        with:
+          name: locust-report
+          path: locust/results.out
