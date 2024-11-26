@@ -4,7 +4,7 @@ support through the [Open Quantum Safe (OQS) provider](https://github.com/open-q
 
 ## Running Wireshark
 
-You can run the Wireshark Docker container on Linux or Windows using the following command:
+You can run the Wireshark Docker container on Linux, Windows, or macOS using the following command:
 
 ```
 docker run --rm -it --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix oqs-wireshark
@@ -12,9 +12,6 @@ docker run --rm -it --net=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-u
 
 Once Wireshark is running, you can [use it as you normally would](https://www.wireshark.org/docs/),
 such as selecting a network interface to capture and analyze traffic.
-
-**Note:** **macOS** support has not been tested yet. We welcome your feedback and suggestions. Please reach us through
-the [oqs-demos issue section](https://github.com/open-quantum-safe/oqs-demos/issues).
 
 ## Testing quantum-safe Protocols
 
@@ -36,7 +33,7 @@ like `ping` to find the IP).
 Run the following command to test a quantum-safe TLS connection:
 
 ```
-docker run -it openquantumsafe/curl sh -c "curl -k https://test.openquantumsafe.org:6069 --curves kyber1024"
+docker run --rm -it openquantumsafe/curl sh -c "curl -k https://test.openquantumsafe.org:6069 --curves kyber1024"
 ```
 
 **Explanation:**
