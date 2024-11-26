@@ -23,7 +23,7 @@ ARG MAKE_DEFINES="-j 8"
 
 ARG SIG_ALG="dilithium3"
 
-FROM alpine:${ALPINE_VERSION} as buildopenssl
+FROM alpine:${ALPINE_VERSION} AS buildopenssl
 # Take in all global args
 ARG OPENSSL_TAG
 ARG INSTALLDIR_OPENSSL
@@ -54,7 +54,7 @@ RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" ./config shared --prefi
     if [ -d ${INSTALLDIR_OPENSSL}/lib64 ]; then ln -s ${INSTALLDIR_OPENSSL}/lib64 ${INSTALLDIR_OPENSSL}/lib; fi && \
     if [ -d ${INSTALLDIR_OPENSSL}/lib ]; then ln -s ${INSTALLDIR_OPENSSL}/lib ${INSTALLDIR_OPENSSL}/lib64; fi
 
-FROM alpine:${ALPINE_VERSION} as buildliboqs
+FROM alpine:${ALPINE_VERSION} AS buildliboqs
 # Take in all global args
 ARG LIBOQS_TAG
 ARG INSTALLDIR_OPENSSL
@@ -83,7 +83,7 @@ RUN mkdir build && \
     cmake -G"Ninja" .. -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && \
     ninja install
 
-FROM alpine:${ALPINE_VERSION} as buildoqsprovider
+FROM alpine:${ALPINE_VERSION} AS buildoqsprovider
 # Take in all global args
 ARG OQSPROVIDER_TAG
 ARG INSTALLDIR_OPENSSL
@@ -126,7 +126,7 @@ RUN set -x; \
     openssl req -x509 -new -newkey ${SIG_ALG} -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:${ALPINE_VERSION} as dev
+FROM alpine:${ALPINE_VERSION} AS dev
 # Take in all global args
 ARG INSTALLDIR_OPENSSL
 ARG SIG_ALG

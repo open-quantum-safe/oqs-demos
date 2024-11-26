@@ -44,7 +44,7 @@ ARG APR_MIRROR="https://dlcdn.apache.org"
 ARG MAKE_DEFINES="-j 4"
 
 
-FROM alpine:${ALPINE_VERSION} as intermediate
+FROM alpine:${ALPINE_VERSION} AS intermediate
 # Take in global args
 ARG OPENSSL_TAG
 ARG LIBOQS_TAG
