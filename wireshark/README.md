@@ -32,11 +32,7 @@ image allows Wireshark to analyze network traffic encrypted with post-quantum cr
         export DISPLAY=<your_host_ip>:0
         ```
 
-**Notes**:
-
-- **macOS** support has not been tested yet. We welcome your feedback and suggestions. Please reach us through
-  the [oqs-demos issue section](https://github.com/open-quantum-safe/oqs-demos/issues).
-- Replace `<your_host_ip>` with your system's IP address. Use `:0` as the default display port unless configured
+**Note**: Replace `<your_host_ip>` with your system's IP address. Use `:0` as the default display port unless configured
   otherwise.
 
 ## Building Instructions

@@ -27,7 +27,7 @@ ARG INSTALLDIR
 # Install essential build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential libtool automake autoconf cmake ninja-build \
-    openssl libssl-dev git wget ca-certificates  \
+    git wget ca-certificates  \
     python3 python3-pip python3-venv && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -53,7 +53,6 @@ RUN cmake -G Ninja /opt/src/liboqs \
     -D CMAKE_INSTALL_PREFIX=${INSTALLDIR}/liboqs \
     -D BUILD_SHARED_LIBS=ON \
     -D OQS_USE_OPENSSL=OFF \
-    -D OQS_MINIMAL_BUILD="KEM_kyber_512;KEM_kyber_768;KEM_kyber_1024" \
     -D CMAKE_INSTALL_RPATH="${INSTALLDIR}/liboqs/lib" && \
     ninja -j$(nproc) && ninja install
 
