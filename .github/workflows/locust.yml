@@ -94,12 +94,6 @@ jobs:
       - name: Download and Check JSON report
         working-directory: ./locust
         run: |
-          curl 'http://localhost:8189/stats/requests/csv'  -o results.out &&
-          cat results.out | grep kyber768
-
-      # Save the JSON report as an artifact so it can be downloaded after the workflow completes.
-      - name: Upload JSON report
-        uses: actions/upload-artifact@v4
-        with:
-          name: locust-report
-          path: locust/results.out
+          curl 'http://localhost:8189/stats/requests/csv' -o results.out &&
+          cat results.out &&
+          grep kyber768 results.out
