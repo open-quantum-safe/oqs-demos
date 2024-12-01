@@ -3,16 +3,10 @@
 # define the alpine image version to use
 ARG ALPINE_VERSION=3.20
 
-# define the openssl tag to be used
-ARG OPENSSL_TAG=openssl-3.3.2
-
-# define the liboqs tag to be used
+# Define version tags for dependencies
+ARG OPENSSL_TAG=openssl-3.4.0
 ARG LIBOQS_TAG=0.11.0
-
-# define the oqsprovider tag to be used
 ARG OQSPROVIDER_TAG=0.7.0
-
-# define the version of haproxy here
 ARG HAPROXY_RELEASE=3.0
 ARG HAPROXY_MICRO=5
 ARG HAPROXY_VERSION=${HAPROXY_RELEASE}.${HAPROXY_MICRO}
@@ -20,9 +14,6 @@ ARG HAPROXY_VERSION=${HAPROXY_RELEASE}.${HAPROXY_MICRO}
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
 ARG HAPROXYDIR=/opt/haproxy
-
-# liboqs build type variant; maximum portability of image:
-ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
 # Default KEM algorithms to be utilized
 ARG KEM_ALGLIST="kyber768:p384_kyber768"
@@ -39,33 +30,34 @@ ARG KEM_ALGLIST
 ARG HAPROXY_VERSION
 ARG HAPROXY_RELEASE
 
-LABEL version "2"
-
-ENV DEBIAN_FRONTEND noninteractive
+LABEL version="2"
 
 # Get all software packages required for builing all components:
-RUN apk update && apk upgrade && apk add openssl make build-base linux-headers openssl-dev autoconf automake git libtool unzip wget cmake ninja
+RUN apk --no-cache add openssl make  \
+    build-base linux-headers openssl-dev \
+    autoconf automake git libtool \
+    unzip wget cmake ninja
 
 # get all sources
 WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
-    wget http://www.haproxy.org/download/${HAPROXY_RELEASE}/src/haproxy-${HAPROXY_VERSION}.tar.gz && tar xzvf haproxy-${HAPROXY_VERSION}.tar.gz && mv haproxy-${HAPROXY_VERSION} $HAPROXYDIR
+    wget http://www.haproxy.org/download/${HAPROXY_RELEASE}/src/haproxy-${HAPROXY_VERSION}.tar.gz && \
+    tar xzvf haproxy-${HAPROXY_VERSION}.tar.gz && \
+    mv haproxy-${HAPROXY_VERSION} $HAPROXYDIR
 
 # build liboqs
-WORKDIR /opt/liboqs
-RUN mkdir build && cd build && \
-    cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && \
+WORKDIR /opt/liboqs/build
+RUN cmake -G"Ninja" ..  -DOQS_DIST_BUILD=ON -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && \
     ninja install
 
 # build OpenSSL3
 WORKDIR /opt/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
-    make -j $(nproc) && \
-    make install_sw install_ssldirs && \
-    if [ -d ${INSTALLDIR}/lib64 ]; then ln -s ${INSTALLDIR}/lib64 ${INSTALLDIR}/lib; fi && \
-    if [ -d ${INSTALLDIR}/lib ]; then ln -s ${INSTALLDIR}/lib ${INSTALLDIR}/lib64; fi
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix="${INSTALLDIR}" && \
+    make -j "$(nproc)" && make install_sw install_ssldirs && \
+    if [ -d "${INSTALLDIR}/lib64" ]; then ln -s "${INSTALLDIR}/lib64" "${INSTALLDIR}/lib"; fi && \
+    if [ -d "${INSTALLDIR}/lib" ]; then ln -s "${INSTALLDIR}/lib" "${INSTALLDIR}/lib64"; fi
 
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR}/bin:${PATH}"
@@ -85,13 +77,13 @@ ENV OPENSSL3_DIR=${INSTALLDIR}
 # build haproxy
 WORKDIR ${HAPROXYDIR}
 
-RUN make -j $(nproc) \
-    LDFLAGS="-Wl,-rpath,$INSTALLDIR/lib64" \
-    SSL_INC=$INSTALLDIR/include \
-    SSL_LIB=$INSTALLDIR/lib64 \
-    TARGET=linux-musl \
+RUN make -j "$(nproc)" \
+    LDFLAGS="-Wl,-rpath,${INSTALLDIR}/lib64" \
+    SSL_INC="${INSTALLDIR}/include" \
+    SSL_LIB="${INSTALLDIR}/lib64" \
+    TARGET="linux-musl" \
     USE_OPENSSL=1 && \
-    make PREFIX=$INSTALLDIR install
+    make PREFIX="${INSTALLDIR}" install
 
 # prepare to run haproxy
 ENV OPENSSL=${INSTALLDIR}/bin/openssl
@@ -101,9 +93,7 @@ ENV OPENSSL_CNF=${INSTALLDIR}/ssl/openssl.cnf
 ARG SIG_ALG=dilithium3
 
 WORKDIR ${HAPROXYDIR}
-    # generate CA key and cert
-    # generate server CSR
-    # generate server cert
+# Generate CA key and certificate, server CSR, and server certificate
 RUN set -x && \
     mkdir pki && \
     mkdir cacert && \
@@ -119,8 +109,8 @@ ARG HAPROXYDIR
 ARG KEM_ALGLIST
 
 # lighttpd as built-in backend
-RUN apk add lighttpd
-#
+RUN apk --no-cache add lighttpd
+
 # Only retain the ${*_PATH} contents in the final image
 COPY --from=intermediate ${HAPROXYDIR} ${HAPROXYDIR}
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
@@ -131,9 +121,9 @@ RUN sed -i "s|@@CURVES@@|$KEM_ALGLIST|g" ${HAPROXYDIR}/conf/haproxy.cfg
 
 WORKDIR ${HAPROXYDIR}
 
-ADD lighttpd.conf /etc/lighttpd/lighttpd.conf
-ADD lighttpd2.conf /etc/lighttpd/lighttpd2.conf
-ADD start.sh ${HAPROXYDIR}/start.sh
+COPY lighttpd.conf /etc/lighttpd/lighttpd.conf
+COPY lighttpd2.conf /etc/lighttpd/lighttpd2.conf
+COPY start.sh ${HAPROXYDIR}/start.sh
 
 # set up normal user
 RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs ${HAPROXYDIR}
