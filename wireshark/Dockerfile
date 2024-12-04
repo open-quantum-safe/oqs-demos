@@ -50,33 +50,34 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
 # Build and install liboqs
 WORKDIR /opt/build/liboqs
 RUN cmake -G Ninja /opt/src/liboqs \
-    -D CMAKE_INSTALL_PREFIX=${INSTALLDIR}/liboqs \
+    -D CMAKE_INSTALL_PREFIX="${INSTALLDIR}/liboqs" \
     -D BUILD_SHARED_LIBS=ON \
     -D OQS_USE_OPENSSL=OFF \
     -D CMAKE_INSTALL_RPATH="${INSTALLDIR}/liboqs/lib" && \
-    ninja -j$(nproc) && ninja install
+    ninja -j"$(nproc)" && \
+    ninja install
 
 # Build OpenSSL integrated with liboqs
 WORKDIR /opt/build/openssl
 RUN LDFLAGS="-Wl,-rpath,${INSTALLDIR}/liboqs/lib" \
     /opt/src/openssl/config \
-        --prefix=${INSTALLDIR}/openssl \
-        --openssldir=${INSTALLDIR}/ssl \
+        --prefix="${INSTALLDIR}/openssl" \
+        --openssldir="${INSTALLDIR}/ssl" \
         shared && \
-    make -j$(nproc) && \
+    make -j"$(nproc)" && \
     make install_sw install_ssldirs
 
 # Build OQS provider for OpenSSL integration
 WORKDIR /opt/build/oqs-provider
 RUN cmake -G Ninja \
-    -D OPENSSL_ROOT_DIR=${INSTALLDIR}/openssl \
+    -D OPENSSL_ROOT_DIR="${INSTALLDIR}/openssl" \
     -D CMAKE_PREFIX_PATH="${INSTALLDIR}/openssl;${INSTALLDIR}/liboqs" \
-    -D CMAKE_INSTALL_PREFIX=${INSTALLDIR}/oqs-provider \
+    -D CMAKE_INSTALL_PREFIX="${INSTALLDIR}/oqs-provider" \
     -D CMAKE_INSTALL_RPATH="${INSTALLDIR}/openssl/lib:${INSTALLDIR}/liboqs/lib" \
     /opt/src/oqs-provider && \
-    ninja -j$(nproc) && \
-    mkdir -p ${INSTALLDIR}/openssl/lib/ossl-modules && \
-    cp /opt/build/oqs-provider/lib/oqsprovider.so ${INSTALLDIR}/openssl/lib/ossl-modules
+    ninja -j"$(nproc)" && \
+    mkdir -p "${INSTALLDIR}/openssl/lib/ossl-modules" && \
+    cp /opt/build/oqs-provider/lib/oqsprovider.so "${INSTALLDIR}/openssl/lib/ossl-modules"
 
 # Set up OpenSSL to load the OQS provider
 RUN CONFIG_FILE="${INSTALLDIR}/ssl/openssl.cnf" && \
@@ -116,17 +117,17 @@ RUN cmake -G Ninja /opt/src/wireshark \
     -D QT5=OFF \
     -D QT6=ON \
     -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_INSTALL_PREFIX=${INSTALLDIR}/wireshark \
+    -D CMAKE_INSTALL_PREFIX="${INSTALLDIR}/wireshark" \
     -D CMAKE_PREFIX_PATH="${INSTALLDIR}/openssl;${INSTALLDIR}/liboqs" \
     -D CMAKE_INSTALL_RPATH="${INSTALLDIR}/openssl/lib:${INSTALLDIR}/liboqs/lib" && \
-    ninja -j$(nproc) && ninja install
+    ninja -j"$(nproc)" && ninja install
 
 # Test integration of OQS provider with OpenSSL
 WORKDIR /opt/src/oqs-provider
 ENV OPENSSL_CONF=${INSTALLDIR}/ssl/openssl.cnf
 ENV OPENSSL_MODULES=${INSTALLDIR}/openssl/lib/ossl-modules
 RUN mkdir -p _build
-RUN ./scripts/runtests.sh -j$(nproc)
+RUN ./scripts/runtests.sh -j"$(nproc)"
 
 # Stage 2: Minimal runtime image
 FROM ubuntu:${UBUNTU_VERSION} AS runtime
