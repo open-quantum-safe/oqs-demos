@@ -14,6 +14,10 @@ on:
         required: false
         default: false
         type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       build_main:
@@ -21,11 +25,16 @@ on:
         required: false
         default: false
         type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
 
 env:
   build-args: |
     LIBOQS_TAG=main
     OQSPROVIDER_TAG=main
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
 
 jobs:
   build:
@@ -41,6 +50,11 @@ jobs:
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
+        if: env.push == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -53,5 +67,18 @@ jobs:
           context: wireshark
           platforms: ${{ matrix.platform }}
           build-args: |
-            ${{ (github.event.inputs.build_main == 'true') && env.build-args || null }}
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: oqs-wireshark
+
+      - name: Push Docker image to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: wireshark
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/wireshark:${{ inputs.release_tag || 'latest' }}
+            openquantumsafe/wireshark:${{ inputs.release_tag || 'latest' }}

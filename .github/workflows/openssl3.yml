@@ -87,5 +87,5 @@ jobs:
             MAKE_DEFINES=-j4
             ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: |
+            ghcr.io/${{ github.repository_owner }}/openssl3:${{ inputs.release_tag || 'latest' }}
             openquantumsafe/openssl3:${{ inputs.release_tag || 'latest' }}
-            ghcr.io/open-quantum-safe/openssl3:${{ inputs.release_tag || 'latest' }}
