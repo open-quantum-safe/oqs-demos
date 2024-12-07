@@ -67,7 +67,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  build-x86:
+  build-x64:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

@@ -1,0 +1,19 @@
+version: 2.1
+
+jobs:
+  ubuntu_x64_provider:
+    description: NoOp
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+        auth:
+          username: $DOCKER_LOGIN
+          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+
+workflows:
+  version: 2.1
+  build:
+    jobs:
+      - ubuntu_x64_provider:
+          context: openquantumsafe
