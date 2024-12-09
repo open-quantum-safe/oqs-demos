@@ -42,10 +42,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: arm64
-            runner: oqs-arm64
           - arch: x86_64
             runner: ubuntu-latest
+          - arch: arm64
+            runner: oqs-arm64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -89,11 +89,11 @@ jobs:
             openquantumsafe/openssl3:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
 
   push:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: ./.github/workflows/manifest
-        if: env.push == 'true'
         with:
           image_name: openssl3
           release_tag: ${{ inputs.release_tag || 'latest' }}
