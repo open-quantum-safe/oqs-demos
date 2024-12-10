@@ -1,4 +1,4 @@
-name: Run all
+name: OQS Demos
 
 on:
   workflow_call:
