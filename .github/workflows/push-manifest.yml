@@ -1,0 +1,41 @@
+name: push-manifest
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        description: "Which docker image to push to"
+        required: true
+        type: string
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push multiarch image to ghcr.io
+        run: |
+          docker manifest create ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }} \
+            --amend ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }}-x86_64 \
+            --amend ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }}-arm64 &&
+          docker manifest push ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }}
+
+      - name: Push multiarch image to DockerHub
+        run: |
+          docker manifest create openquantumsafe/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }} \
+            --amend openquantumsafe/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }}-x86_64 \
+            --amend openquantumsafe/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }}-arm64 &&
+          docker manifest push openquantumsafe/${{ inputs.image_name }}:${{ inputs.release_tag || 'latest' }}

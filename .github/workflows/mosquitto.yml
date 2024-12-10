@@ -1,0 +1,102 @@
+name: mosquitto
+
+on:
+  push:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/mosquitto.yml', 'mosquitto/**']
+  pull_request:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/mosquitto.yml', 'mosquitto/**']
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    OQSPROVIDER_TAG=main
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: oqs-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        if: env.push == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: mosquitto
+          build-args: |
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: oqs-mosquitto
+
+      - name: Test mosquitto using local docker network
+        run: |
+          docker network create --subnet=192.168.0.0/16 mosquitto-test &&
+          docker run --network mosquitto-test --ip 192.168.0.2 -it --rm --name oqs-mosquitto-broker -e "BROKER_IP=192.168.0.2" -e "EXAMPLE=broker-start.sh" -d oqs-mosquitto &&
+          docker run --network mosquitto-test --ip 192.168.0.3 -it --rm --name oqs-mosquitto-subscriber -e "BROKER_IP=192.168.0.2" -e "SUB_IP=192.168.0.3" -e "EXAMPLE=subscriber-start.sh" -d oqs-mosquitto &&
+          docker run --network mosquitto-test --ip 192.168.0.4 -it --rm --name oqs-mosquitto-publisher -e "BROKER_IP=192.168.0.2" -e "PUB_IP=192.168.0.4" -e "EXAMPLE=publisher-start.sh" -d oqs-mosquitto &&
+          sleep 2 &&
+          docker logs oqs-mosquitto-publisher | grep "Client_pub sending PUBLISH" &&
+          docker logs oqs-mosquitto-subscriber | grep "Hello world"
+
+      - name: Push Docker image to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: mosquitto
+          build-args: |
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/mosquitto:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/mosquitto:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+
+  push:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/manifest
+        with:
+          image_name: mosquitto
+          release_tag: ${{ inputs.release_tag || 'latest' }}
