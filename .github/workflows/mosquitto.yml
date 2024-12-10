@@ -34,7 +34,7 @@ env:
   build-args: |
     LIBOQS_TAG=main
     OQSPROVIDER_TAG=main
-  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
 
 jobs:
   build:
@@ -92,7 +92,7 @@ jobs:
             openquantumsafe/mosquitto:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
 
   push:
-    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
     needs: build
     runs-on: ubuntu-latest
     steps:
