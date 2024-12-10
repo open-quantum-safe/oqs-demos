@@ -34,7 +34,7 @@ ARG MAKE_DEFINES="-j"
 # Root CA directory
 ARG CAROOTDIR="/rootca"
 
-FROM ubuntu:focal-20230412 as intermediate
+FROM ubuntu:focal-20230412 AS intermediate
 # Take in global args
 ARG BASEDIR
 ARG CONFIGDIR

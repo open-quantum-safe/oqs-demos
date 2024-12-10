@@ -36,7 +36,7 @@ ARG NGINX_VERSION=1.27.2
 ARG MAKE_DEFINES="-j 18"
 
 
-FROM alpine:${ALPINE_VERSION} as intermediate
+FROM alpine:${ALPINE_VERSION} AS intermediate
 # Take in global args
 ARG OPENSSL_TAG
 ARG LIBOQS_TAG

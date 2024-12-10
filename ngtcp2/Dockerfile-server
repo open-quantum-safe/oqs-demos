@@ -3,7 +3,7 @@
 # define the alpine image version to use
 ARG ALPINE_VERSION=3.20
 
-FROM alpine:${ALPINE_VERSION} as intermediate
+FROM alpine:${ALPINE_VERSION} AS intermediate
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -87,7 +87,7 @@ RUN mkdir /opt/lib && cd /opt/lib && \
         cp /usr/lib/libgcc_s.so.* .
 
 ## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM alpine:${ALPINE_VERSION} as dev
+FROM alpine:${ALPINE_VERSION} AS dev
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apk update && apk upgrade && apk add mailcap && echo "This is my index page">index.html
