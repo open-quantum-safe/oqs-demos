@@ -39,6 +39,8 @@ It should be possible to use the openssl (s_client) and curl clients with all al
 
 When updates to an integration with a Dockerfile are pushed to `main`, an updated `latest` image is pushed to DockerHub and ghcr.io with support for both x86_64 and arm64.
 
+The build and test CI is run against the latest code in liboqs and oqs-provider weekly.
+
 ## Contributing
 
 Contributions are gratefully welcomed. See our [Contributing Guide](CONTRIBUTING.md) for more details.
