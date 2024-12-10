@@ -26,7 +26,7 @@ ARG MAKE_DEFINES="-j 4"
 # Default KEM algorithms to be utilized
 ARG KEM_ALGLIST="kyber768:p384_kyber768"
 
-FROM debian:bullseye as intermediate
+FROM debian:bullseye AS intermediate
 # Take in all global args
 ARG OPENSSL_TAG
 ARG LIBOQS_TAG
