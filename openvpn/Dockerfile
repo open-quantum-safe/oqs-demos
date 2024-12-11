@@ -32,7 +32,7 @@ ENV OPENSSL3_DIR=${INSTALLDIR}
 
 # Get all software packages required for builing all components:
 RUN apt-get update && apt-get install -y --no-install-recommends \
-            libtool automake autoconf cmake ninja-build \
+            libtool automake autoconf cmake ninja-build ca-certificates \
             make openssl libssl-dev pkg-config libcap-ng-dev \
             git net-tools liblzo2-dev \
              libpam0g-dev python3-docutils \
@@ -86,7 +86,7 @@ ARG OPENVPNDIR
 # Install required runtime packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     liblzo2-2 libnl-3-200 libnl-genl-3-200 \
-    procps net-tools iputils-ping  \
+    procps net-tools iputils-ping ca-certificates \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories
