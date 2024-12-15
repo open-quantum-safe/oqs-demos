@@ -1,157 +1,127 @@
-# Multi-stage build: First the full builder image:
+# Multi-stage build: Build components in the first stage
 
-# define the alpine image version to use
+# Define the base versions and tags for dependencies
+# Note: Changing LIBOQS_TAG may require updates in sshd_config and ssh_config
 ARG ALPINE_VERSION=3.20
+ARG LIBOQS_TAG="0.11.0"
+ARG OQS_OPENSSH_RELEASE="OQS-v9"
 
-# Default location where all binaries wind up:
+# Define installation directory
 ARG DEFAULT_INSTALL_DIR=/opt/oqs-ssh
 ARG INSTALL_DIR=${DEFAULT_INSTALL_DIR}
 
-# liboqs version
-# ATTENTION: Changing this could mean that further adaptions in sshd_config and ssh_config are required
-ARG LIBOQS_TAG="0.11.0"
-
-# liboqs build defines (https://github.com/open-quantum-safe/liboqs/wiki/Customizing-liboqs)
-ARG LIBOQS_BUILD_DEFINES=
-
-# Open quantum safe OpenSSH release
-ARG OQS_OPENSSH_RELEASE="OQS-v9"
-
-# openssh build defines (https://github.com/open-quantum-safe/openssh#step-2-build-the-fork)
-ARG OPENSSH_BUILD_OPTIONS=
-
-# Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j2"
-ARG MAKE_INSTALL="install-nokeys"
-
-# Define the username of the normal user
+# Define user credentials
 ARG OQS_USER="oqs"
 ARG OQS_PASSWORD="Pa55W0rd"
 
-FROM alpine:${ALPINE_VERSION} as intermediate
-# Take in all global args
+FROM alpine:${ALPINE_VERSION} AS intermediate
 ARG INSTALL_DIR
 ARG LIBOQS_TAG
-ARG LIBOQS_BUILD_DEFINES
 ARG OQS_OPENSSH_RELEASE
-ARG OPENSSH_BUILD_OPTIONS
-ARG MAKE_DEFINES
-ARG MAKE_INSTALL
 ARG OQS_USER
 
 LABEL version="3"
 
-ENV DEBIAN_FRONTEND noninteractive
+# Install build dependencies
+RUN apk update && apk --no-cache add gcc musl-dev  \
+    linux-headers libtool automake autoconf cmake \
+    make openssl openssl-dev \
+    git docker zlib-dev
 
-RUN apk update && apk upgrade
-
-# Get all software packages required for builing all components:
-# Note: build-base cannot be used due to the fortify-headers package throwing an error
-RUN apk add gcc musl-dev linux-headers \
-    libtool automake autoconf cmake \
-    make \
-    openssl openssl-dev \
-    git docker \
-    zlib-dev
-
-# get all sources
+# Clone source repositories
 WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OQS_OPENSSH_RELEASE} https://github.com/open-quantum-safe/openssh ossh-src;
 
-# build liboqs static (does not work with shared lib!)
+# Build and install liboqs
+# Note: Shared libraries are not supported; static libraries must be used
 WORKDIR /opt/liboqs
-# RUN mkdir build && cd build && cmake .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/opt/ossh-src/oqs && make ${MAKE_DEFINES} && make install
-RUN mkdir build-static && \
-    cd build-static && \
-    cmake .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_BUILD_TYPE=${LIBOQS_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/opt/ossh-src/oqs && \
-    make ${MAKE_DEFINES} && \
-    make install
+RUN cmake .  \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DCMAKE_INSTALL_PREFIX="/opt/ossh-src/oqs" && \
+    make -j"$(nproc)" && make install
 
-# builds and installs OQS-OpenSSH
+# Build and install OQS-OpenSSH
 WORKDIR /opt/ossh-src
 RUN autoreconf && ./configure \
     --with-libs=-lm \
     --prefix=${INSTALL_DIR} \
     --sysconfdir=${INSTALL_DIR} \
     --with-liboqs-dir=/opt/ossh-src/oqs \
-    --with-mantype=man \
-    ${OPENSSH_BUILD_OPTIONS}
-RUN make ${MAKE_DEFINES} && \
-    make ${MAKE_INSTALL}
+    --with-mantype=man
+
+RUN make -j"$(nproc)" && make install-nokeys
 
 CMD ["sh"]
 STOPSIGNAL SIGTERM
 
-## second stage: Only create minimal image without build tooling and intermediate build results generated above:
-
-FROM alpine:${ALPINE_VERSION} as dev
-# Take in all global args
+# Second stage: Create a minimal image with the built components
+FROM alpine:${ALPINE_VERSION} AS dev
 ARG DEFAULT_INSTALL_DIR
 ARG INSTALL_DIR
 ARG OQS_USER
 ARG OQS_PASSWORD
 
-RUN apk update \
-    && apk upgrade \
-    && apk add bash nano
+# Install runtime tools
+RUN apk update && apk --no-cache add bash nano
 
-# Only retain the ${INSTALL_DIR} contents in the final image
+# Copy installation artifacts from the build stage
 COPY --from=intermediate ${INSTALL_DIR} ${INSTALL_DIR}
 
-# Create a normal user to be able to log into the system via ssh
-RUN addgroup --gid 1000 --system ${OQS_USER} && \
-    adduser --uid 1000 --system ${OQS_USER} --ingroup ${OQS_USER} --shell /bin/sh && \
-    echo -e -e "${OQS_PASSWORD}\n${OQS_PASSWORD}\n" | passwd ${OQS_USER}
+# Create a system user for SSH
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+RUN addgroup --gid 1000 --system "${OQS_USER}" && \
+    adduser --uid 1000 --system "${OQS_USER}" --ingroup "${OQS_USER}" --shell /bin/sh && \
+    printf "%s\n%s\n" "${OQS_PASSWORD}" "${OQS_PASSWORD}" | passwd "${OQS_USER}"
 
-# Set up login shell: Add ssh-binaries to path for ssh login shell, fix /etc/profile not executing /etc/profile.d/*
+# Add SSH binaries to PATH for login shell and ensure /etc/profile executes scripts in /etc/profile.d/
 RUN sed -i "s|PATH=|PATH=${INSTALL_DIR}/bin:|;s|/etc/profile.d/\*\.sh|/etc/profile.d/\*|" /etc/profile
 
-# Setup .ssh folder for $OQS_USER to hold the identity keys later
+# Set up .ssh directory for identity keys
 WORKDIR /home/${OQS_USER}/.ssh
 RUN chown ${OQS_USER}:${OQS_USER} .
 
-# Pass some potentionally useful variables to environment
 ENV OQS_INSTALL_DIR=${INSTALL_DIR}
 ENV OQS_USER=$OQS_USER
 
-# Enable ssh deamon to start at boot (although `rc-service oqs-sshd start` still needs to be called)
+# Enable SSH daemon to start at boot
+# Note: `rc-service oqs-sshd start` must still be called manually to start the service
 COPY oqs-sshd /etc/init.d/
 RUN sed -ri "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" /etc/init.d/oqs-sshd
-RUN apk add openrc openssl \
+RUN apk --no-cache add openrc openssl \
     && mkdir -p /run/openrc \
     && touch /run/openrc/softlevel \
     && rc-update add oqs-sshd \
     && rc-status
 
-# Fix error "/lib/rc/sh/openrc-run.sh: line 100: can't create /sys/fs/cgroup/*/*: Read-only file system"
+# Fix OpenRC cgroup error caused by attempts to modify a read-only file system
 RUN sed -ri '269 s/cgroup_add_service/#cgroup_add_service/' /lib/rc/sh/openrc-run.sh
 
-# Copy scripts
+# Copy and configure SSH server settings
 COPY sshd_config ${INSTALL_DIR}
 RUN sed -ri "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/sshd_config
+
+# Copy and configure SSH client settings
 COPY ssh_config ${INSTALL_DIR}
 RUN sed -ri "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/ssh_config
-COPY serverstart.sh ${INSTALL_DIR}/test/
-# RUN sed -in "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/serverstart.sh
-COPY connect-test.sh ${INSTALL_DIR}/test/
-# RUN sed -in "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/connect-test.sh
-COPY key-gen.sh ${INSTALL_DIR}/scripts/
-# RUN sed -in "s:${DEFAULT_INSTALL_DIR}:${INSTALL_DIR}:g" ${INSTALL_DIR}/key-gen.sh
 
-# set path to use 'new' openssh
+# Copy utility scripts for server operations
+COPY serverstart.sh ${INSTALL_DIR}/test/
+COPY connect-test.sh ${INSTALL_DIR}/test/
+COPY key-gen.sh ${INSTALL_DIR}/scripts/
+
+# Update PATH for OpenSSH and utility scripts
 ENV PATH="${INSTALL_DIR}/bin:${PATH}"
 ENV PATH="${INSTALL_DIR}/test:${PATH}"
 ENV PATH="${INSTALL_DIR}/scripts:${PATH}"
 
 STOPSIGNAL SIGTERM
 
-# Expose port 2222 as this is the chosen ssh port for oqs-ssh
+# Expose the SSH port for oqs-ssh
 EXPOSE 2222
 
+# Prepare entrypoint and default shell
 WORKDIR /home/${OQS_USER}/
-
-# Generate the host and identity keys (see key-gen.sh) and start a shell
 COPY entrypoint.sh .
 RUN chmod a+x ./entrypoint.sh
 ENTRYPOINT [ "./entrypoint.sh" ]
