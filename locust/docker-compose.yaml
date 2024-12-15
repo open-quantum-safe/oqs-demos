@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   master:
     image: oqs-locust:0.0.1
