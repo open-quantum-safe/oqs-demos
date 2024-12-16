@@ -37,7 +37,7 @@ RUN cmake -GNinja -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} .. && ninja && ninja inst
 # Build and install OpenSSL with QUIC support
 WORKDIR /opt/openssl
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix="${INSTALLDIR}" && \
-    ninja -j"$(nproc)" && make install_sw install_ssldirs && \
+    make -j"$(nproc)" && make install_sw install_ssldirs && \
     if [ -d "${INSTALLDIR}/lib64" ]; then ln -s "${INSTALLDIR}/lib64" "${INSTALLDIR}/lib"; fi && \
     if [ -d "${INSTALLDIR}/lib" ]; then ln -s "${INSTALLDIR}/lib" "${INSTALLDIR}/lib64"; fi
 
