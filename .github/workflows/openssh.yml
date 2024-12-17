@@ -92,7 +92,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/workflows/manifest
+      - uses: ./.github/workflows/manifest.yml
         with:
           image_name: openssh
           release_tag: ${{ inputs.release_tag || 'latest' }}

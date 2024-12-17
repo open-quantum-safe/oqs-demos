@@ -143,15 +143,15 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/workflows/manifest
+      - uses: ./.github/workflows/manifest.yml
         with:
           image_name: curl
           release_tag: optimized
-      - uses: ./.github/workflows/manifest
+      - uses: ./.github/workflows/manifest.yml
         with:
           image_name: curl-dev
           release_tag: latest
-      - uses: ./.github/workflows/manifest
+      - uses: ./.github/workflows/manifest.yml
         with:
           image_name: curl
           release_tag: ${{ inputs.release_tag || 'latest' }}

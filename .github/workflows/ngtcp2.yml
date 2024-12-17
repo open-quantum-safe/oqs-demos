@@ -122,11 +122,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/workflows/manifest
+      - uses: ./.github/workflows/manifest.yml
         with:
           image_name: ngtcp2-server
           release_tag: ${{ inputs.release_tag || 'latest' }}
-      - uses: ./.github/workflows/manifest
+      - uses: ./.github/workflows/manifest.yml
         with:
           image_name: ngtcp2-client
           release_tag: ${{ inputs.release_tag || 'latest' }}
