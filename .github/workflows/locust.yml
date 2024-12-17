@@ -1,0 +1,135 @@
+name: locust
+
+on:
+  push:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/locust.yml', 'locust/**']
+  pull_request:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/locust.yml', 'locust/**']
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    OQSPROVIDER_TAG=main
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: oqs-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        if: env.push == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: locust
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            oqs-locust
+            oqs-locust:0.0.1
+
+      # Launch the Locust environment with a single worker for this test case.
+      - name: Launch Locust in Docker Compose
+        working-directory: ./locust
+        run: |
+          LOGGER_LEVEL=DEBUG HOST=https://localhost:4433 GROUP=kyber768 docker compose up -d --scale worker=1
+      - run: sleep 10
+
+      # Start the OpenSSL quantum-safe server inside the Locust worker container.
+      - name: Start OpenSSL server
+        working-directory: ./locust
+        run: |
+          docker exec -d locust-worker-1 openssl s_server \
+            -cert bin/CA.crt \
+            -key bin/CA.key \
+            -www \
+            -tls1_3 \
+            -groups kyber768
+      - run: sleep 10
+
+      # Trigger the Locust load test by sending a POST request to the Locust master API.
+      - name: Run Locust load test
+        working-directory: ./locust
+        run: |
+          curl -X POST -H 'content-type: application/x-www-form-urlencoded' \
+            --data-raw 'user_count=1&spawn_rate=1&host=https%3A%2F%2Flocalhost%3A4433&run_time=30s' \
+            http://localhost:8189/swarm
+
+      # Allow the test to complete by waiting longer than the specified run-time.
+      - name: Wait for test to finish
+        run: sleep 70
+
+      # Fetch the Locust test results in CSV format using the /stats/requests API.
+      - name: Download and Check JSON report
+        working-directory: ./locust
+        run: |
+          curl 'http://localhost:8189/stats/requests/csv' -o results.out &&
+          cat results.out &&
+          grep kyber768 results.out
+
+      - name: Push Docker image to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: locust
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/locust:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/locust:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+
+  push:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/manifest
+        with:
+          image_name: locust
+          release_tag: ${{ inputs.release_tag || 'latest' }}

@@ -1,0 +1,100 @@
+name: OQS Demos
+
+on:
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+  schedule: # run with "build_main: true" weekly on Mon at 1:01
+    - cron: '1 1 * * 1'
+
+jobs:
+  curl:
+    uses: ./.github/workflows/curl.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  h2load:
+    uses: ./.github/workflows/h2load.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  haproxy:
+    uses: ./.github/workflows/haproxy.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  httpd:
+    uses: ./.github/workflows/httpd.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  locust:
+    uses: ./.github/workflows/locust.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  mosquitto:
+    uses: ./.github/workflows/mosquitto.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  nginx:
+    uses: ./.github/workflows/nginx.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  ngtcp2:
+    uses: ./.github/workflows/ngtcp2.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  openssh:
+    uses: ./.github/workflows/openssh.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  openssl3:
+    uses: ./.github/workflows/openssl3.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  openvpn:
+    uses: ./.github/workflows/openvpn.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
+  wireshark:
+    uses: ./.github/workflows/wireshark.yml
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}

@@ -1,0 +1,157 @@
+name: curl
+
+on:
+  push:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/curl.yml', 'curl/**']
+  pull_request:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/curl.yml', 'curl/**']
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    OQSPROVIDER_TAG=main
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: oqs-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        if: env.push == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: curl
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: oqs-curl
+
+      - name: Build the Docker image (dev)
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: curl
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          target: dev
+          tags: oqs-curl-dev
+
+      - name: Build the Docker image (with generic liboqs)
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: curl
+          build-args: |
+            MAKE_DEFINES=-j4
+            LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic"
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: oqs-curl-generic
+
+      - name: Test curl and curl generic
+        run: |
+          docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 oqs-curl perftest.sh &&
+          docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 oqs-curl-generic perftest.sh
+
+      - name: Push Docker image to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: curl
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/curl:optimized-${{ matrix.arch }}
+            openquantumsafe/curl:optimized-${{ matrix.arch }}
+
+      - name: Push Docker image to registries (dev)
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: curl
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          target: dev
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/curl-dev:latest-${{ matrix.arch }}
+            openquantumsafe/curl-dev:latest-${{ matrix.arch }}
+
+      - name: Push Docker image to registries (with generic liboqs)
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: curl
+          build-args: |
+            MAKE_DEFINES=-j4
+            LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic"
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/curl:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/curl:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+
+  push:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/manifest
+        with:
+          image_name: curl
+          release_tag: optimized
+      - uses: ./.github/workflows/manifest
+        with:
+          image_name: curl-dev
+          release_tag: latest
+      - uses: ./.github/workflows/manifest
+        with:
+          image_name: curl
+          release_tag: ${{ inputs.release_tag || 'latest' }}
