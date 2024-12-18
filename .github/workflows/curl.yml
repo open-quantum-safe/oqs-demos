@@ -142,6 +142,7 @@ jobs:
     if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
     needs: build
     uses: ./.github/workflows/push-manifest.yml
+    secrets: inherit
     with:
       image_name: curl
       release_tag: optimized
@@ -150,6 +151,7 @@ jobs:
     if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
     needs: build
     uses: ./.github/workflows/push-manifest.yml
+    secrets: inherit
     with:
       image_name: curl-dev
       release_tag: latest
@@ -158,6 +160,7 @@ jobs:
     if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
     needs: build
     uses: ./.github/workflows/push-manifest.yml
+    secrets: inherit
     with:
       image_name: curl
       release_tag: ${{ inputs.release_tag || 'latest' }}

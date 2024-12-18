@@ -92,9 +92,8 @@ jobs:
   push:
     if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
     needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ./.github/workflows/manifest.yml
-        with:
-          image_name: <demo_name>
-          release_tag: ${{ inputs.release_tag || 'latest' }}
+    uses: ./.github/workflows/push-manifest.yml
+    secrets: inherit
+    with:
+      image_name: <demo_name>
+      release_tag: ${{ inputs.release_tag || 'latest' }}
