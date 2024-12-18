@@ -29,72 +29,84 @@ on:
 jobs:
   curl:
     uses: ./.github/workflows/curl.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   h2load:
     uses: ./.github/workflows/h2load.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   haproxy:
     uses: ./.github/workflows/haproxy.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   httpd:
     uses: ./.github/workflows/httpd.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   locust:
     uses: ./.github/workflows/locust.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   mosquitto:
     uses: ./.github/workflows/mosquitto.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   nginx:
     uses: ./.github/workflows/nginx.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   ngtcp2:
     uses: ./.github/workflows/ngtcp2.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   openssh:
     uses: ./.github/workflows/openssh.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   openssl3:
     uses: ./.github/workflows/openssl3.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   openvpn:
     uses: ./.github/workflows/openvpn.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
 
   wireshark:
     uses: ./.github/workflows/wireshark.yml
+    secrets: inherit
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
