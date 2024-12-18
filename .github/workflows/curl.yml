@@ -138,20 +138,26 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/curl:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
             openquantumsafe/curl:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
 
+  push-optimized:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    uses: ./.github/workflows/push-manifest.yml
+    with:
+      image_name: curl
+      release_tag: optimized
+
+  push-dev:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    uses: ./.github/workflows/push-manifest.yml
+    with:
+      image_name: curl-dev
+      release_tag: latest
+
   push:
     if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
     needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ./.github/workflows/manifest.yml
-        with:
-          image_name: curl
-          release_tag: optimized
-      - uses: ./.github/workflows/manifest.yml
-        with:
-          image_name: curl-dev
-          release_tag: latest
-      - uses: ./.github/workflows/manifest.yml
-        with:
-          image_name: curl
-          release_tag: ${{ inputs.release_tag || 'latest' }}
+    uses: ./.github/workflows/push-manifest.yml
+    with:
+      image_name: curl
+      release_tag: ${{ inputs.release_tag || 'latest' }}
