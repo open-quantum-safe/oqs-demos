@@ -24,7 +24,7 @@ ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 ARG MAKE_DEFINES="-j 4"
 
 # Default KEM algorithms to be utilized
-ARG KEM_ALGLIST="kyber768:p384_kyber768"
+ARG KEM_ALGLIST="mlkem768:p384_mlkem768"
 
 FROM debian:bullseye AS intermediate
 # Take in all global args
@@ -38,9 +38,9 @@ ARG MAKE_DEFINES
 ARG KEM_ALGLIST
 ARG OPENVPNDIR
 
-LABEL version "2"
+LABEL version="2"
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && apt -y upgrade
 
