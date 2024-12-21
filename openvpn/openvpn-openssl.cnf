@@ -61,7 +61,7 @@ ssl_conf = ssl_sect
 system_default = system_default_sect
 
 [system_default_sect]
-Groups = kyber768:p384_kyber768
+Groups = mlkem768:p384_mlkem768
 
 
 # List of providers to load
