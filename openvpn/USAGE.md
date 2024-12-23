@@ -53,7 +53,7 @@ The last three commands clean up all data structures established.
 
 ## Advanced usage options
 
-The docker image has been pre-configured to use the quantum-safe crypto (QSC) algorithm family "Kyber" for key establishment. For TLS1.3 handshaking, the QSC algorithm "mldsa44" is configured by default, but for both algorithm types, any plain or hybrid QSC algorithm can be selected. For the full list of supported OQS KEM and signature algorithms see [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
+The docker image has been pre-configured to use the quantum-safe crypto (QSC) algorithm family "ML-KEM" for key establishment. For TLS1.3 handshaking, the QSC algorithm "mldsa65" is configured by default, but for both algorithm types, any plain or hybrid QSC algorithm can be selected. For the full list of supported OQS KEM and signature algorithms see [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
 ### TLS_GROUPS
 
