@@ -73,7 +73,7 @@ jobs:
       - name: Test openvpn
         working-directory: ./openvpn
         run: |
-          sh ./test.sh mldsa65 p521_mlkem1024
+          sh ./test.sh mldsa87 p521_mlkem1024
 
       - name: Push Docker image to registries
         if: env.push == 'true'
