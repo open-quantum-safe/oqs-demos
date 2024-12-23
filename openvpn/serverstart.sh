@@ -1,8 +1,5 @@
 #!/bin/bash
 
-mkdir -p /dev/net
-mknod /dev/net/tun c 10 200
-
 # Location of config files
 cd /etc/openvpn
 
@@ -11,7 +8,7 @@ cd /etc/openvpn
 
 # if env var not set, chose default certificate signature algorithm
 if [ -z "$OQSIGALG" ]; then
-   OQSSIGALG="dilithium3"
+   OQSSIGALG="mldsa65"
 fi
 
 if [ ! -f ca_cert.crt ]; then

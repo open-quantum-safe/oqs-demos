@@ -47,12 +47,12 @@ echo "Starting test openvpn server and client"
 # OQS server & test client:
 if [ -z "$2" ]; then
    # use default TLS_GROUPS
-   docker run --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN $OQS_OPENVPN_DOCKERIMAGE
-   docker run --rm --name $OQS_CLIENT --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn --cap-add=NET_ADMIN -d $OQS_OPENVPN_DOCKERIMAGE clientstart.sh
+   docker run --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN --cap-add=MKNOD --device /dev/net/tun $OQS_OPENVPN_DOCKERIMAGE
+   docker run --rm --name $OQS_CLIENT --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn --cap-add=NET_ADMIN --cap-add=MKNOD --device /dev/net/tun -d $OQS_OPENVPN_DOCKERIMAGE clientstart.sh
 else
    # assume the first parameter to be (a list of) TLS_GROUPS to be utilized:
-   docker run -e TLS_GROUPS=$2 --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN oqs-openvpn
-   docker run -e TLS_GROUPS=$2 --rm --name $OQS_CLIENT --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn --cap-add=NET_ADMIN -d oqs-openvpn clientstart.sh
+   docker run -e TLS_GROUPS=$2 --rm --name $OQS_SERVER --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn -d --cap-add=NET_ADMIN --cap-add=MKNOD --device /dev/net/tun oqs-openvpn
+   docker run -e TLS_GROUPS=$2 --rm --name $OQS_CLIENT --net $OQS_NETWORK -v $OQS_DATA:/etc/openvpn --cap-add=NET_ADMIN --cap-add=MKNOD --device /dev/net/tun -d oqs-openvpn clientstart.sh
 fi
 
 # Allow time to start up
