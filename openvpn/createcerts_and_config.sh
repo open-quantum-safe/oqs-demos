@@ -2,7 +2,7 @@
 
 # if env var not set, chose default certificate signature algorithm
 if [ -z "$OQSSIGALG" ]; then
-   OQSSIGALG="mldsa44"
+   OQSSIGALG="mldsa65"
 fi
 
 if [ -z "$SERVERFQDN" ]; then
