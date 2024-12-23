@@ -8,7 +8,7 @@ cd /etc/openvpn
 
 # if env var not set, chose default certificate signature algorithm
 if [ -z "$OQSIGALG" ]; then
-   OQSSIGALG="mldsa44"
+   OQSSIGALG="mldsa65"
 fi
 
 if [ ! -f ca_cert.crt ]; then
