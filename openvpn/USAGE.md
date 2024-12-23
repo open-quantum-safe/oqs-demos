@@ -20,7 +20,7 @@ The required scripting for generating all keys, certificates and configuration f
 
     docker run -e OQSSIGALG=$OQS_SIGALG -e SERVERFQDN=$OQS_SERVER -e CLIENTFQDN=$OQS_CLIENT -v $OQS_DATA:/config/openvpn --rm openquantumsafe/openvpn sh -c "cd /config/openvpn && createcerts_and_config.sh"
 
-This generates all required configuration information into the docker volume. The mandatory environment variables `SERVERFQDN` and `CLIENTFQDN` must contain the FQDN of the server and the client respectively running the instance. The optional environment variable `OQSSIGALG` may contain the name of any of the [supported OQS PQ signature algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms); if not set, the default value "mldsa44" is used for creation of client and server keys and certificates.
+This generates all required configuration information into the docker volume. The mandatory environment variables `SERVERFQDN` and `CLIENTFQDN` must contain the FQDN of the server and the client respectively running the instance. The optional environment variable `OQSSIGALG` may contain the name of any of the [supported OQS PQ signature algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms); if not set, the default value "mldsa65" is used for creation of client and server keys and certificates.
 
 Additionally, information for connecting to the server is generated into the file `/etc/openvpn/client.config` and can be used to connect to the server.
 
