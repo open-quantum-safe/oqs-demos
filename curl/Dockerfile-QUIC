@@ -1,6 +1,6 @@
 FROM ubuntu:latest AS build
 
-ARG CURL_VERSION=8.10.1
+ARG CURL_VERSION=8.11.1
 ARG QUICHE_VERSION=0.22.0
 
 RUN apt update && apt install cmake gcc ninja-build libunwind-dev pkg-config build-essential cargo git wget -y && cd /root && \
