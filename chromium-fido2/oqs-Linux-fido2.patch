@@ -57,10 +57,10 @@ index 8e00ce77041f7..25e3378605aee 100644
    if (!public_key) {
 diff --git a/device/fido/dilithium3_public_key.cc b/device/fido/dilithium3_public_key.cc
 new file mode 100644
-index 0000000000000..dd4848efcef66
+index 0000000000000..0c9d36ac2b0a4
 --- /dev/null
 +++ b/device/fido/dilithium3_public_key.cc
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,81 @@
 +// Copyright 2020 The Chromium Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -99,8 +99,7 @@ index 0000000000000..dd4848efcef66
 +    // raw_ptr<T> as a void*, skipping AddRef() call and causing a ref-counting
 +    // mismatch.
 +    RAW_PTR_EXCLUSION const int64_t* kty;
-+    // TODO: Only using x for compatibility with existing Sandbox demo. Rename.
-+    RAW_PTR_EXCLUSION const std::vector<uint8_t>* x;
++    RAW_PTR_EXCLUSION const std::vector<uint8_t>* pk;
 +  } cose_key;
 +
 +  static constexpr cbor_extract::StepOrByte<COSEKey> kSteps[] = {
@@ -108,8 +107,8 @@ index 0000000000000..dd4848efcef66
 +      ELEMENT(Is::kRequired, COSEKey, kty),
 +      IntKey<COSEKey>(static_cast<int>(CoseKeyKey::kKty)),
 +
-+      ELEMENT(Is::kRequired, COSEKey, x),
-+      IntKey<COSEKey>(static_cast<int>(CoseKeyKey::kEllipticX)),
++      ELEMENT(Is::kRequired, COSEKey, pk),
++      IntKey<COSEKey>(static_cast<int>(CoseKeyKey::kPQCPublicKey)),
 +
 +      Stop<COSEKey>(),
 +      // clang-format on
@@ -117,13 +116,13 @@ index 0000000000000..dd4848efcef66
 +
 +  if (!cbor_extract::Extract<COSEKey>(&cose_key, kSteps, map) ||
 +      *cose_key.kty != static_cast<int64_t>(CoseKeyTypes::kPQC) ||
-+      cose_key.x->size() != 1952) { // TODO don't hardcode
++      cose_key.pk->size() != 1952) { // TODO don't hardcode
 +    return nullptr;
 +  }
 +
 +  bssl::UniquePtr<EVP_PKEY> pkey(
 +      EVP_PKEY_new_raw_public_key(EVP_PKEY_DILITHIUM3, /*engine=*/nullptr,
-+                                  cose_key.x->data(), cose_key.x->size()));
++                                  cose_key.pk->data(), cose_key.pk->size()));
 +  if (!pkey) {
 +    return nullptr;
 +  }
@@ -178,10 +177,18 @@ index 0000000000000..04a28b50e8086
 +
 +#endif  // DEVICE_FIDO_DILITHIUM3_PUBLIC_KEY_H_
 diff --git a/device/fido/fido_constants.h b/device/fido/fido_constants.h
-index 2337b2eeba670..e5948372d1888 100644
+index 2337b2eeba670..e8c2269126d4c 100644
 --- a/device/fido/fido_constants.h
 +++ b/device/fido/fido_constants.h
-@@ -280,6 +280,7 @@ enum class CoseKeyTypes : int {
+@@ -272,6 +272,7 @@ enum class CoseKeyKey : int {
+   kEllipticCurve = -1,
+   kEllipticX = -2,
+   kEllipticY = -3,
++  kPQCPublicKey = -1,
+ };
+ 
+ // Enumerates COSE key types. See
+@@ -280,6 +281,7 @@ enum class CoseKeyTypes : int {
    kOKP = 1,
    kEC2 = 2,
    kRSA = 3,
@@ -189,7 +196,7 @@ index 2337b2eeba670..e5948372d1888 100644
    // kInvalidForTesting is a random 32-bit number used to test unknown key
    // types.
    kInvalidForTesting = 146919568,
-@@ -295,6 +296,9 @@ enum class CoseCurves : int {
+@@ -295,6 +297,9 @@ enum class CoseCurves : int {
  enum class CoseAlgorithmIdentifier : int {
    kEs256 = -7,
    kEdDSA = -8,
@@ -243,7 +250,7 @@ index d3736e90fc6fc..a1f3d5699a1cf 100644
  
      // support_enterprise_attestation indicates whether enterprise attestation
 diff --git a/device/fido/virtual_fido_device.cc b/device/fido/virtual_fido_device.cc
-index 71fa246282170..3dcba485d0163 100644
+index 71fa246282170..b6e2afc6bb153 100644
 --- a/device/fido/virtual_fido_device.cc
 +++ b/device/fido/virtual_fido_device.cc
 @@ -14,6 +14,7 @@
@@ -308,7 +315,7 @@ index 71fa246282170..3dcba485d0163 100644
 +                static_cast<int64_t>(CoseAlgorithmIdentifier::kCryDi3));
 +    map.emplace(static_cast<int64_t>(CoseKeyKey::kKty),
 +                static_cast<int64_t>(CoseKeyTypes::kPQC));
-+    map.emplace(static_cast<int64_t>(CoseKeyKey::kEllipticX),
++    map.emplace(static_cast<int64_t>(CoseKeyKey::kPQCPublicKey),
 +                base::span<const uint8_t>(public_key, sizeof(public_key)));
 +
 +    std::optional<std::vector<uint8_t>> cbor_bytes(
