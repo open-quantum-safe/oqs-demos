@@ -83,7 +83,7 @@ tr:nth-child(even) {
 
 <p>For automated testing, a JSON file encoding all available SIG/KEM combinations and the respective ports where they can be found is <a href="assignments.json">available for download here</a>. <i>We explicitly want to warn that algorithm/port combinations are subject to change. Be sure to download the most current JSON file before testing.</i></p>
 
-<p>Note: The designator "*" below for key exchange algorithms should not be understood that the port referenced supports any possible KEM, but only all those KEMs configured into the underlying nginx server as default groups. This can be set when building the server via the <a href="https://github.com/open-quantum-safe/oqs-demos/blob/main/nginx/fulltest/Dockerfile#L25-L26">DEFAULT_GROUPS</a> configuration option. The default algorithm list is: <pre>x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:x25519_kyber768:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024.</pre></p>
+<p>Note: The designator "*" below for key exchange algorithms should not be understood that the port referenced supports any possible KEM, but only all those KEMs configured into the underlying nginx server as default groups. This can be set when building the server via the <a href="https://github.com/open-quantum-safe/oqs-demos/blob/main/nginx/fulltest/Dockerfile#L25-L26">DEFAULT_GROUPS</a> configuration option. The default algorithm list is: <pre>x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:x25519_kyber768:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024:mlkem512:mlkem768:mlkem1024:X25519MLKEM768:SecP256r1MLKEM768.</pre></p>
 
 <table>
   <tr>

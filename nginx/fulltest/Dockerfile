@@ -3,11 +3,11 @@
 # First: global build arguments:
 
 # liboqs build type variant; maximum portability of image:
-ARG LIBOQS_TAG=0.11.0
+ARG LIBOQS_TAG=0.12.0
 
-ARG OPENSSL_TAG=openssl-3.3.2
+ARG OPENSSL_TAG=openssl-3.4.0
 
-ARG OQSPROVIDER_TAG=0.6.1
+ARG OQSPROVIDER_TAG=0.8.0
 
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
@@ -20,13 +20,13 @@ ARG INSTALLDIR=${BASEDIR}/nginx
 ARG CONFIGDIR="/"
 
 # defines the QSC signature algorithm used for the certificates:
-ARG SIG_ALG="dilithium3"
+ARG SIG_ALG="mldsa44"
 
 # defines the list of default groups to be activated in nginx-openssl config:
-ARG DEFAULT_GROUPS=x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:x25519_kyber768:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024
+ARG DEFAULT_GROUPS=x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:x25519_kyber768:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024:mlkem512:mlkem768:mlkem1024:X25519MLKEM768:SecP256r1MLKEM768
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.27.2
+ARG NGINX_VERSION=1.27.3
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j"

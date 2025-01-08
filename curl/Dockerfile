@@ -7,10 +7,10 @@ ARG ALPINE_VERSION=3.20
 ARG OPENSSL_TAG=openssl-3.3.2
 
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=0.11.0
+ARG LIBOQS_TAG=0.12.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=0.7.0
+ARG OQSPROVIDER_TAG=0.8.0
 
 # define the Curl version to be baked in
 ARG CURL_VERSION=8.10.0
