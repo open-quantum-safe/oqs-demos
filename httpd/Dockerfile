@@ -1,55 +1,24 @@
-# Multi-stage build: First the full builder image:
-
-# First: global build arguments: 
-
-# define the alpine image version to use
-ARG ALPINE_VERSION=3.20
-
-# define the openssl tag to be used
-ARG OPENSSL_TAG=openssl-3.3.2
-
-# define the liboqs tag to be used
-ARG LIBOQS_TAG=0.11.0
-
-# define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=0.7.0
-
-# liboqs build type variant; maximum portability of image:
-ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
-
-# installation paths
+# Define build arguments for version tags, installation paths, and configurations
+ARG ALPINE_VERSION=3.21
+ARG OPENSSL_TAG=openssl-3.4.0
+ARG LIBOQS_TAG=0.12.0
+ARG OQSPROVIDER_TAG=0.8.0
+ARG HTTPD_VERSION=2.4.62
+ARG APR_VERSION=1.7.5
+ARG APRU_VERSION=1.6.3
 ARG OPENSSL_PATH=/opt/openssl
 ARG HTTPD_PATH=/opt/httpd
-
-# defines the QSC signature algorithm used for the certificates:
-ARG SIG_ALG="dilithium3"
-
-# defines default KEM groups to be announced
-ARG DEFAULT_GROUPS="kyber768:p384_kyber768"
-
-# define the httpd version to include
-ARG HTTPD_VERSION=2.4.62
-
-# define the APR version to include
-ARG APR_VERSION=1.7.5
-
-# define the APR util version to include
-ARG APRU_VERSION=1.6.3
-
-# define the mirror from which to fetch the APR and APR-util source code
 ARG APR_MIRROR="https://dlcdn.apache.org"
 
-# Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-# A CI system with less than 4 cores should be avoided
-ARG MAKE_DEFINES="-j 4"
+# Specify supported signature and key encapsulation mechanisms (KEM) algorithms
+ARG SIG_ALG="dilithium3"
+ARG DEFAULT_GROUPS="kyber768:p384_kyber768"
 
-
+# Stage 1: Build - Compile and assemble all necessary components and dependencies
 FROM alpine:${ALPINE_VERSION} AS intermediate
-# Take in global args
 ARG OPENSSL_TAG
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
-ARG LIBOQS_BUILD_DEFINES
 ARG OPENSSL_PATH
 ARG HTTPD_PATH
 ARG SIG_ALG
@@ -57,17 +26,14 @@ ARG HTTPD_VERSION
 ARG APR_VERSION
 ARG APRU_VERSION
 ARG APR_MIRROR
-ARG MAKE_DEFINES
 ARG DEFAULT_GROUPS
 
-# Get all software packages required for builing all components:
-RUN apk add build-base linux-headers \
+# Install required build tools and system dependencies
+RUN apk update && apk --no-cache add build-base linux-headers \
             libtool automake autoconf cmake ninja \
-            make \
-            git wget pcre-dev \
-            expat-dev
+            make git wget pcre-dev expat-dev
 
-# get sources
+# Download and prepare source files needed for the build process
 WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl ossl-src && \
@@ -76,48 +42,54 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
     wget ${APR_MIRROR}/apr/apr-util-${APRU_VERSION}.tar.gz && tar xzvf apr-util-${APRU_VERSION}.tar.gz && \
     wget --trust-server-names "https://archive.apache.org/dist/httpd/httpd-${HTTPD_VERSION}.tar.gz" && tar -zxvf httpd-${HTTPD_VERSION}.tar.gz;
 
-# build OpenSSL3
+# Build and install OpenSSL
 WORKDIR /opt/ossl-src
-RUN LDFLAGS="-Wl,-rpath -Wl,${OPENSSL_PATH}/lib64" ./config no-shared --prefix=${OPENSSL_PATH} && \
-    make ${MAKE_DEFINES} && make install_sw install_ssldirs && \
-    if [ -d ${OPENSSL_PATH}/lib64 ]; then ln -s ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib; fi && \
-    if [ -d ${OPENSSL_PATH}/lib ]; then ln -s ${OPENSSL_PATH}/lib ${OPENSSL_PATH}/lib64; fi
+RUN LDFLAGS="-Wl,-rpath -Wl,${OPENSSL_PATH}/lib64" ./config no-shared --prefix="${OPENSSL_PATH}" && \
+    make -j"$(nproc)" && make install_sw install_ssldirs && \
+    if [ -d "${OPENSSL_PATH}/lib64" ]; then ln -s "${OPENSSL_PATH}/lib64" "${OPENSSL_PATH}/lib"; fi && \
+    if [ -d "${OPENSSL_PATH}/lib" ]; then ln -s "${OPENSSL_PATH}/lib" "${OPENSSL_PATH}/lib64"; fi
 
-# build liboqs (shared lib only for oqsprovider)
-WORKDIR /opt/liboqs
-RUN mkdir build && cd build && cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${OPENSSL_PATH} && ninja && ninja install
+# Build and install liboqs
+WORKDIR /opt/liboqs/build
+RUN cmake -G"Ninja" ..  \
+    -DOQS_DIST_BUILD=ON -DBUILD_SHARED_LIBS=ON  \
+    -DCMAKE_INSTALL_PREFIX=${OPENSSL_PATH} && \
+    ninja && ninja install
 
-# build oqs-provider
+# Build, install, and configure the oqs-provider for OpenSSL integration
 WORKDIR /opt/oqs-provider
-RUN rm -rf build && cmake -DCMAKE_BUILD_TYPE=Debug -DOPENSSL_ROOT_DIR=${OPENSSL_PATH} -DCMAKE_PREFIX_PATH=${OPENSSL_PATH} -S . -B build && cmake --build build && export MODULESDIR=$(find ${OPENSSL_PATH} -name ossl-modules) && cp build/lib/oqsprovider.so $MODULESDIR/oqsprovider.so
-
-# create openssl.cnf activating oqsprovider & setting default groups
-RUN sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${OPENSSL_PATH}/ssl/openssl.cnf && \
+RUN cmake -DOPENSSL_ROOT_DIR="${OPENSSL_PATH}" -DCMAKE_PREFIX_PATH="${OPENSSL_PATH}" -S . -B build && \
+    cmake --build build && \
+    MODULESDIR="$(find "${OPENSSL_PATH}" -name ossl-modules)" && \
+    cp build/lib/oqsprovider.so "${MODULESDIR}/oqsprovider.so" && \
+    sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${OPENSSL_PATH}/ssl/openssl.cnf && \
     sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && \
     sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${OPENSSL_PATH}/ssl/openssl.cnf && \
     sed -i "s/HOME\t\t\t= ./HOME\t\t= .\nDEFAULT_GROUPS\t= ${DEFAULT_GROUPS}/g" ${OPENSSL_PATH}/ssl/openssl.cnf
 
-# build httpd
+# Build and install httpd
 WORKDIR /opt
-RUN sed -i "s/\$RM \"\$cfgfile\"/\$RM -f \"\$cfgfile\"/g" apr-${APR_VERSION}/configure && \
-    cd apr-${APR_VERSION} && ./configure && make ${MAKE_DEFINES} && make install && cd .. && \
-    cd apr-util-${APRU_VERSION} && ./configure x86_64-pc-linux-gnu --with-crypto --with-openssl=${OPENSSL_PATH} --with-apr=/usr/local/apr && make ${MAKE_DEFINES} && make install
+RUN sed -i "s/\$RM \"\$cfgfile\"/\$RM -f \"\$cfgfile\"/g" "apr-${APR_VERSION}/configure" && \
+    ./apr-${APR_VERSION}/configure && make -j"$(nproc)" && make install
+
+WORKDIR /opt/apr-util-${APRU_VERSION}
+RUN ./configure x86_64-pc-linux-gnu --with-crypto --with-openssl="${OPENSSL_PATH}" --with-apr="/usr/local/apr" && \
+    make -j"$(nproc)" && make install
 
 WORKDIR /opt/httpd-${HTTPD_VERSION}
-RUN ./configure --prefix=${HTTPD_PATH} \
+RUN ./configure --prefix="${HTTPD_PATH}" \
                     --enable-debugger-mode \
-                    --enable-ssl --with-ssl=${OPENSSL_PATH} \
+                    --enable-ssl --with-ssl="${OPENSSL_PATH}" \
                     --enable-ssl-staticlib-deps \
                     --enable-mods-static=ssl && \
-    make ${MAKE_DEFINES} && make install;
+    make -j"$(nproc)" && make install;
 
 # prepare to run httpd
 ARG OPENSSL_CNF=${OPENSSL_PATH}/ssl/openssl.cnf
 
 WORKDIR ${HTTPD_PATH}
-    # generate CA key and cert
-    # generate server CSR
-    # generate server cert
+
+# Generate CA key and certificate, create server CSR, and issue server certificate
 RUN set -x && \
     mkdir pki && \
     mkdir cacert && \
@@ -125,48 +97,45 @@ RUN set -x && \
     ${OPENSSL_PATH}/bin/openssl req -new -newkey ${SIG_ALG} -keyout pki/server.key -out pki/server.csr -nodes -subj "/CN=oqs-httpd" -config ${OPENSSL_CNF} && \
     ${OPENSSL_PATH}/bin/openssl x509 -req -in pki/server.csr -out pki/server.crt -CA cacert/CA.crt -CAkey cacert/CA.key -CAcreateserial -days 365
 
-# Some size optimization:
-RUN rm -rf ${HTTPD_PATH}/bin/ab
-
-# second stage: Only create minimal image without build tooling and intermediate build results generated above:
+# Stage 2: Runtime - Lightweight image with essential binaries and configurations
 FROM alpine:${ALPINE_VERSION}
-
-LABEL version="3"
-
-# Take in global args
 ARG HTTPD_PATH
 ARG OPENSSL_PATH
-#
-RUN apk add pcre-dev expat-dev
-#
-# Only retain the ${*_PATH} contents in the final image
-COPY --from=intermediate ${HTTPD_PATH} ${HTTPD_PATH}
-# copy over manually build libapr{util}
-COPY --from=intermediate /usr/local/apr/lib  /usr/local/apr/lib
 
-# Need to copy over OpenSSL3 libs and conf for oqsprovider use
+# Install runtime tools and dependencies
+RUN apk update && apk --no-cache add pcre-dev expat-dev
+
+# Copy necessary components from the build stage
+COPY --from=intermediate ${HTTPD_PATH} ${HTTPD_PATH}
+COPY --from=intermediate /usr/local/apr/lib /usr/local/apr/lib
 COPY --from=intermediate ${OPENSSL_PATH}/ssl ${OPENSSL_PATH}/ssl
 COPY --from=intermediate ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib64
 
-RUN ln -s ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib;
+# Create symbolic links for OpenSSL library paths
+RUN ln -s ${OPENSSL_PATH}/lib64 ${OPENSSL_PATH}/lib
 
+# Copy HTTPD configuration files
 COPY httpd-conf/httpd-ssl.conf ${HTTPD_PATH}/httpd-conf/httpd-ssl.conf
 COPY httpd-conf/httpd.conf ${HTTPD_PATH}/httpd-conf/httpd.conf
-WORKDIR ${HTTPD_PATH}
 
-# forward request and error logs to docker log collector
+# Configure log forwarding
+WORKDIR ${HTTPD_PATH}
 RUN ln -sf /dev/stdout ${HTTPD_PATH}/logs/access_log && \
-    ln -sf /dev/stderr ${HTTPD_PATH}/logs/error_log;
-#
-RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && chown -R oqs.oqs ${HTTPD_PATH}
+    ln -sf /dev/stderr ${HTTPD_PATH}/logs/error_log
+
+# Set up non-root user for improved security, adjust ownership
+RUN addgroup -g 1000 -S oqs && adduser --uid 1000 -S oqs -G oqs && \
+    chown -R oqs:oqs ${HTTPD_PATH}
+
+# Switch to the non-root user
 USER oqs
 
-# Ensure httpd just runs
-ENV PATH ${HTTPD_PATH}/bin:$PATH
+# Set PATH to include HTTPD binaries for runtime execution
+ENV PATH="${HTTPD_PATH}/bin:$PATH"
 
+# Expose port for secure communication
 EXPOSE 4433
-#
+
+# Specify stop signal and startup command for HTTPD
 STOPSIGNAL SIGTERM
-
 CMD ["httpd", "-f", "httpd-conf/httpd.conf", "-D", "FOREGROUND"]
-
