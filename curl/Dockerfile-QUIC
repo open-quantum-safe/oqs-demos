@@ -1,25 +1,73 @@
-FROM ubuntu:latest AS build
-
 ARG CURL_VERSION=8.11.1
 ARG QUICHE_VERSION=0.22.0
 
-RUN apt update && apt install cmake gcc ninja-build libunwind-dev pkg-config build-essential cargo git wget -y && cd /root && \
-# Clone BoringSSL&liboqs
-  git clone --branch master https://github.com/open-quantum-safe/boringssl.git bssl && git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git && \
-# Build liboqs
-  cd liboqs && mkdir build && cd build && cmake -G"Ninja" -DCMAKE_INSTALL_PREFIX=../../bssl/oqs -DOQS_USE_OPENSSL=OFF .. && ninja && ninja install && \
-# Build BoringSSL
-  cd /root/bssl && mkdir build && cd build && cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 .. && ninja && ninja install && cp -rp ../install/include /usr/local/include/bssl && cp -rp ../install/lib /usr/local/lib/bssl && \
-# Build quiche
-  cd /root && git clone --recursive -b ${QUICHE_VERSION} https://github.com/cloudflare/quiche && cd quiche/quiche/deps && rm -R boringssl && ln -s /root/bssl boringssl && cd /root/quiche && cargo build --package quiche --release --features ffi,pkg-config-meta,qlog && cp -p target/release/libquiche.so /usr/local/lib/bssl/libquiche.so.0 && \
-# Build curl
-  cd /root && wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz && tar -zxf curl-${CURL_VERSION}.tar.gz && rm -R curl-${CURL_VERSION}.tar.gz && mv curl-${CURL_VERSION} curl && cd curl && LIBS=-lpthread ./configure LDFLAGS="-Wl,-rpath,/usr/local/lib/bssl" --with-openssl=/root/bssl/install --with-quiche=/root/quiche/target/release --without-libpsl --prefix="/usr/local/curl" && make && make install
+# Stage 1: Build - Compile and assemble all necessary components and dependencies.
+FROM ubuntu:latest AS build
+ARG CURL_VERSION
+ARG QUICHE_VERSION
 
+# Install required build tools and system dependencies.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake gcc ninja-build libunwind-dev \
+    pkg-config build-essential \
+    cargo git wget ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
+# Download and prepare source files needed for the build process.
+WORKDIR /root
+RUN git clone --branch master --depth 1 https://github.com/open-quantum-safe/boringssl.git bssl \
+    && git clone --recursive --depth 1 https://github.com/open-quantum-safe/liboqs.git \
+    && git clone --recursive --depth 1 --branch ${QUICHE_VERSION} https://github.com/cloudflare/quiche.git \
+    && mkdir -p /root/curl \
+    && wget -qO- "https://curl.se/download/curl-${CURL_VERSION}.tar.gz" | tar -xzf - -C /root/curl --strip-components=1
+
+# Build and install liboqs
+WORKDIR /root/liboqs/build
+RUN cmake -G"Ninja"  \
+    "-DCMAKE_INSTALL_PREFIX=../../bssl/oqs"  \
+    "-DOQS_USE_OPENSSL=OFF" .. \
+    && ninja -j"$(nproc)" && ninja install
+
+# Build and install BoringSSL
+WORKDIR /root/bssl/build
+RUN cmake -GNinja  \
+    "-DCMAKE_BUILD_TYPE=Release" \
+    "-DBUILD_SHARED_LIBS=1" .. \
+    && ninja -j"$(nproc)" && ninja install \
+    && cp -rp "../install/include" "/usr/local/include/bssl" \
+    && cp -rp "../install/lib" "/usr/local/lib/bssl"
+
+# Build quiche with custom BoringSSL integration, enabling HTTP/3 and QUIC support
+WORKDIR /root/quiche/quiche/deps
+RUN rm -R boringssl \
+    && ln -s /root/bssl boringssl
+
+WORKDIR /root/quiche
+RUN cargo build --package quiche --release --features ffi,pkg-config-meta,qlog \
+    && cp -p target/release/libquiche.so /usr/local/lib/bssl/libquiche.so.0
+
+# Build and install cURL
+WORKDIR /root/curl
+RUN LIBS=-lpthread ./configure \
+    LDFLAGS=-Wl,-rpath,/usr/local/lib/bssl \
+    --with-openssl=/root/bssl/install \
+    --with-quiche=/root/quiche/target/release \
+    --without-libpsl \
+    --prefix=/usr/local/curl \
+      && make -j"$(nproc)" && make install
+
+# Stage 2: Runtime - Create a lightweight image with essential binaries and configurations.
 FROM ubuntu:latest
 
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy necessary files from the build stage
 COPY --from=build /usr/local/include/bssl /usr/local/include/bssl
 COPY --from=build /usr/local/lib/bssl /usr/local/lib/bssl
 COPY --from=build /usr/local/curl /usr/local/curl
 
+# Create a symbolic link for cURL
 RUN ln -s /usr/local/curl/bin/curl /usr/local/bin/curl

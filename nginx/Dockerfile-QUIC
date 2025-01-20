@@ -1,83 +1,118 @@
-FROM ubuntu:latest AS build
-
+# Define nginx version
 ARG NGINX_VERSION=1.26.2
 
-RUN apt update && apt upgrade -y && mkdir /home/build && cd /home/build && \
-  apt install -y g++ make git libpcre3 libpcre3-dev build-essential zlib1g-dev wget && \
-# liboqs deps
-  liboqs_pkgs="cmake gcc ninja-build libunwind-dev pkg-config python3" && apt install -y $liboqs_pkgs && \
-# Download liboqs
-  git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git && \
-# Download open-quantum-safe/boringssl
-  git clone --branch master --single-branch --depth 1 https://github.com/open-quantum-safe/boringssl.git && \
-# Build liboqs
-# https://github.com/open-quantum-safe/liboqs/blob/main/CONFIGURE.md#options-for-configuring-liboqs-builds
-  cd liboqs && mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=../../boringssl/oqs -DCMAKE_BUILD_TYPE=Release -DOQS_DIST_BUILD=ON -DOQS_USE_OPENSSL=OFF .. && ninja && ninja install && \
-# build boringssl
-  cd ../../boringssl && mkdir build && cd build && cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 .. && ninja && \
-# prepare dir
-  cp -p ssl/libssl.so /usr/local/lib && cp -p crypto/libcrypto.so /usr/local/lib && cd ../.. && \
-# Download nginx
-  wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -O nginx.tgz && tar xvf nginx.tgz && mv nginx-${NGINX_VERSION} nginx && \
-# build nginx
-  cd nginx && \
-  ./configure \
-  --prefix=/etc/nginx \
-  --sbin-path=/usr/sbin/nginx \
-  --modules-path=/usr/lib/nginx/modules \
-  --conf-path=/etc/nginx/nginx.conf \
-  --error-log-path=/var/log/nginx/error.log \
-  --http-log-path=/var/log/nginx/access.log \
-  --pid-path=/var/run/nginx.pid \
-  --lock-path=/var/run/nginx.lock \
-  --http-client-body-temp-path=/var/cache/nginx/client_temp \
-  --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
-  --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
-  --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
-  --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
-  --user=nginx --group=nginx \
-  --with-http_v3_module \
-  --with-http_v2_module \
-  --with-http_ssl_module \
-  --with-http_realip_module \
-  --with-http_gzip_static_module \
-  --with-http_gunzip_module \
-  --with-http_slice_module \
-  --with-stream \
-  --with-stream_ssl_module \
-  --with-stream_ssl_preread_module \
-  --with-stream_realip_module \
-  --with-compat \
-  --with-threads \
-  --with-http_mp4_module \
-  --with-file-aio \
-  --with-http_secure_link_module \
-  --with-http_stub_status_module \
-  --with-http_auth_request_module \
-  --with-http_dav_module \
-  --with-http_flv_module \
-  --with-cc=c++ \
-  --with-cc-opt="-I../boringssl/include -x c -Ofast" \
-  --with-ld-opt="-L../boringssl/build/ssl -L../boringssl/build/crypto -Wl,-rpath,/usr/local/lib" && \
-  make
+# Stage 1: Build - Compile and assemble all necessary components and dependencies
+FROM ubuntu:latest AS build
+ARG NGINX_VERSION
 
+# Install required build tools and system dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
+      g++ make cmake git build-essential \
+      libpcre3 libpcre3-dev zlib1g-dev \
+      wget ninja-build libunwind-dev \
+      pkg-config python3  ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download and prepare source files needed for the build process
+WORKDIR /home/build
+RUN git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git && \
+    git clone --branch master --single-branch --depth 1 https://github.com/open-quantum-safe/boringssl.git && \
+    wget -qO- "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar -xzf -
+
+
+# Build and install liboqs
+WORKDIR /home/build/liboqs/build
+RUN cmake -GNinja \
+    -DCMAKE_INSTALL_PREFIX=/home/build/boringssl/oqs \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DOQS_DIST_BUILD=ON \
+    -DOQS_USE_OPENSSL=OFF .. && \
+    ninja && ninja install
+
+# Build and install boringssl
+WORKDIR /home/build/boringssl
+RUN mkdir build && cd build && \
+    cmake -GNinja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_SHARED_LIBS=1 .. && \
+    ninja && \
+    # Copy BoringSSL libraries into the system path after build
+    cp -p ssl/libssl.so /usr/local/lib && \
+    cp -p crypto/libcrypto.so /usr/local/lib
+
+# Build and install Nginx
+WORKDIR /home/build/nginx-${NGINX_VERSION}
+RUN ./configure \
+    --prefix=/etc/nginx --sbin-path=/usr/sbin/nginx \
+    --modules-path=/usr/lib/nginx/modules \
+    --conf-path=/etc/nginx/nginx.conf \
+    --error-log-path=/var/log/nginx/error.log \
+    --http-log-path=/var/log/nginx/access.log \
+    --pid-path=/var/run/nginx.pid \
+    --lock-path=/var/run/nginx.lock \
+    --http-client-body-temp-path=/var/cache/nginx/client_temp \
+    --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
+    --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+    --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
+    --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+    --user=nginx \
+    --group=nginx \
+    --with-http_v3_module \
+    --with-http_v2_module \
+    --with-http_ssl_module \
+    --with-http_realip_module \
+    --with-http_gzip_static_module \
+    --with-http_gunzip_module \
+    --with-http_slice_module \
+    --with-stream \
+    --with-stream_ssl_module \
+    --with-stream_ssl_preread_module \
+    --with-stream_realip_module \
+    --with-compat \
+    --with-threads \
+    --with-http_mp4_module \
+    --with-file-aio \
+    --with-http_secure_link_module \
+    --with-http_stub_status_module \
+    --with-http_auth_request_module \
+    --with-http_dav_module \
+    --with-http_flv_module \
+    --with-cc=c++ \
+    --with-cc-opt="-I../boringssl/include -x c -Ofast" \
+    --with-ld-opt="-L../boringssl/build/ssl -L../boringssl/build/crypto -Wl,-rpath,/usr/local/lib" && \
+    make
+
+
+# Stage 2: Runtime - Create a lightweight image with essential binaries and configurations
 FROM ubuntu:latest
-COPY --from=build /home/build/nginx/objs/nginx /usr/sbin/nginx
-COPY --from=build /home/build/nginx/conf /etc/nginx
-COPY --from=build /usr/local/lib /usr/local/lib
-RUN set -x \
-    && apt update && apt upgrade -y && apt install --no-install-recommends --no-install-suggests -y adduser libpcre3 && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/nginx.list \
-    && groupadd --system --gid 101 nginx \
-    && useradd --system --gid nginx --no-create-home --home /nonexistent --comment "nginx user" --shell /bin/false --uid 101 nginx \
-    && mkdir -p '/var/run' && mkdir -p '/var/cache/nginx' && mkdir -p '/var/log/nginx' \
-    && touch /var/log/nginx/access.log /var/log/nginx/error.log \
-    && ln -sf /dev/stdout /var/log/nginx/access.log \
-    && ln -sf /dev/stderr /var/log/nginx/error.log
+ARG NGINX_VERSION
 
-EXPOSE 80
-EXPOSE 443
-EXPOSE 443/udp
+# Copy compiled artifacts from the intermediate stage
+COPY --from=build /home/build/nginx-${NGINX_VERSION}/objs/nginx /usr/sbin/nginx
+COPY --from=build /home/build/nginx-${NGINX_VERSION}/conf /etc/nginx
+COPY --from=build /usr/local/lib /usr/local/lib
+
+# Install essential runtime tools and libraries
+RUN apt-get update && apt-get install --no-install-recommends -y \
+      adduser libpcre3 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a dedicated 'nginx' user and group
+RUN groupadd --system --gid 101 nginx && \
+    useradd --system --gid nginx --no-create-home --home /nonexistent \
+            --comment "nginx user" --shell /bin/false --uid 101 nginx
+
+# Link logs to Docker collector
+RUN mkdir -p /var/run /var/cache/nginx /var/log/nginx && \
+    touch /var/log/nginx/access.log /var/log/nginx/error.log && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
+
+# Expose the following ports:
+#   80      : HTTP        (tcp)
+#   443     : HTTPS       (tcp)
+#   443/udp : QUIC/HTTP/3 (udp)
+EXPOSE 80 443 443/udp
 
 STOPSIGNAL SIGQUIT
-
 CMD ["nginx", "-g", "daemon off;"]
