@@ -136,6 +136,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PATH="${INSTALLDIR}/wireshark/bin:${INSTALLDIR}/openssl/bin:${PATH}"
 ENV OPENSSL_CONF=${INSTALLDIR}/ssl/openssl.cnf
 ENV OPENSSL_MODULES=${INSTALLDIR}/openssl/lib/ossl-modules
+ENV QT_QPA_PLATFORM=xcb
+ENV XDG_RUNTIME_DIR=/tmp/runtime-root
 
 # Copy essential files from build stage
 COPY --from=build ${INSTALLDIR}/wireshark ${INSTALLDIR}/wireshark
@@ -143,4 +145,7 @@ COPY --from=build ${INSTALLDIR}/openssl ${INSTALLDIR}/openssl
 COPY --from=build ${INSTALLDIR}/liboqs ${INSTALLDIR}/liboqs
 COPY --from=build ${INSTALLDIR}/ssl ${INSTALLDIR}/ssl
 
-CMD ["wireshark"]
+# Ensure runtime directory exists with correct permissions
+RUN mkdir -p ${XDG_RUNTIME_DIR} && chmod 0700 ${XDG_RUNTIME_DIR}
+
+CMD ["sh", "-c", "wireshark"]
