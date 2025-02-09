@@ -22,19 +22,20 @@ image allows Wireshark to analyze network traffic encrypted with post-quantum cr
           $env:DISPLAY="<your_host_ip>:0"
           ```
     - **macOS**:
-      - Install an X server, such as [XQuartz](https://www.xquartz.org), and start it.
+      - Ensure [XQuartz](https://www.xquartz.org) is installed and running.
+      - Enable **"Allow connections from network clients"** under **XQuartz Preferences > Security**.
       - Run the following command in the terminal to allow Docker to access the display:
-        ```
+        ```sh
         xhost +
         ```
       - Set the display environment variable in the terminal:
+        ```sh
+        export DISPLAY=host.docker.internal:0
         ```
-        export DISPLAY=<your_host_ip>:0
-        ```
-
-**Note**: Replace `<your_host_ip>` with your system's IP address. Use `:0` as the default display port unless configured
+      **Notes:** 
+      - Every time you open XQuartz, you need to run `xhost +` and `export DISPLAY=host.docker.internal:0` again.
+      - Replace `<your_host_ip>` with your system's IP address. Use `:0` as the default display port unless configured
   otherwise.
-
 ## Building Instructions
 
 Run the following commands to build and launch Wireshark with OQS support:
@@ -74,4 +75,4 @@ Customize the build using the following Dockerfile arguments:
 - **`OQSPROVIDER_TAG`**: Defines the Open Quantum Safe provider version.
 - **`INSTALLDIR`**: Sets the installation path for OQS libraries.
 
-To keep the build up-to-date, update the  arguments as needed to include the latest versions.
+To keep the build up-to-date, update the arguments as needed to include the latest versions.
