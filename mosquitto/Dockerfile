@@ -2,13 +2,13 @@
 # Multi-stage build: First the full builder image:
 
 # define the openssl tag to be used
-ARG OPENSSL_TAG=openssl-3.3.2
+ARG OPENSSL_TAG=openssl-3.4.0
 
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=0.11.0
+ARG LIBOQS_TAG=0.12.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=0.7.0
+ARG OQSPROVIDER_TAG=0.8.0
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -17,10 +17,10 @@ ARG INSTALLDIR=/opt/oqssa
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
 # Default KEM algorithms to be utilized
-ARG KEM_ALGLIST="kyber768:p384_kyber768"
+ARG KEM_ALGLIST="mlkem768:p384_mlkem768"
 
 # Default Signature algorithm to be used
-ARG SIG_ALG="dilithium3"
+ARG SIG_ALG="mldsa65"
 
 ARG MOSQUITTO_TAG=v2.0.20
 
