@@ -1,30 +1,52 @@
 import json
 import sys
-import subprocess
 import os
-import time
+import subprocess
 
-# Parameter checks already done in shellscript
+# Ensure correct usage
+if len(sys.argv) < 2:
+    print("Usage: python testrun.py <docker-image-name>")
+    sys.exit(1)
 
-with open("assignments.json", "r") as f:
-   jsoncontents = f.read();
+docker_image = sys.argv[1]
 
-assignments = json.loads(jsoncontents)
-for sig in assignments:
-    print("Testing %s:" % (sig))
-    for kem in assignments[sig]:
-       # assemble testing command
-       cmd = "docker run -v "+os.path.abspath(os.getcwd())+"/ca:/ca -it "+sys.argv[1]+" sh -c \"(echo \'GET /\'; sleep 1) | openssl s_client -CAfile /ca/CA.crt -connect test.openquantumsafe.org:"+str(assignments[sig][kem])
-       if kem!="*": # don't prescribe KEM
-          cmd=cmd+" -groups "+kem
-       cmd=cmd+"\""
-       output = os.popen(cmd).read()
-       if not ("Successfully" in output):
-           print("Error testing %s: \n %s \n" % (kem, output))
-       else:
-          print("    Tested KEM %s successfully." % (kem))
-    print("  Successfully concluded testing "+sig) 
-    break # only a single sig round makes sense until all OQS sigs are supported by OSSL3-oqsprovider (TBD)
+# Load JSON file
+try:
+    with open("assignments.json", "r") as f:
+        assignments = json.load(f)
+except FileNotFoundError:
+    print("Error: assignments.json not found.")
+    sys.exit(1)
+except json.JSONDecodeError:
+    print("Error: Failed to parse assignments.json.")
+    sys.exit(1)
+
+# Iterate over signature algorithms and associated KEMs
+for sig, kems in assignments.items():
+    print(f"Testing {sig}:")
+    for kem, port in kems.items():
+        # Construct the command
+        cmd = [
+            "docker", "run", "-v", f"{os.path.abspath(os.getcwd())}/ca:/ca", "-it", docker_image,
+            "sh", "-c",
+            f"(echo 'GET /'; sleep 1) | openssl s_client -CAfile /ca/CA.crt -connect test.openquantumsafe.org:{port}"
+            + (f" -groups {kem}" if kem != "*" else "")
+        ]
+
+        # Run the command
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            output = result.stdout
+        except subprocess.CalledProcessError as e:
+            output = e.stderr
+
+        # Evaluate output
+        if "Successfully" not in output:
+            print(f"Error testing {kem}:\n{output}\n")
+        else:
+            print(f"    Tested KEM {kem} successfully.")
+
+    print(f"  Successfully concluded testing {sig}")
+    break  # TODO: Only test one signature until full support is available.
+
 print("All available tests successfully passed.")
-
-
