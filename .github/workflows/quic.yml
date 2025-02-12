@@ -4,10 +4,13 @@ on:
   push:
     branches: ['main']
     paths: ['.github/workflows/quic.yml', 'curl/**', 'nginx/**']
+
   pull_request:
     paths: ['.github/workflows/quic.yml', 'curl/**', 'nginx/**']
+
   schedule:
     - cron: '2 7 18,28 * *'
+
   workflow_dispatch:
 
 env:
@@ -18,23 +21,28 @@ jobs:
   test-push:
     name: Test and push QUIC images
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v4
+
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       if: env.push == 'true'
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Create a shared volume
       run: docker volume create shared-1
       shell: bash
+
     - name: Generate a quantum-safe certificate chain
       run: |
         docker run -v shared-1:/certs $TARGET_NAME/openssl3 /bin/sh -c "\
@@ -42,6 +50,7 @@ jobs:
         openssl req -new -newkey sphincssha2128fsimple -keyout /certs/server.key -out /certs/server.csr -nodes -subj /CN=host.docker.internal && \
         openssl x509 -req -in /certs/server.csr -out /certs/server.crt -CA /certs/CA.crt -CAkey /certs/CA.key -CAcreateserial -days 365"
       shell: bash
+
     - name: Build NGINX with QUIC support and start the server
       working-directory: ./nginx
       run: |
@@ -50,6 +59,7 @@ jobs:
         docker cp ./nginx-conf/nginx-quic.conf nginx-quic-daemon:/etc/nginx/nginx-quic.conf && \
         docker exec nginx-quic-daemon bash -c "cd /etc/nginx && rm nginx.conf && mv nginx-quic.conf nginx.conf && nginx -s reload"
       shell: bash
+
     - name: Build cURL with QUIC support and test it with the server that's started earlier
       working-directory: ./curl
       run: |
@@ -57,6 +67,22 @@ jobs:
         docker run -v shared-1:/certs --add-host=host.docker.internal:host-gateway $TARGET_NAME/curl-quic:latest \
         curl --cacert /certs/CA.crt --http3-only https://host.docker.internal --curves hqc192 -vvvv
       shell: bash
+
+    - name: Scan cURL QUIC Docker Image
+      if: env.push == 'true'
+      uses: docker/scout-action@v1.16.1
+      with:
+        image: $TARGET_NAME/curl-quic:latest
+        command: cves,recommendations
+        sarif-file: curl-quic-scan-results.sarif
+
+    - name: Upload Scan Results for cURL QUIC
+      if: env.push == 'true'
+      uses: actions/upload-artifact@v4.4.3
+      with:
+        name: curl-quic-scan-results
+        path: curl-quic-scan-results.sarif
+
     - name: Push Docker images to Docker Hub
       if: env.push == 'true'
       run: |

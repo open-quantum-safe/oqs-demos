@@ -70,6 +70,21 @@ jobs:
             ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: oqs-openvpn
 
+      - name: Scan Docker Image
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-openvpn
+          command: cves,recommendations
+          sarif-file: openvpn-scan-results.sarif
+
+      - name: Upload Scan Results
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: openvpn-scan-results
+          path: openvpn-scan-results.sarif
+
       - name: Test openvpn
         working-directory: ./openvpn
         run: |

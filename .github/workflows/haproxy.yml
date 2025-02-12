@@ -70,6 +70,21 @@ jobs:
             ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: oqs-haproxy
 
+      - name: Scan Docker Image
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-haproxy
+          command: cves,recommendations
+          sarif-file: haproxy-scan-results.sarif
+
+      - name: Upload Scan Results
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: haproxy-scan-results
+          path: haproxy-scan-results.sarif
+
       - name: Build the curl Docker image
         uses: docker/build-push-action@v6
         with:

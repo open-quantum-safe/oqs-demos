@@ -1,14 +1,27 @@
-# This is a template workflow for a new demo
-# To get started replace all instances of <demo_name> with the name of your demo below and add the demo to the build.yml workflow
+# Template Workflow for a New Demo
+# This template sets up a reusable workflow for adding a new demo to the repository.
+
+# To use this workflow:
+# 1. Replace all instances of `<demo_name>` with the name of your demo.
+# 2. Add the demo to the `build.yml` workflow for inclusion in the build matrix.
+# 3. Ensure the necessary Dockerfile and demo-specific files are in place.
+# 4. Customize the steps (build, scan, test, push) as needed for your demo.
+
+
 name: <demo_name>
 
 on:
+  # Trigger the workflow when code changes related to the demo are pushed to the `main` branch
   push:
     branches: [ 'main' ]
     paths: ['.github/workflows/<demo_name>.yml', '<demo_name>/**']
+
+  # Trigger the workflow when a pull request targeting the `main` branch includes changes for the demo
   pull_request:
     branches: [ 'main' ]
     paths: ['.github/workflows/<demo_name>.yml', '<demo_name>/**']
+
+  # Allow this workflow to be called by other workflows (e.g., `build.yml`)
   workflow_call:
     inputs:
       build_main:
@@ -17,9 +30,11 @@ on:
         default: false
         type: boolean
       release_tag:
-        description: "Which docker tag to push to"
+        description: "Which Docker tag to push to"
         required: false
         type: string
+
+  # Allow manual triggering of this workflow from the GitHub Actions UI
   workflow_dispatch:
     inputs:
       build_main:
@@ -28,7 +43,7 @@ on:
         default: false
         type: boolean
       release_tag:
-        description: "Which docker tag to push to"
+        description: "Which Docker tag to push to"
         required: false
         type: string
 
@@ -36,10 +51,12 @@ env:
   build-args: |
     LIBOQS_TAG=main
     OQSPROVIDER_TAG=main
+
   push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
 
 jobs:
   build:
+    # Here we define a matrix to run the build on multiple architectures (x86_64 and arm64) to ensure compatibility across platforms.
     strategy:
       fail-fast: false
       matrix:
@@ -48,14 +65,18 @@ jobs:
             runner: ubuntu-latest
           - arch: arm64
             runner: ubuntu-24.04-arm
+
     runs-on: ${{ matrix.runner }}
+
     steps:
       - uses: actions/checkout@v4
+
+      # Log in to Docker Hub is required for scanning and pushing Docker images
       - uses: docker/login-action@v3
-        if: env.push == 'true'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -72,9 +93,27 @@ jobs:
             ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: <demo_name>
 
+      # Scan the Docker image for vulnerabilities (restricted to x86_64 architecture) to avoid redundancy,
+      # as scanning on multiple architectures produces identical results.
+      - name: Scan Docker Image
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-<demo_name>
+          command: cves,recommendations
+          sarif-file: <demo_name>-scan-results.sarif
+
+      - name: Upload Scan Results
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: <demo_name>-scan-results
+          path: <demo_name>-scan-results.sarif
+
+      # Run tests for the demo (add your specific test logic here)
       - name: Test <demo_name>
         run: |
-          echo "Add tests here"
+          echo "Add test logic here"
 
       - name: Push Docker image to registries
         if: env.push == 'true'

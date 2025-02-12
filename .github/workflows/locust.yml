@@ -72,6 +72,21 @@ jobs:
             oqs-locust
             oqs-locust:0.0.1
 
+      - name: Scan Docker Image
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-locust
+          command: cves,recommendations
+          sarif-file: locust-scan-results.sarif
+
+      - name: Upload Scan Results
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: locust-scan-results
+          path: locust-scan-results.sarif
+
       # Launch the Locust environment with a single worker for this test case.
       - name: Launch Locust in Docker Compose
         working-directory: ./locust
