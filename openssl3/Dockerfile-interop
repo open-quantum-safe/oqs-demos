@@ -1,111 +1,108 @@
-# Multi-stage build: First the full builder image:
+# Define build arguments for version tags, installation paths, and configurations
+ARG OPENSSL_TAG=openssl-3.4.0
+ARG LIBOQS_TAG=0.12.0
+ARG OQSPROVIDER_TAG=0.8.0
 
-# define the openssl tag to be used
-ARG OPENSSL_TAG=openssl-3.3.2
-
-# define the liboqs tag to be used
-ARG LIBOQS_TAG=0.11.0
-
-# define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=0.7.0
-
-ARG INSTALLDIR_OPENSSL=/opt/openssl32
+ARG INSTALLDIR_OPENSSL=/opt/openssl
 ARG INSTALLDIR_LIBOQS=/opt/liboqs
-
-# liboqs build type variant; maximum portability of image:
-ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
-
-# Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j 8"
 
 ARG SIG_ALG="dilithium3"
 
+# Stage 1: Build OpenSSL
 FROM ubuntu AS buildopenssl
-# Take in all global args
+
+LABEL version="3"
+
+ENV DEBIAN_FRONTEND=noninteractive
 ARG OPENSSL_TAG
 ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
-ARG LIBOQS_BUILD_DEFINES
-ARG MAKE_DEFINES
 ARG SIG_ALG
 
-LABEL version="2"
-ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential clang libtool make gcc \
+    ninja-build cmake libtool wget git ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt update && apt upgrade -y
+WORKDIR /optbuild
+RUN git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git
 
-# Get all software packages required for builing openssl
-RUN apt install -y build-essential clang libtool make gcc ninja-build cmake libtool wget git
-
-# get current openssl sources
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git
-
-# build OpenSSL3
+# Configure, compile, and install OpenSSL 3 with shared libraries
 WORKDIR /optbuild/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" ./config shared --prefix=${INSTALLDIR_OPENSSL} && \
-    make ${MAKE_DEFINES} && \
-    make install && \
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" \
+    ./config shared --prefix=${INSTALLDIR_OPENSSL} && \
+    make -j"$(nproc)" && make install && \
     if [ -d ${INSTALLDIR_OPENSSL}/lib64 ]; then ln -s ${INSTALLDIR_OPENSSL}/lib64 ${INSTALLDIR_OPENSSL}/lib; fi && \
     if [ -d ${INSTALLDIR_OPENSSL}/lib ]; then ln -s ${INSTALLDIR_OPENSSL}/lib ${INSTALLDIR_OPENSSL}/lib64; fi
 
+# Stage 2: Build liboqs
 FROM ubuntu AS buildliboqs
-# Take in all global args
+
+LABEL version="3"
+
+ENV DEBIAN_FRONTEND=noninteractive
 ARG LIBOQS_TAG
 ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
-ARG LIBOQS_BUILD_DEFINES
-ARG MAKE_DEFINES
 ARG SIG_ALG
 
-LABEL version="2"
-ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential clang libtool make gcc \
+    ninja-build cmake libtool wget git ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt update && apt upgrade -y
-
-# Get all software packages required for builing liboqs:
-RUN apt install -y build-essential clang libtool make gcc ninja-build cmake libtool wget git
-
-# Get OpenSSL image (from cache)
+# Copy the previously built OpenSSL installation from the buildopenssl stage.
 COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs
+WORKDIR /optbuild
+RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs
 
-WORKDIR /optbuild/liboqs
-RUN mkdir build && \
-    cd build && \
-    cmake -G"Ninja" .. -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && \
+# Build and install liboqs
+WORKDIR /optbuild/liboqs/build
+RUN cmake -G"Ninja" .. \
+    -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} \
+    -DCMAKE_INSTALL_PREFIX=${INSTALLDIR_LIBOQS} && \
     ninja install
 
+# Stage 3: Build OQS Provider for OpenSSL
 FROM ubuntu AS buildoqsprovider
-# Take in all global args
 ARG OQSPROVIDER_TAG
 ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
-ARG LIBOQS_BUILD_DEFINES
-ARG MAKE_DEFINES
 ARG SIG_ALG
 
-LABEL version="2"
-ENV DEBIAN_FRONTEND noninteractive
+LABEL version="3"
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && apt upgrade -y
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential clang libtool make gcc  \
+    ninja-build cmake wget git python3 python3-pip python3-venv && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Get all software packages required for builing oqsprovider
-RUN apt install -y build-essential clang libtool make gcc ninja-build cmake wget git python3 python3-pip && pip3 install jinja2 tabulate
+RUN python3 -m venv /opt/venv
+RUN /opt/venv/bin/pip install --no-cache-dir jinja2 tabulate pyyaml
 
-RUN mkdir /optbuild && cd /optbuild && git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git
+# Set the virtual environment's Python and pip as default
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Get openssl32 and liboqs
+WORKDIR /optbuild
+RUN git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git
+
+# Copy the previously built OpenSSL and liboqs installations
 COPY --from=buildopenssl ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 COPY --from=buildliboqs ${INSTALLDIR_LIBOQS} ${INSTALLDIR_LIBOQS}
 COPY --from=buildliboqs /optbuild/liboqs /optbuild/liboqs
 
+# Modify the oqs-provider configuration to enable all cryptographic algorithms
 WORKDIR /optbuild/oqs-provider
-# configure oqs-provider to activate all algorithms
-RUN sed -i "s/false/true/g" oqs-template/generate.yml && LIBOQS_SRC_DIR=/optbuild/liboqs python3 oqs-template/generate.py
+RUN sed -i "s/false/true/g" oqs-template/generate.yml && \
+    LIBOQS_SRC_DIR=/optbuild/liboqs python3 oqs-template/generate.py
 
-# build & install provider (and activate by default)
-RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DNOPUBKEY_IN_PRIVKEY=ON -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${INSTALLDIR_OPENSSL} -S . -B _build && \
+# Compile, install, and configure the OQS provider, enabling it by default
+RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DNOPUBKEY_IN_PRIVKEY=ON \
+    -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSSL} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_PREFIX_PATH=${INSTALLDIR_OPENSSL} -S . -B _build && \
     cmake --build _build && \
     cmake --install _build && \
     cp _build/lib/oqsprovider.so ${INSTALLDIR_OPENSSL}/lib64/ossl-modules && \
@@ -114,35 +111,36 @@ RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DNOPUBKEY_IN_PRIVKEY=ON -DOPENSSL_ROO
     sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
     sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = kyber768/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
 
+# Update the PATH to prioritize the newly installed OpenSSL binaries
 WORKDIR ${INSTALLDIR_OPENSSL}/bin
-# set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-# generate CA key and cert
+# Create a self-signed CA key and certificate
 RUN set -x; \
     openssl req -x509 -new -newkey ${SIG_ALG} -keyout CA.key -out CA.crt -nodes -subj "/CN=oqstest CA" -days 365
 
-## second stage: Only create minimal image without build tooling and intermediate build results generated above:
+
+# Stage 4: Create a Minimal Runtime Image
 FROM ubuntu AS dev
-# Take in all global args
 ARG INSTALLDIR_OPENSSL
 ARG SIG_ALG
 
-# Only retain the ${INSTALLDIR_OPENSSL} contents in the final image
+# Final stage: Copy only the OpenSSL installation directory from the previous stage
 COPY --from=buildoqsprovider ${INSTALLDIR_OPENSSL} ${INSTALLDIR_OPENSSL}
 
-# set path to use 'new' openssl. Dyn libs have been properly linked in to match
+# Update the PATH to include the new OpenSSL binary directory
 ENV PATH="${INSTALLDIR_OPENSSL}/bin:${PATH}"
 
-# generate certificates for openssl s_server, which is what we will test curl against
+# Generate certificates for the OpenSSL server
 WORKDIR ${INSTALLDIR_OPENSSL}/bin
 
-# generate server CSR using pre-set CA.key and cert
-# and generate server cert
+# Create a certificate signing request (CSR) for the server and sign it using the pre-generated CA
 RUN set -x && mkdir -p /opt/test; \
-    openssl version && openssl list -providers && openssl req -new -newkey ${SIG_ALG} -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" && \
+    openssl version && openssl list -providers && \
+    openssl req -new -newkey ${SIG_ALG} -keyout /opt/test/server.key -out /opt/test/server.csr -nodes -subj "/CN=localhost" && \
     openssl x509 -req -in /opt/test/server.csr -out /opt/test/server.crt -CA CA.crt -CAkey CA.key -CAcreateserial -days 365;
 
+# Copy the startup script into the OpenSSL binary directory
 COPY serverstart.sh ${INSTALLDIR_OPENSSL}/bin/serverstart.sh
 
 WORKDIR ${INSTALLDIR_OPENSSL}
@@ -152,9 +150,15 @@ ARG INSTALLDIR_OPENSSL
 
 WORKDIR /
 
-# Enable a normal user to create new server keys off set CA
-RUN groupadd -g 1000 oqs && useradd -u 1000 -g oqs -d /home/oqs oqs && chown -R oqs.oqs /opt/test && chmod go+r ${INSTALLDIR_OPENSSL}/bin/CA.key 
+# Create user 'oqs'
+RUN groupadd oqs && \
+    useradd -m -d /home/oqs -s /bin/bash -g oqs oqs && \
+    mkdir -p /home/oqs && \
+    chown -R oqs:oqs /opt/test && \
+    chmod go+r ${INSTALLDIR_OPENSSL}/bin/CA.key
 
-#USER oqs
+# Set 'oqs' as the default user
+USER oqs
+
 CMD ["serverstart.sh"]
 STOPSIGNAL SIGTERM
