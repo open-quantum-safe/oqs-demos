@@ -85,8 +85,8 @@ jobs:
             MAKE_DEFINES=-j4
             ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/openssl3:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
-            openquantumsafe/openssl3:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            ghcr.io/${{ github.repository_owner }}/oqs-ossl3:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/oqs-ossl3:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
 
   push:
     if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
@@ -94,5 +94,5 @@ jobs:
     uses: ./.github/workflows/push-manifest.yml
     secrets: inherit
     with:
-      image_name: openssl3
+      image_name: oqs-ossl3
       release_tag: ${{ inputs.release_tag || 'latest' }}
