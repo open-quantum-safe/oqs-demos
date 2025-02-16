@@ -1,17 +1,15 @@
 diff --git a/net/cert/cert_verify_proc.cc b/net/cert/cert_verify_proc.cc
-index d3a3436e3d..d7e949a474 100644
---- a/net/cert/cert_verify_proc.cc
-+++ b/net/cert/cert_verify_proc.cc
-@@ -88,6 +88,19 @@ const int kRsaKeySizes[] = {512,  768,  1024, 1536, 2048,
+--- a/net/cert/cert_verify_proc.cc	(revision 70733890e6ccd273c88472fd5823612501a5d0fe)
++++ b/net/cert/cert_verify_proc.cc	(date 1739705883402)
+@@ -94,6 +94,18 @@
  // return P-224, P-256, P-384, or P-521, and the verifier will reject P-224.
  const int kEcdsaKeySizes[] = {163, 192, 224, 233, 256, 283, 384, 409, 521, 571};
- 
+
 +template<typename C, typename T>
-+bool ArrayContains(C && c, T t) { 
++bool ArrayContains(C && c, T t) {
 +    return std::find(std::begin(c), std::end(c), t) != std::end(c);
 +}
 +const X509Certificate::PublicKeyType OqsSigTypes[] = {
-+  X509Certificate::kPublicKeyTypeDilithium,
 +  X509Certificate::kPublicKeyTypeFalcon,
 +  X509Certificate::kPublicKeyTypeMLDSA,
 +  X509Certificate::kPublicKeyTypeSPHINCSSHA2,
@@ -22,12 +20,10 @@ index d3a3436e3d..d7e949a474 100644
  const char* CertTypeToString(X509Certificate::PublicKeyType cert_type) {
    switch (cert_type) {
      case X509Certificate::kPublicKeyTypeUnknown:
-@@ -96,6 +109,20 @@ const char* CertTypeToString(X509Certificate::PublicKeyType cert_type) {
+@@ -102,6 +114,18 @@
        return "RSA";
      case X509Certificate::kPublicKeyTypeECDSA:
        return "ECDSA";
-+    case X509Certificate::kPublicKeyTypeDilithium:
-+      return "Dilithium";
 +    case X509Certificate::kPublicKeyTypeFalcon:
 +      return "Falcon";
 +    case X509Certificate::kPublicKeyTypeMLDSA:
@@ -43,7 +39,7 @@ index d3a3436e3d..d7e949a474 100644
    }
    NOTREACHED();
  }
-@@ -128,6 +155,8 @@ void RecordPublicKeyHistogram(const char* chain_position,
+@@ -134,6 +158,8 @@
            base::CustomHistogram::ArrayToCustomEnumRanges(kRsaKeySizes),
            base::HistogramBase::kUmaTargetedHistogramFlag);
        break;
@@ -52,16 +48,16 @@ index d3a3436e3d..d7e949a474 100644
    }
    counter->Add(size_bits);
  }
-@@ -166,7 +195,7 @@ bool ExaminePublicKeys(const scoped_refptr<X509Certificate>& cert,
+@@ -172,7 +198,7 @@
        cert->valid_expiry() >= kBaselineKeysizeEffectiveDate;
- 
+
    X509Certificate::GetPublicKeyInfo(cert->cert_buffer(), &size_bits, &type);
 -  if (should_histogram) {
 +  if (!ArrayContains(OqsSigTypes, type) && should_histogram) {
      RecordPublicKeyHistogram(kLeafCert, baseline_keysize_applies, size_bits,
                               type);
    }
-@@ -178,7 +207,7 @@ bool ExaminePublicKeys(const scoped_refptr<X509Certificate>& cert,
+@@ -184,7 +210,7 @@
    for (size_t i = 0; i < intermediates.size(); ++i) {
      X509Certificate::GetPublicKeyInfo(intermediates[i].get(), &size_bits,
                                        &type);
@@ -70,13 +66,12 @@ index d3a3436e3d..d7e949a474 100644
        RecordPublicKeyHistogram(
            (i < intermediates.size() - 1) ? kIntermediateCert : kRootCert,
            baseline_keysize_applies,
-@@ -304,6 +333,37 @@ void RecordTrustAnchorHistogram(const HashValueVector& spki_hashes,
+@@ -310,6 +336,34 @@
      case bssl::SignatureAlgorithm::kRsaPssSha256:
      case bssl::SignatureAlgorithm::kRsaPssSha384:
      case bssl::SignatureAlgorithm::kRsaPssSha512:
 +    case bssl::SignatureAlgorithm::kCrossrsdp128balanced:
 +    case bssl::SignatureAlgorithm::kMayo1:
-+    case bssl::SignatureAlgorithm::kDilithium2:
 +    case bssl::SignatureAlgorithm::kMldsa44:
 +    case bssl::SignatureAlgorithm::kP256_mldsa44:
 +    case bssl::SignatureAlgorithm::kFalcon512:
@@ -88,7 +83,6 @@ index d3a3436e3d..d7e949a474 100644
 +    case bssl::SignatureAlgorithm::kSphincsshake128ssimple:
 +    case bssl::SignatureAlgorithm::kMayo2:
 +    case bssl::SignatureAlgorithm::kMayo3:
-+    case bssl::SignatureAlgorithm::kDilithium3:
 +    case bssl::SignatureAlgorithm::kMldsa65:
 +    case bssl::SignatureAlgorithm::kP384_mldsa65:
 +    case bssl::SignatureAlgorithm::kSphincssha2192fsimple:
@@ -96,7 +90,6 @@ index d3a3436e3d..d7e949a474 100644
 +    case bssl::SignatureAlgorithm::kSphincsshake192fsimple:
 +    case bssl::SignatureAlgorithm::kSphincsshake192ssimple:
 +    case bssl::SignatureAlgorithm::kMayo5:
-+    case bssl::SignatureAlgorithm::kDilithium5:
 +    case bssl::SignatureAlgorithm::kMldsa87:
 +    case bssl::SignatureAlgorithm::kP521_mldsa87:
 +    case bssl::SignatureAlgorithm::kFalcon1024:
@@ -107,12 +100,11 @@ index d3a3436e3d..d7e949a474 100644
 +    case bssl::SignatureAlgorithm::kSphincsshake256ssimple:
        return true;
    }
- 
+
 diff --git a/net/cert/x509_certificate.cc b/net/cert/x509_certificate.cc
-index 8e33d78b27..2b3586f598 100644
---- a/net/cert/x509_certificate.cc
-+++ b/net/cert/x509_certificate.cc
-@@ -630,6 +630,51 @@ void X509Certificate::GetPublicKeyInfo(const CRYPTO_BUFFER* cert_buffer,
+--- a/net/cert/x509_certificate.cc	(revision 70733890e6ccd273c88472fd5823612501a5d0fe)
++++ b/net/cert/x509_certificate.cc	(date 1739705827923)
+@@ -634,6 +634,46 @@
      case EVP_PKEY_EC:
        *type = kPublicKeyTypeECDSA;
        break;
@@ -123,11 +115,6 @@ index 8e33d78b27..2b3586f598 100644
 +    case EVP_PKEY_MLDSA87:
 +    case EVP_PKEY_P521_MLDSA87:
 +      *type = kPublicKeyTypeMLDSA;
-+      break;
-+    case EVP_PKEY_DILITHIUM2:
-+    case EVP_PKEY_DILITHIUM3:
-+    case EVP_PKEY_DILITHIUM5:
-+      *type = kPublicKeyTypeDilithium;
 +      break;
 +    case EVP_PKEY_FALCON512:
 +    case EVP_PKEY_RSA3072_FALCON512:
@@ -165,28 +152,25 @@ index 8e33d78b27..2b3586f598 100644
    *size_bits = base::saturated_cast<size_t>(EVP_PKEY_bits(pkey.get()));
  }
 diff --git a/net/cert/x509_certificate.h b/net/cert/x509_certificate.h
-index 60470fdd71..fd525c263d 100644
---- a/net/cert/x509_certificate.h
-+++ b/net/cert/x509_certificate.h
-@@ -45,6 +45,13 @@ class NET_EXPORT X509Certificate
+--- a/net/cert/x509_certificate.h	(revision 70733890e6ccd273c88472fd5823612501a5d0fe)
++++ b/net/cert/x509_certificate.h	(date 1739705862744)
+@@ -45,6 +45,12 @@
      kPublicKeyTypeUnknown,
      kPublicKeyTypeRSA,
      kPublicKeyTypeECDSA,
 +    kPublicKeyTypeMAYO,
 +    kPublicKeyTypeCROSS,
-+    kPublicKeyTypeDilithium,
 +    kPublicKeyTypeFalcon,
 +    kPublicKeyTypeMLDSA,
 +    kPublicKeyTypeSPHINCSSHA2,
 +    kPublicKeyTypeSPHINCSSHAKE
    };
- 
+
    enum Format {
 diff --git a/net/quic/quic_session_pool.cc b/net/quic/quic_session_pool.cc
-index ec427c0a6c..5b9db9fd0f 100644
---- a/net/quic/quic_session_pool.cc
-+++ b/net/quic/quic_session_pool.cc
-@@ -425,12 +425,16 @@ QuicSessionPool::QuicCryptoClientConfigOwner::QuicCryptoClientConfigOwner(
+--- a/net/quic/quic_session_pool.cc	(revision 70733890e6ccd273c88472fd5823612501a5d0fe)
++++ b/net/quic/quic_session_pool.cc	(date 1739706654391)
+@@ -511,12 +511,16 @@
                            base::Unretained(this)));
    if (quic_session_pool_->ssl_config_service_->GetSSLContextConfig()
            .PostQuantumKeyAgreementEnabled()) {
@@ -202,7 +186,7 @@ index ec427c0a6c..5b9db9fd0f 100644
 +      SSL_GROUP_MLKEM512, SSL_GROUP_P256_MLKEM512, SSL_GROUP_X25519_MLKEM512, SSL_GROUP_MLKEM768, SSL_GROUP_P256_MLKEM768, SSL_GROUP_P384_MLKEM768, SSL_GROUP_MLKEM1024, SSL_GROUP_P384_MLKEM1024, SSL_GROUP_P521_MLKEM1024,
 +      SSL_GROUP_FRODO640AES, SSL_GROUP_P256_FRODO640AES, SSL_GROUP_X25519_FRODO640AES, SSL_GROUP_FRODO976AES, SSL_GROUP_P384_FRODO976AES, SSL_GROUP_FRODO1344AES, SSL_GROUP_P521_FRODO1344AES,
 +      SSL_GROUP_FRODO640SHAKE, SSL_GROUP_P256_FRODO640SHAKE, SSL_GROUP_X25519_FRODO640SHAKE, SSL_GROUP_FRODO976SHAKE, SSL_GROUP_P384_FRODO976SHAKE, SSL_GROUP_FRODO1344SHAKE, SSL_GROUP_P521_FRODO1344SHAKE,
-+      SSL_GROUP_KYBER512, SSL_GROUP_P256_KYBER512, SSL_GROUP_X25519_KYBER512, SSL_GROUP_KYBER768, SSL_GROUP_P256_KYBER768, SSL_GROUP_P384_KYBER768, SSL_GROUP_KYBER1024, SSL_GROUP_P521_KYBER1024,
++      SSL_GROUP_BIKEL1, SSL_GROUP_P256_BIKEL1, SSL_GROUP_X25519_BIKEL1, SSL_GROUP_BIKEL3, SSL_GROUP_P384_BIKEL3, SSL_GROUP_BIKEL5, SSL_GROUP_P521_BIKEL5,
 +      SSL_GROUP_HQC128, SSL_GROUP_P256_HQC128, SSL_GROUP_X25519_HQC128, SSL_GROUP_HQC192, SSL_GROUP_P384_HQC192, SSL_GROUP_HQC256, SSL_GROUP_P521_HQC256,
 +      SSL_GROUP_X25519, SSL_GROUP_SECP256R1, SSL_GROUP_SECP384R1
 +    });
@@ -210,12 +194,11 @@ index ec427c0a6c..5b9db9fd0f 100644
  }
  QuicSessionPool::QuicCryptoClientConfigOwner::~QuicCryptoClientConfigOwner() {
 diff --git a/net/socket/ssl_client_socket_impl.cc b/net/socket/ssl_client_socket_impl.cc
-index 786d1c08aa..a23bdfa10b 100644
---- a/net/socket/ssl_client_socket_impl.cc
-+++ b/net/socket/ssl_client_socket_impl.cc
-@@ -645,12 +645,15 @@ int SSLClientSocketImpl::Init() {
+--- a/net/socket/ssl_client_socket_impl.cc	(revision 70733890e6ccd273c88472fd5823612501a5d0fe)
++++ b/net/socket/ssl_client_socket_impl.cc	(date 1739705895433)
+@@ -644,12 +644,15 @@
    }
- 
+
    if (context_->config().PostQuantumKeyAgreementEnabled()) {
 -    const uint16_t postquantum_group =
 -        base::FeatureList::IsEnabled(features::kUseMLKEM)
@@ -229,13 +212,13 @@ index 786d1c08aa..a23bdfa10b 100644
 +      SSL_GROUP_MLKEM512, SSL_GROUP_P256_MLKEM512, SSL_GROUP_X25519_MLKEM512, SSL_GROUP_MLKEM768, SSL_GROUP_P256_MLKEM768, SSL_GROUP_P384_MLKEM768, SSL_GROUP_MLKEM1024, SSL_GROUP_P384_MLKEM1024, SSL_GROUP_P521_MLKEM1024,
 +      SSL_GROUP_FRODO640AES, SSL_GROUP_P256_FRODO640AES, SSL_GROUP_X25519_FRODO640AES, SSL_GROUP_FRODO976AES, SSL_GROUP_P384_FRODO976AES, SSL_GROUP_FRODO1344AES, SSL_GROUP_P521_FRODO1344AES,
 +      SSL_GROUP_FRODO640SHAKE, SSL_GROUP_P256_FRODO640SHAKE, SSL_GROUP_X25519_FRODO640SHAKE, SSL_GROUP_FRODO976SHAKE, SSL_GROUP_P384_FRODO976SHAKE, SSL_GROUP_FRODO1344SHAKE, SSL_GROUP_P521_FRODO1344SHAKE,
-+      SSL_GROUP_KYBER512, SSL_GROUP_P256_KYBER512, SSL_GROUP_X25519_KYBER512, SSL_GROUP_KYBER768, SSL_GROUP_P256_KYBER768, SSL_GROUP_P384_KYBER768, SSL_GROUP_KYBER1024, SSL_GROUP_P521_KYBER1024,
++      SSL_GROUP_BIKEL1, SSL_GROUP_P256_BIKEL1, SSL_GROUP_X25519_BIKEL1, SSL_GROUP_BIKEL3, SSL_GROUP_P384_BIKEL3, SSL_GROUP_BIKEL5, SSL_GROUP_P521_BIKEL5,
 +      SSL_GROUP_HQC128, SSL_GROUP_P256_HQC128, SSL_GROUP_X25519_HQC128, SSL_GROUP_HQC192, SSL_GROUP_P384_HQC192, SSL_GROUP_HQC256, SSL_GROUP_P521_HQC256,
 +      SSL_GROUP_X25519, SSL_GROUP_SECP256R1, SSL_GROUP_SECP384R1};
      if (!SSL_set1_group_ids(ssl_.get(), kGroups, std::size(kGroups))) {
        return ERR_UNEXPECTED;
      }
-@@ -752,6 +755,13 @@ int SSLClientSocketImpl::Init() {
+@@ -751,6 +754,12 @@
        SSL_SIGN_RSA_PKCS1_SHA256,       SSL_SIGN_ECDSA_SECP384R1_SHA384,
        SSL_SIGN_RSA_PSS_RSAE_SHA384,    SSL_SIGN_RSA_PKCS1_SHA384,
        SSL_SIGN_RSA_PSS_RSAE_SHA512,    SSL_SIGN_RSA_PKCS1_SHA512,
@@ -244,17 +227,15 @@ index 786d1c08aa..a23bdfa10b 100644
 +      SSL_SIGN_MAYO1, SSL_SIGN_MAYO2, SSL_SIGN_MAYO3, SSL_SIGN_MAYO5,
 +      SSL_SIGN_SPHINCSSHA2128FSIMPLE, SSL_SIGN_SPHINCSSHA2128SSIMPLE, SSL_SIGN_SPHINCSSHA2192FSIMPLE, SSL_SIGN_SPHINCSSHA2192SSIMPLE, SSL_SIGN_SPHINCSSHA2256FSIMPLE, SSL_SIGN_SPHINCSSHA2256SSIMPLE,
 +      SSL_SIGN_SPHINCSSHAKE128FSIMPLE, SSL_SIGN_SPHINCSSHAKE128SSIMPLE, SSL_SIGN_SPHINCSSHAKE192FSIMPLE, SSL_SIGN_SPHINCSSHAKE192SSIMPLE, SSL_SIGN_SPHINCSSHAKE256FSIMPLE, SSL_SIGN_SPHINCSSHAKE256SSIMPLE,
-+      SSL_SIGN_CROSSRSDP128BALANCED,
-+      SSL_SIGN_DILITHIUM2, SSL_SIGN_DILITHIUM3, SSL_SIGN_DILITHIUM5
++      SSL_SIGN_CROSSRSDP128BALANCED
    };
    if (!SSL_set_verify_algorithm_prefs(ssl_.get(), kVerifyPrefs,
                                        std::size(kVerifyPrefs))) {
 diff --git a/third_party/boringssl/BUILD.gn b/third_party/boringssl/BUILD.gn
-index 52e239f60f..5334e44947 100644
---- a/third_party/boringssl/BUILD.gn
-+++ b/third_party/boringssl/BUILD.gn
-@@ -17,7 +17,7 @@ if (enable_rust) {
- 
+--- a/third_party/boringssl/BUILD.gn	(revision 70733890e6ccd273c88472fd5823612501a5d0fe)
++++ b/third_party/boringssl/BUILD.gn	(date 1739704469219)
+@@ -17,7 +17,7 @@
+
  # Config for us and everybody else depending on BoringSSL.
  config("external_config") {
 -  include_dirs = [ "src/include" ]
@@ -262,20 +243,20 @@ index 52e239f60f..5334e44947 100644
    if (is_component_build) {
      defines = [ "BORINGSSL_SHARED_LIBRARY" ]
    }
-@@ -46,7 +46,7 @@ config("no_asm_config") {
+@@ -46,7 +46,7 @@
  # unexport pki_internal_headers.
  all_sources = bcm_internal_headers + bcm_sources + crypto_internal_headers +
                crypto_sources + ssl_internal_headers + ssl_sources + pki_sources
 -all_headers = crypto_headers + ssl_headers + pki_headers + pki_internal_headers
 +all_headers = crypto_headers + ssl_headers + pki_headers + pki_internal_headers + oqs_headers
- 
+
  if (enable_rust) {
-   rust_bindgen("raw_bssl_sys_bindings") {
-@@ -145,6 +145,7 @@ component("boringssl") {
+   rust_bindgen_generator("raw_bssl_sys_bindings") {
+@@ -142,6 +142,7 @@
    sources = rebase_path(all_sources, ".", "src")
    public = rebase_path(all_headers, ".", "src")
    friend = [ ":*" ]
 +  libs = [ "//third_party/boringssl/src/oqs/lib/oqs.lib" ]
    deps = [ "//third_party/boringssl/src/third_party/fiat:fiat_license" ]
- 
+
    # Mark boringssl_asm as a public dependency so the OPENSSL_NO_ASM

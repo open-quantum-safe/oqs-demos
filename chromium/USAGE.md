@@ -32,10 +32,10 @@ There are a few things to try should you recieve this error whilst importing you
 # manually invoke certutl
 # certutil -d sql:$HOME/.pki/nssdb -A -t "CT,c,c" -n "CertName" -i /usr/share/ca-certificates/your_ca.crt
 ```
-If running this in ansible you may need to replace $HOME with a path to the target users home directory instead of $HOME.
+If running this in ansible you may need to replace `$HOME` with a path to the target users home directory instead of `$HOME`.
 
 2. Symlink Linux trust store over libnss file (last resort)
-```
+```sh
 #backup store
 mv /usr/lib/x86_64-linux-gnu/libnssckbi.so /usr/lib/x86_64-linux-gnu/libnssckbi.so.bak
 #create symlink
