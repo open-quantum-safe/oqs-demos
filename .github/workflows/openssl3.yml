@@ -70,6 +70,21 @@ jobs:
             ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: oqs-ossl3
 
+      - name: Scan Docker Image
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-openssh
+          command: cves,recommendations
+          sarif-file: openssh-scan-results.sarif
+
+      - name: Upload Scan Results
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: openssh-scan-results
+          path: openssh-scan-results.sarif
+
       - name: Test openssl3 with provider - one baseline and one hybrid QSC algorithm
         run: |
           docker run --rm --name oqs-ossl3 oqs-ossl3 sh -c "openssl list -providers; /opt/openssl/bin/serverstart.sh; sleep 2; echo 'GET /' | openssl s_client -connect localhost --groups kyber768 --CAfile /opt/openssl/bin/CA.crt" &&

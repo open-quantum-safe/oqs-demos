@@ -82,6 +82,36 @@ jobs:
             ${{ (inputs.build_main == 'true') && env.build-args || null }}
           tags: oqs-ngtcp2-client
 
+      - name: Scan Docker Image for ngtcp2-server
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-ngtcp2-server
+          command: cves,recommendations
+          sarif-file: ngtcp2-server-scan-results.sarif
+
+      - name: Scan Docker Image for ngtcp2-client
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-ngtcp2-client
+          command: cves,recommendations
+          sarif-file: ngtcp2-client-scan-results.sarif
+
+      - name: Upload Scan Results for ngtcp2-server
+        if: matrix.arch == 'x86_64'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ngtcp2-server-scan-results
+          path: ngtcp2-server-scan-results.sarif
+
+      - name: Upload Scan Results for ngtcp2-client
+        if: matrix.arch == 'x86_64'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: ngtcp2-client-scan-results
+          path: ngtcp2-client-scan-results.sarif
+
       - name: Test ngtcp2 using local docker network
         run: |
           docker network create ngtcp2-test &&
