@@ -74,7 +74,7 @@ jobs:
         if: matrix.arch == 'x86_64' && env.push == 'true'
         uses: docker/scout-action@v1.16.1
         with:
-          image: oqs-openssh
+          image: oqs-ossl3
           command: cves,recommendations
           sarif-file: openssh-scan-results.sarif
 
