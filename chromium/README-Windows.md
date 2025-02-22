@@ -11,7 +11,7 @@ In Command Prompt, run following commands:
 
 ```bat
 cd %CHROMIUM_ROOT%
-git checkout tags/131.0.6769.0
+git checkout tags/133.0.6943.98
 gclient sync
 ```
 
@@ -23,7 +23,7 @@ In Command Prompt, run following commands:
 cd %CHROMIUM_ROOT%/third_party/boringssl/src
 git remote add oqs-bssl https://github.com/open-quantum-safe/boringssl
 git fetch oqs-bssl
-git checkout -b oqs-bssl-master 0599bb559d3be76a98f0940d494411b6a8e0b18e
+git checkout -b oqs-bssl-master ac42ca1431e487df2247a714d31eb23b926842b1
 ```
 
 ### 3. Clone and Build liboqs
@@ -32,7 +32,7 @@ Choose a directory to store the liboqs source code and use the `cd` command to m
 Start _x64 Native Tools Command Prompt for VS 2022_ (usually it's in _C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2022\Visual Studio Tools\VC_) and run following commands:
 
 ```bat
-git clone https://github.com/open-quantum-safe/liboqs.git && cd liboqs && git checkout 9aa2e1481cd0c242658ec8e92776741feabec163
+git clone https://github.com/open-quantum-safe/liboqs.git && cd liboqs && git checkout f4b96220e4bd208895172acc4fedb5a191d9f5b1
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=%CHROMIUM_ROOT%/third_party/boringssl/src/oqs -DOQS_USE_OPENSSL=OFF -DCMAKE_BUILD_TYPE=Release
 msbuild ALL_BUILD.vcxproj
@@ -73,4 +73,4 @@ If the build completes successfully, it will create _chrome.exe_ in _%CHROMIUM_R
 ### 6. Miscellaneous
 
 - BIKE key exchange is not supported.
-- This guide was initially published on October 10, 2024, and may be outdated.
+- This guide was published on February 16, 2025, and may be outdated.
