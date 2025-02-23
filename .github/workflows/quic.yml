@@ -45,7 +45,7 @@ jobs:
         context: .
         file: nginx/Dockerfile-QUIC
         load: true
-        tags: nginx-quic
+        tags: ${{ env.TARGET_NAME }}/nginx-quic:latest
 
     - name: Build cURL QUIC Docker image
       uses: docker/build-push-action@v6
@@ -53,7 +53,7 @@ jobs:
         context: .
         file: curl/Dockerfile-QUIC
         load: true
-        tags: curl-quic
+        tags: ${{ env.TARGET_NAME }}/curl-quic:latest
 
     - name: Create a shared volume
       run: docker volume create shared-1
@@ -63,20 +63,20 @@ jobs:
       run: |
         docker run -v shared-1:/certs $TARGET_NAME/openssl3 /bin/sh -c "\
         openssl req -x509 -new -newkey rsa3072_falcon512 -keyout /certs/CA.key -out /certs/CA.crt -nodes -subj '/C=US/O=Open Quantum Safe/CN=OQS Demos' -days 1461 && \
-        openssl req -new -newkey sphincssha2128fsimple -keyout /certs/server.key -out /certs/server.csr -nodes -subj /CN=host.docker.internal && \
+        openssl req -new -newkey sphincssha2128fsimple -keyout /certs/server.key -out /certs/server.csr -nodes -subj '/CN=host.docker.internal' && \
         openssl x509 -req -in /certs/server.csr -out /certs/server.crt -CA /certs/CA.crt -CAkey /certs/CA.key -CAcreateserial -days 365"
       shell: bash
 
     - name: Start NGINX server with QUIC support
       run: |
-        docker run -d -p 443:443/udp -v shared-1:/certs --name nginx-quic-daemon nginx-quic:latest
+        docker run -d -p 443:443/udp -v shared-1:/certs --name nginx-quic-daemon $TARGET_NAME/nginx-quic:latest
         docker cp ${{ github.workspace }}/nginx/nginx-conf/nginx-quic.conf nginx-quic-daemon:/etc/nginx/nginx-quic.conf
         docker exec nginx-quic-daemon bash -c "cd /etc/nginx && rm nginx.conf && mv nginx-quic.conf nginx.conf && nginx -s reload"
       shell: bash
 
     - name: Test cURL with QUIC support
       run: |
-        docker run -v shared-1:/certs --add-host=host.docker.internal:host-gateway curl-quic:latest \
+        docker run -v shared-1:/certs --add-host=host.docker.internal:host-gateway $TARGET_NAME/curl-quic:latest \
         curl --cacert /certs/CA.crt --http3-only https://host.docker.internal --curves hqc192 -vvvv
       shell: bash
 
@@ -84,7 +84,7 @@ jobs:
       if: env.push == 'true'
       uses: docker/scout-action@v1.16.1
       with:
-        image: curl-quic
+        image: ${{ env.TARGET_NAME }}/curl-quic
         command: cves,recommendations
         sarif-file: curl-quic-scan-results.sarif
 
@@ -92,7 +92,7 @@ jobs:
       if: env.push == 'true'
       uses: docker/scout-action@v1.16.1
       with:
-        image: nginx-quic
+        image: ${{ env.TARGET_NAME }}/nginx-quic
         command: cves,recommendations
         sarif-file: nginx-quic-scan-results.sarif
 
