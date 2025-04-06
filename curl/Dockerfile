@@ -3,7 +3,7 @@ ARG ALPINE_VERSION=3.21
 ARG OPENSSL_TAG=openssl-3.4.0
 ARG LIBOQS_TAG=0.12.0
 ARG OQSPROVIDER_TAG=0.8.0
-ARG CURL_VERSION=8.11.1
+ARG CURL_VERSION=8.13.0
 ARG INSTALLDIR=/opt/oqssa
 
 # Specify supported signature and key encapsulation mechanisms (KEM) algorithms.

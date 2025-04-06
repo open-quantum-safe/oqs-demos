@@ -1,5 +1,5 @@
-ARG CURL_VERSION=8.11.1
-ARG QUICHE_VERSION=0.22.0
+ARG CURL_VERSION=8.13.0
+ARG QUICHE_VERSION=0.24.5
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
 FROM ubuntu:latest AS build

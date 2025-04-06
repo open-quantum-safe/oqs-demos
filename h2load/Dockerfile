@@ -5,7 +5,7 @@ ARG ALPINE_VERSION=3.21
 ARG OPENSSL_TAG=openssl-3.4.0
 ARG LIBOQS_TAG=0.12.0
 ARG OQSPROVIDER_TAG=0.8.0
-ARG NGHTTP2_TAG=v1.64.0
+ARG NGHTTP2_TAG=v1.65.0
 ARG INSTALLDIR=/opt/oqssa
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.

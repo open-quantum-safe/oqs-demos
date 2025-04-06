@@ -1,10 +1,10 @@
 # Define build arguments for version tags, installation paths, and configurations
 ARG ALPINE_VERSION=3.21
-ARG OPENSSLQUIC_TAG=openssl-3.1.7-quic1
+ARG OPENSSLQUIC_TAG=openssl-3.3.0+quic
 ARG LIBOQS_TAG=0.12.0
 ARG OQSPROVIDER_TAG=0.8.0
-ARG NGHTTP3_TAG=v1.6.0
-ARG NGTCP2_TAG=v1.5.0
+ARG NGHTTP3_TAG=v1.8.0
+ARG NGTCP2_TAG=v1.65.0
 ARG INSTALLDIR=/opt/oqssa
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
@@ -38,10 +38,10 @@ RUN cmake -GNinja -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} ..  \
 
 # Build and instal OpenSSL
 WORKDIR /opt/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install_sw install_ssldirs && \
-    if [ -d ${INSTALLDIR}/lib64 ]; then ln -s ${INSTALLDIR}/lib64 ${INSTALLDIR}/lib; fi && \
-    if [ -d ${INSTALLDIR}/lib ]; then ln -s ${INSTALLDIR}/lib ${INSTALLDIR}/lib64; fi
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix="${INSTALLDIR}" && \
+    make "${MAKE_DEFINES}" && make install_sw install_ssldirs && \
+    if [ -d "${INSTALLDIR}/lib64" ]; then ln -s "${INSTALLDIR}/lib64" "${INSTALLDIR}/lib"; fi && \
+    if [ -d "${INSTALLDIR}/lib" ]; then ln -s "${INSTALLDIR}/lib" "${INSTALLDIR}/lib64"; fi
 
 # Build, install, and configure the oqs-provider for OpenSSL integration
 WORKDIR /opt/oqs-provider
@@ -56,23 +56,24 @@ RUN ln -s ../openssl . && \
 # Build and install nghttp3
 WORKDIR /opt/nghttp3
 RUN git submodule update --init && autoreconf -i && \
-    ./configure --prefix=$PWD/build --enable-lib-only && \
-    make -j$(nproc) check && make install
+    ./configure --prefix="$PWD/build" --enable-lib-only && \
+    make -j"$(nproc)" check && make install
 
 # Build and install ngtcp2
 WORKDIR /opt/ngtcp2
 RUN autoreconf -i && \
-    ./configure PKG_CONFIG_PATH=$PWD/../nghttp3/build/lib/pkgconfig:/opt/oqssa/lib64/pkgconfig  \
-    CXX=g++ CXXFLAGS="-std=c++20" && \
-    make -j$(nproc) && make install
+    ./configure PKG_CONFIG_PATH="$PWD/../nghttp3/build/lib/pkgconfig:/opt/oqssa/lib64/pkgconfig" \
+    CXX="g++" CXXFLAGS="-std=c++20" && \
+    make -j"$(nproc)" && make install
 
 # Generate server key and self-signed certificate files
-WORKDIR /
-RUN echo "Generating server key and certificate"  && mkdir certs && cd certs && openssl req -newkey rsa:4096 -nodes -keyout server.key -x509 -days 365 -out server.crt -subj "/CN=localhost"
+WORKDIR /certs
+RUN echo "Generating server key and certificate" \
+    && openssl req -newkey rsa:4096 -nodes -keyout server.key -x509 -days 365 -out server.crt -subj "/CN=localhost"
 
 # Copy all required shared object dependencies to a single directory
-RUN mkdir /opt/lib && cd /opt/lib && \
-        cp /opt/ngtcp2/lib/.libs/libngtcp2.so.* . && \
+WORKDIR /opt/lib
+RUN cp /opt/ngtcp2/lib/.libs/libngtcp2.so.* . && \
         cp /usr/lib/libev.so.* . && \
         cp /opt/nghttp3/build/lib/libnghttp3.so.* . && \
         cp /opt/ngtcp2/crypto/quictls/.libs/libngtcp2_crypto_quictls.so.* . && \

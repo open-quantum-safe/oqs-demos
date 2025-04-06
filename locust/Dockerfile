@@ -1,57 +1,35 @@
-# define the liboqs tag to be used
+# Define build arguments for version tags, installation paths, and configurations
+ARG ALPINE_VERSION=3.21
+ARG OPENSSL_BRANCH=openssl-3.4.0
 ARG LIBOQS_TAG=0.11.0
-
-# define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=0.7.0
-
-# define the openssl version to be baked in
-ARG OPENSSL_BRANCH=openssl-3.3.2
-
-# Default location where all binaries wind up:
+ARG OQSPROVIDER_TAG=0.8.0
+ARG PYTHON_VERSION=3.13.2
 ARG INSTALLDIR=/opt/oqssa
 
-# Default Python version to be used
-ARG PYTHON_VERSION=3.12.6
-
-# liboqs build type variant; maximum portability of image:
-ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
-
-# Default root CA signature algorithm; can be set to any listed at https://github.com/open-quantum-safe/oqs-provider#algorithms
+# Specify supported signature and key encapsulation mechanisms (KEM) algorithms
 ARG SIG_ALG="dilithium3"
-
-# Default KEM algorithms; can be set to any listed at https://github.com/open-quantum-safe/oqs-provider#algorithms
 ARG DEFAULT_GROUPS="x25519:x448:kyber512:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024"
 
-# Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
-ARG MAKE_DEFINES="-j 16"
-
-# Define the Alpine version to be used
-ARG ALPINE_VERSION=3.20.3
 
 FROM alpine:${ALPINE_VERSION}
 # Take in all global args
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
 ARG INSTALLDIR
-ARG LIBOQS_BUILD_DEFINES
 ARG SIG_ALG
 ARG DEFAULT_GROUPS
-ARG MAKE_DEFINES
 ARG PYTHON_VERSION
 ARG OPENSSL_BRANCH
 
 LABEL version="1"
 
-ENV DEBIAN_FRONTEND noninteractive
 ENV LD_LIBRARY_PATH=${INSTALLDIR}/lib
 
-RUN apk update && apk upgrade
 
 # Get all software packages required for builing all components:
-RUN apk add build-base linux-headers \
-            libtool automake autoconf cmake ninja \
-            make \
-            git wget vim nano zlib-dev py3-pip tcpdump python3-dev
+RUN apk update && apk --no-cache add build-base linux-headers \
+    libtool automake autoconf cmake ninja make \
+    git wget vim nano zlib-dev py3-pip tcpdump python3-dev
 
 # get all sources
 WORKDIR /opt
@@ -62,16 +40,14 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
 # build OpenSSL3
 WORKDIR /opt/openssl
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared enable-zlib no-comp --prefix=${INSTALLDIR} && \
-    make ${MAKE_DEFINES} && make install_sw install_ssldirs install_dev && \
+    make -j("nproc") && make install_sw install_ssldirs install_dev && \
     if [ -d ${INSTALLDIR}/lib64 ]; then ln -s ${INSTALLDIR}/lib64 ${INSTALLDIR}/lib; fi && \
     if [ -d ${INSTALLDIR}/lib ]; then ln -s ${INSTALLDIR}/lib ${INSTALLDIR}/lib64; fi
 
-
 # build liboqs
-WORKDIR /opt/liboqs
-RUN mkdir build &&  \
-    cd build  &&  \
-    cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}  &&  \
+WORKDIR /opt/liboqs/build
+RUN cmake -G"Ninja" .. -DOQS_DIST_BUILD=ON  \
+    -DCMAKE_INSTALL_PREFIX=${INSTALLDIR}  &&  \
     ninja install
 
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
@@ -105,11 +81,10 @@ RUN wget --no-check-certificate https://test.openquantumsafe.org/CA.crt &&  \
     mv CA.crt oqs-testca.pem
 
 # Install Locust
-RUN mkdir /home/locust && cd /home/locust
+WORKDIR /home/locust
 ENV CFLAGS="-I/opt/python-${PYTHON_VERSION}-custom/include/${PYTHON_VERSION}"
 ENV LDFLAGS="-L/opt/python-${PYTHON_VERSION}-custom/lib"
 COPY requirements.txt /home/locust
 RUN pip3 install --break-system-packages --upgrade pip
 RUN pip3 install  --break-system-packages -r /home/locust/requirements.txt
 ADD / /mnt/locust
-
