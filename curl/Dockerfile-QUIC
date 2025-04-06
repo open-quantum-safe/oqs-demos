@@ -1,18 +1,27 @@
-ARG CURL_VERSION=8.11.1
-ARG QUICHE_VERSION=0.22.0
+ARG CURL_VERSION=8.13.0
+ARG QUICHE_VERSION=0.23.5
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
 FROM ubuntu:latest AS build
 ARG CURL_VERSION
 ARG QUICHE_VERSION
 
-# Install required build tools and system dependencies.
+# Install required build tools and system dependencies (excluding rustc/cargo from apt)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake gcc ninja-build libunwind-dev \
     pkg-config build-essential \
-    cargo git wget ca-certificates \
+    git wget ca-certificates curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Rust using rustup to ensure we get a version >= 1.81
+# quiche v0.23.5 requires rustc >= 1.81, but until now Ubuntu does not provide it via apt.
+# In the future, if Ubuntu includes rustc >= 1.81 in its default repositories,
+# this rustup installation can be removed and replaced with a standard `apt install rustc cargo`.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    ln -s /root/.cargo/bin/rustc /usr/local/bin/rustc && \
+    ln -s /root/.cargo/bin/cargo /usr/local/bin/cargo && \
+    rustc --version
 
 # Download and prepare source files needed for the build process.
 WORKDIR /root
