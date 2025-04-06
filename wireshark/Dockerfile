@@ -1,6 +1,6 @@
 # Define build arguments for version tags, installation paths, and configurations
 ARG UBUNTU_VERSION=24.04
-ARG WIRESHARK_VERSION=4.4.3
+ARG WIRESHARK_VERSION=4.4.5
 ARG OPENSSL_TAG=3.4.0
 ARG LIBOQS_TAG=0.12.0
 ARG OQSPROVIDER_TAG=0.8.0
