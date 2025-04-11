@@ -64,7 +64,7 @@ Make sure to update `server_name`, `ssl_certificate`, `ssl_certificate_key`, and
 
         # Select a subset of supported key exchange algorithms from
         # https://github.com/open-quantum-safe/boringssl?tab=readme-ov-file#key-exchange
-        ssl_ecdh_curve 'mlkem1024:bikel3:hqc192:x25519_frodo640shake';
+        ssl_ecdh_curve 'mlkem1024:bikel3:x25519_frodo640shake';
 
         location / {
             root   html;
