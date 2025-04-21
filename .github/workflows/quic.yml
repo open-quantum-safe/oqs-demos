@@ -77,7 +77,7 @@ jobs:
     - name: Test cURL with QUIC support
       run: |
         docker run -v shared-1:/certs --add-host=host.docker.internal:host-gateway $TARGET_NAME/curl-quic:latest \
-        curl --cacert /certs/CA.crt --http3-only https://host.docker.internal --curves hqc192 -vvvv
+        curl --cacert /certs/CA.crt --http3-only https://host.docker.internal --curves bikel3 -vvvv
       shell: bash
 
     - name: Scan cURL QUIC Docker Image
