@@ -3,7 +3,7 @@ ARG UBUNTU_VERSION=24.04
 ARG OPENSSL_TAG=openssl-3.4.0
 ARG LIBOQS_TAG=0.12.0
 ARG OQSPROVIDER_TAG=0.8.0
-ARG OPENVPN_TAG=v2.6.12
+ARG OPENVPN_TAG=v2.6.14
 ARG INSTALLDIR=/opt/oqssa
 ARG OPENVPNDIR=/home/openvpn
 
@@ -13,7 +13,7 @@ ARG KEM_ALGLIST="mlkem768:p384_mlkem768"
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
 FROM ubuntu:${UBUNTU_VERSION} AS intermediate
 
-LABEL version="3"
+LABEL version="4"
 
 ARG OPENSSL_TAG
 ARG LIBOQS_TAG
