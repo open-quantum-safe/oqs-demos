@@ -1,4 +1,4 @@
-ARG NGINX_VERSION=1.27.5
+ARG NGINX_VERSION=1.28.0
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
 FROM ubuntu:latest AS build
@@ -9,13 +9,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
       g++ make cmake git build-essential \
       libpcre3 libpcre3-dev zlib1g-dev \
       wget ninja-build libunwind-dev \
-      pkg-config python3  ca-certificates \
+      pkg-config python3 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and prepare source files needed for the build process
 WORKDIR /home/build
 RUN git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git && \
-    git clone --branch master --single-branch --depth 1 https://github.com/open-quantum-safe/boringssl.git && \
+    git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/boringssl.git && \
     wget -qO- "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar -xzf -
 
 
