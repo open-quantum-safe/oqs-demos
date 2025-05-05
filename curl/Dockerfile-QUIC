@@ -1,5 +1,5 @@
 ARG CURL_VERSION=8.13.0
-ARG QUICHE_VERSION=0.23.5
+ARG QUICHE_VERSION=0.24.2
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
 FROM ubuntu:latest AS build
@@ -25,7 +25,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
 
 # Download and prepare source files needed for the build process.
 WORKDIR /root
-RUN git clone --branch master --depth 1 https://github.com/open-quantum-safe/boringssl.git bssl \
+RUN git clone --branch main --depth 1 https://github.com/open-quantum-safe/boringssl.git bssl \
     && git clone --recursive --depth 1 https://github.com/open-quantum-safe/liboqs.git \
     && git clone --recursive --depth 1 --branch ${QUICHE_VERSION} https://github.com/cloudflare/quiche.git \
     && mkdir -p /root/curl \
