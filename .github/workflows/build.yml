@@ -117,3 +117,10 @@ jobs:
     with:
       build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
       release_tag: ${{ inputs.release_tag }}
+
+  epiphany:
+    uses: ./.github/workflows/epiphany.yml
+    secrets: inherit
+    with:
+        build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+        release_tag: ${{ inputs.release_tag }}
