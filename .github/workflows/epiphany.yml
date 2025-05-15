@@ -1,0 +1,111 @@
+name: epiphany
+
+on:
+  push:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/epiphany.yml', 'epiphany/**']
+  pull_request:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/epiphany.yml', 'epiphany/**']
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    OQSPROVIDER_TAG=main
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        if: env.push == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine architecture
+        id: arch
+        run: echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
+
+      - name: Build the epiphany Docker image
+        uses: docker/build-push-action@v6
+        with:
+            load: true
+            context: epiphany
+            build-args: |
+                ARCH=${{ steps.arch.outputs.arch }}
+                ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            tags: oqs-epiphany
+
+      - name: Scan Docker Image
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-epiphany
+          command: cves,recommendations
+          sarif-file: epiphany-scan-results.sarif
+
+      - name: Upload Scan Results
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: epiphany-scan-results
+          path: epiphany-scan-results.sarif
+
+      - name: Push Docker image to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: epiphany
+          build-args: |
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/epiphany:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/epiphany:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+
+  push:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    uses: ./.github/workflows/push-manifest.yml
+    secrets: inherit
+    with:
+      image_name: epiphany
+      release_tag: ${{ inputs.release_tag || 'latest' }}
