@@ -35,8 +35,8 @@ RUN cmake -GNinja \
           -DBUILD_SHARED_LIBS=1 .. && \
     ninja && \
     # Copy BoringSSL libraries into the system path after build
-    cp -p ssl/libssl.so /usr/local/lib && \
-    cp -p crypto/libcrypto.so /usr/local/lib
+    cp -p libssl.so /usr/local/lib && \
+    cp -p libcrypto.so /usr/local/lib
 
 # Build and install Nginx
 WORKDIR /home/build/nginx-${NGINX_VERSION}
@@ -77,7 +77,7 @@ RUN ./configure \
     --with-http_flv_module \
     --with-cc=c++ \
     --with-cc-opt="-I../boringssl/include -x c -Ofast" \
-    --with-ld-opt="-L../boringssl/build/ssl -L../boringssl/build/crypto -Wl,-rpath,/usr/local/lib" && \
+    --with-ld-opt="-L../boringssl/build -Wl,-rpath,/usr/local/lib" && \
     make
 
 
