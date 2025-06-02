@@ -109,8 +109,8 @@ jobs:
 
       - name: Test curl and curl generic
         run: |
-          docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 oqs-curl perftest.sh &&
-          docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 oqs-curl-generic perftest.sh
+          docker run -e TEST_TIME=5 -e KEM_ALG=mlkem768 -e SIG_ALG=mldsa65 oqs-curl perftest.sh &&
+          docker run -e TEST_TIME=5 -e KEM_ALG=mlkem768 -e SIG_ALG=mldsa65 oqs-curl-generic perftest.sh
 
       - name: Push Docker image to registries
         if: env.push == 'true'

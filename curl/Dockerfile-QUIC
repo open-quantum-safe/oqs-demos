@@ -1,4 +1,4 @@
-ARG CURL_VERSION=8.13.0
+ARG CURL_VERSION=8.14.0
 ARG QUICHE_VERSION=0.24.2
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
