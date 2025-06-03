@@ -100,7 +100,7 @@ jobs:
           docker network create httpd-test &&
           docker run --network httpd-test --detach --rm --name oqs-httpd oqs-httpd &&
           sleep 2 &&
-          docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433 --curves kyber768
+          docker run --network httpd-test oqs-curl curl -k https://oqs-httpd:4433 --curves mlkem768
 
       - name: Push Docker image to registries
         if: env.push == 'true'
