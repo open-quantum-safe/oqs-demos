@@ -1,8 +1,8 @@
 # Define build arguments for version tags, installation paths, and configurations.
 ARG ALPINE_VERSION=3.21
 ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.12.0
-ARG OQSPROVIDER_TAG=0.8.0
+ARG LIBOQS_TAG=0.13.0
+ARG OQSPROVIDER_TAG=0.9.0
 ARG HAPROXY_RELEASE=3.0
 ARG HAPROXY_MICRO=5
 ARG HAPROXY_VERSION=${HAPROXY_RELEASE}.${HAPROXY_MICRO}
@@ -10,8 +10,8 @@ ARG INSTALLDIR=/opt/oqssa
 ARG HAPROXYDIR=/opt/haproxy
 
 # Specify supported signature and key encapsulation mechanisms (KEM) algorithms.
-ARG KEM_ALGLIST="kyber768:p384_kyber768"
-ARG SIG_ALG=dilithium3
+ARG KEM_ALGLIST="mlkem768:p384_mlkem768"
+ARG SIG_ALG=mldsa65
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
 FROM alpine:${ALPINE_VERSION} AS intermediate
