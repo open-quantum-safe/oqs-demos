@@ -9,7 +9,7 @@ rc-service oqs-sshd stop
 OPTIONS=${OPTIONS:="-q -o BatchMode=yes -o StrictHostKeyChecking=no"}
 
 SIG=${SIG_ALG:="ecdsa-nistp384-mldsa65"}
-KEM=${KEM_ALG:="ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org"}
+KEM=${KEM_ALG:="mlkem768nistp256-sha256"}
 
 # Generate new identity keys, overwrite old keys
 SSH_DIR="/home/${OQS_USER}/.ssh"

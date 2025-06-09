@@ -22,7 +22,7 @@
 ###############################################################################
 
 # Key-exchange algorithms
-KexAlgorithms ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org
+KexAlgorithms mlkem768nistp256-sha256
 
 # The host key algorithms ssh accepts
 HostKeyAlgorithms ssh-ecdsa-nistp384-mldsa65

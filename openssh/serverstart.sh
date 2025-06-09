@@ -5,7 +5,7 @@
 OPTIONS=${OPTIONS:=""}
 
 SIG=${SIG_ALG:="ecdsa-nistp384-mldsa65"}
-KEM=${KEM_ALG:="ecdh-nistp384-kyber-768r3-sha384-d00@openquantumsafe.org"}
+KEM=${KEM_ALG:="mlkem768nistp256-sha256"}
 
 # Optionally set port
 # if left empty, the options defined in sshd_config will be used
