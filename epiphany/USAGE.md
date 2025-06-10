@@ -10,7 +10,7 @@ The image is based on Ubuntu and requires the host to run the Unix X-Window syst
 
 Execute this command to open the epiphany browser window on your host:
 
-    docker run -it --rm --entrypoint /bin/bash -e DISPLAY=$DISPLAY --ipc=host -v /tmp/.X11-unix:/tmp/.X11-unix  openquantumsafe/epiphany
+    docker run --rm -e DISPLAY=$DISPLAY --ipc=host -v /tmp/.X11-unix:/tmp/.X11-unix  openquantumsafe/epiphany
 
 *Note*: You may need to grant permissions for Docker to access the X display. As most users run docker in root mode, you would need:
 
