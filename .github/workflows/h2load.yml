@@ -98,7 +98,7 @@ jobs:
         run: |
           docker network create h2load-test &&
           docker run --network h2load-test --detach --rm --name oqs-nginx oqs-nginx &&
-          docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups kyber512"
+          docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups mlkem512"
 
       - name: Push Docker image to registries
         if: env.push == 'true'

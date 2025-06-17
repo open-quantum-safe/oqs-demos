@@ -5,8 +5,8 @@ ARG INSTALLDIR=/opt/oqssa
 
 # OpenSSL/OQS Versions
 ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.12.0
-ARG OQSPROVIDER_TAG=0.8.0
+ARG LIBOQS_TAG=0.13.0
+ARG OQSPROVIDER_TAG=0.9.0
 
 # architecture to build on
 ARG ARCH=x86_64
@@ -17,7 +17,7 @@ ARG KEM_ALGLIST="mlkem768:p384_mlkem768:x25519"
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
 FROM ubuntu:${UBUNTU_VERSION} AS intermediate
-LABEL version="1"
+LABEL version="2"
 
 ARG OPENSSL_TAG
 ARG LIBOQS_TAG

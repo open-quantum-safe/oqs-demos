@@ -5,11 +5,11 @@ ARG INSTALLDIR=/opt/oqssa
 
 # OpenSSL/OQS Versions
 ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.12.0
-ARG OQSPROVIDER_TAG=0.8.0
+ARG LIBOQS_TAG=0.13.0
+ARG OQSPROVIDER_TAG=0.9.0
 
 # Nodejs specific versions, Always use an LTS version for nodejs
-ARG NODEJS_VERSION=v22.14.0
+ARG NODEJS_VERSION=v22.16.0
 ARG CARES_VERSION=1.28.0
 ARG LIBUV_VERSION=v1.50.0
 
@@ -18,7 +18,7 @@ ARG KEM_ALGLIST="mlkem768:p384_mlkem768"
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
 FROM ubuntu:${UBUNTU_VERSION} AS intermediate
-LABEL version="1"
+LABEL version="3"
 
 ARG OPENSSL_TAG
 ARG LIBOQS_TAG

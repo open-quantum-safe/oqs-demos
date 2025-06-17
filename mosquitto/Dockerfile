@@ -5,10 +5,10 @@
 ARG OPENSSL_TAG=openssl-3.4.0
 
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=0.12.0
+ARG LIBOQS_TAG=0.13.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=0.8.0
+ARG OQSPROVIDER_TAG=0.9.0
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa

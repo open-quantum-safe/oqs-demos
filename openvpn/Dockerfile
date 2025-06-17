@@ -1,8 +1,8 @@
 # Define build arguments for version tags, installation paths, and configurations
 ARG UBUNTU_VERSION=24.04
 ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.12.0
-ARG OQSPROVIDER_TAG=0.8.0
+ARG LIBOQS_TAG=0.13.0
+ARG OQSPROVIDER_TAG=0.9.0
 ARG OPENVPN_TAG=v2.6.14
 ARG INSTALLDIR=/opt/oqssa
 ARG OPENVPNDIR=/home/openvpn
