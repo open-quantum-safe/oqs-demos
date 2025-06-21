@@ -20,7 +20,7 @@ such as selecting a network interface to capture and analyze traffic.
 Use the following Wireshark display filter to isolate quantum-safe TLS traffic:
 
 ```
-tls && ip.addr == <IP of test.openquantumsafe.org>
+tls && tcp.port == <PORT>
 ```
 
 **Explanation:**
@@ -33,10 +33,10 @@ like `ping` to find the IP).
 Run the following command to test a quantum-safe TLS connection:
 
 ```
-docker run --rm -it openquantumsafe/curl sh -c "curl -k https://test.openquantumsafe.org:6069 --curves kyber1024"
+docker run --rm -it openquantumsafe/curl sh -c "curl -k https://test.openquantumsafe.org:6049 --curves mlkem1024"
 ```
 
 **Explanation:**
-Replace `6069` with the port number and `kyber1024` with the name of the quantum-safe cryptographic
+Replace `6049` with the port number and `mlkem1024` with the name of the quantum-safe cryptographic
 algorithm you wish to test. Refer to the [Open Quantum Safe test page](https://test.openquantumsafe.org/) for the full
 list of supported protocols.
