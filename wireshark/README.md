@@ -23,7 +23,7 @@ image allows Wireshark to analyze network traffic encrypted with post-quantum cr
           ```
     - **macOS**:
       - Ensure [XQuartz](https://www.xquartz.org) is installed and running.
-      - Enable **"Allow connections from network clients"** under **XQuartz Preferences > Security**.
+      -  Under **settings > Security**. Enable **"Allow connections from network clients"** and disable **"Authenticate connections"**.
       - Run the following command in the terminal to allow Docker to access the display:
         ```sh
         xhost +
