@@ -2,10 +2,17 @@ import common
 import os
 import json
 import oqsprovider_alglist
+import yaml
 
 # Script assumes nginx to have been built for this platform using build-ubuntu.sh
 
 ############# Configuration section starting here
+
+# This is the generate.yml file
+GENERATE_YML_FILE="generate.yml"
+generate_config = {}
+with open('generate.yml', mode='r', encoding='utf-8') as f:
+   generate_config = yaml.safe_load(f.read())
 
 # This is where the explanation HTML code is
 TEMPLATE_FILE="index-template"
@@ -42,6 +49,18 @@ chromium_algs = ["p256_frodo640aes"]
 
 ############# Functions starting here
 
+def filter_alglist_fun(s):
+   for sig in generate_config['sigs']:
+      for variant in sig['variants']:
+         if (s[0].endswith(variant['name'])) and ('enable_tls' in variant) and (variant['enable_tls'] == False):
+            return False
+   return True
+
+
+# Filters signature algorithms that should be enabled for TLS according to generate.yml
+def filter_alglist_sigs():
+   oqsprovider_alglist.signatures = list(filter(filter_alglist_fun, oqsprovider_alglist.signatures))
+
 # Generate cert chain (server and CA for a given sig alg:
 # srv crt/key wind up in '<path>/<sigalg>_srv.crt|key
 def gen_cert(_sig_alg):
@@ -49,14 +68,20 @@ def gen_cert(_sig_alg):
    # first check whether we already have a root CA; if not create it
    if not os.path.exists(CAROOTDIR):
            os.mkdir(CAROOTDIR)
-           common.run_subprocess([OPENSSL, 'req', '-x509', '-new',
+
+           common.run_subprocess([OPENSSL, 'req', '-new',
                                      '-newkey', "rsa:4096",
                                      '-keyout', os.path.join(CAROOTDIR, "CA.key"),
-                                     '-out', os.path.join(CAROOTDIR, "CA.crt"),
+                                     '-out', os.path.join(CAROOTDIR, "CA.csr"),
                                      '-nodes',
                                          '-subj', '/CN=oqstest_CA',
-                                         '-days', '500',
                                      '-config', OPENSSL_CNF])
+           common.run_subprocess([OPENSSL, 'x509', '-req', '-in', os.path.join(CAROOTDIR, "CA.csr"),
+                                     '-signkey', os.path.join(CAROOTDIR, "CA.key"),
+                                     '-out', os.path.join(CAROOTDIR, "CA.crt"),
+                                     '-days', '500',
+                                     '-extfile', 'ext-csr.conf',
+                                     '-extensions', 'v3_ca'])
            print("New root cert residing in %s." % (os.path.join(CAROOTDIR, "CA.crt")))
 
    # first check whether we already have a PKI dir; if not create it
@@ -228,6 +253,8 @@ def gen_conf(filename, indexbasefilename, chromiumfilename):
       json.dump(assignments, outfile)
 
 def main():
+   # preprocess / filter signature algorithms
+   filter_alglist_sigs()
    # first generate certs for all supported sig algs:
    for sig in oqsprovider_alglist.signatures:
       gen_cert(sig)

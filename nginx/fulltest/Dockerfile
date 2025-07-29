@@ -3,11 +3,11 @@
 # First: global build arguments:
 
 # liboqs build type variant; maximum portability of image:
-ARG LIBOQS_TAG=0.12.0
+ARG LIBOQS_TAG=0.14.0
 
-ARG OPENSSL_TAG=openssl-3.4.0
+ARG OPENSSL_TAG=openssl-3.4.2
 
-ARG OQSPROVIDER_TAG=0.8.0
+ARG OQSPROVIDER_TAG=0.9.0
 
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
@@ -20,10 +20,10 @@ ARG INSTALLDIR=${BASEDIR}/nginx
 ARG CONFIGDIR="/"
 
 # defines the list of default groups to be activated in nginx-openssl config:
-ARG DEFAULT_GROUPS=x25519:x448:prime256v1:secp384r1:secp521r1:mlkem512:mlkem768:mlkem1024:X25519MLKEM768:SecP256r1MLKEM768
+ARG DEFAULT_GROUPS=x25519:x448:prime256v1:secp384r1:secp521r1:kyber512:x25519_kyber768:p256_kyber512:kyber768:p384_kyber768:kyber1024:p521_kyber1024:mlkem512:mlkem768:mlkem1024:X25519MLKEM768:SecP256r1MLKEM768
 
 # define the nginx version to include
-ARG NGINX_VERSION=1.27.3
+ARG NGINX_VERSION=1.27.4
 
 # Define the degree of parallelism when building the image; leave the number away only if you know what you are doing
 ARG MAKE_DEFINES="-j"
@@ -31,7 +31,7 @@ ARG MAKE_DEFINES="-j"
 # Root CA directory
 ARG CAROOTDIR="/rootca"
 
-FROM ubuntu:focal-20230412 AS intermediate
+FROM redhat/ubi9:9.5-1742918310 AS intermediate
 # Take in global args
 ARG BASEDIR
 ARG CONFIGDIR
@@ -48,7 +48,16 @@ ARG OSSLDIR=${BASEDIR}/openssl/.openssl
 
 ENV DEBIAN_FRONTEND noninteractive
 # Get all software packages required for builing all components (probably not all are really needed):
-RUN apt update && apt install -y sed libpcre3 libpcre3-dev libtool automake autoconf openssl libssl-dev build-essential git cmake astyle gcc ninja-build libssl-dev python3-pytest python3-psutil python3-pytest-xdist unzip xsltproc doxygen graphviz python3-yaml valgrind wget scala patch
+RUN dnf update -y && \
+    dnf install -y sed perl java-openjdk git python3-pip && \
+    dnf install -y pcre pcre-devel libtool automake autoconf && \
+    dnf install -y openssl openssl-devel gcc gcc-c++ make cmake && \
+    dnf install -y ninja-build unzip libxslt graphviz valgrind wget patch && \
+    pip3 install pyyaml psutil pytest pytest-xdist && \
+    wget https://downloads.lightbend.com/scala/2.13.15/scala-2.13.15.rpm && \
+    dnf localinstall -y scala-2.13.15.rpm
+
+#RUN dnf update && dnf install -y sed perl java-openjdk git python3-pip pcre pcre-devel libtool automake autoconf openssl openssl-devel gcc gcc-c++ make cmake ninja-build unzip libxslt graphviz valgrind wget patch && pip3 install pyyaml psutil pytest pytest-xdist && wget https://downloads.lightbend.com/scala/2.13.15/scala-2.13.15.rpm && dnf localinstall -y scala-2.13.15.rpm
 
 # get OQS sources
 WORKDIR /opt
@@ -102,6 +111,7 @@ COPY success.htm ${CONFIGDIR}
 COPY OsslAlgParser.scala ${CONFIGDIR}
 # copy existing rootca directory if it exists
 COPY rootc[a] ${CAROOTDIR} 
+RUN cp /opt/oqs-provider/oqs-template/generate.yml ${CONFIGDIR}
 
 RUN for i in 128 192 256; do echo "seclevel:$i"; OPENSSL_MODULES=${OSSLDIR}/lib64/ossl-modules /opt/openssl/apps/openssl list -provider oqsprovider -propquery oqsprovider.security_bits=$i -kem-algorithms; done | scala -nobootcp -nc OsslAlgParser.scala key_exchanges >> oqsprovider_alglist.py
 RUN for i in 128 192 256; do echo "seclevel:$i"; OPENSSL_MODULES=${OSSLDIR}/lib64/ossl-modules /opt/openssl/apps/openssl list -provider oqsprovider -propquery oqsprovider.security_bits=$i -signature-algorithms; done | scala -nobootcp -nc OsslAlgParser.scala signatures >> oqsprovider_alglist.py
@@ -127,7 +137,7 @@ RUN cp assignments.json ${INSTALLDIR}/html/
 RUN rm ${OSSLDIR}/bin/*
 
 # second stage: Only create minimal image without build tooling and intermediate build results generated above:
-FROM ubuntu:focal-20230412
+FROM redhat/ubi9:9.5-1742918310
 # Take in global args
 ARG LIBOQS_BUILD_DEFINES
 ARG LIBOQS_VERSION
@@ -140,7 +150,7 @@ LABEL version="2"
 
 ENV DEBIAN_FRONTEND noninteractive
 #RUN apk add pcre-dev
-RUN apt update && apt install -y libpcre3 libpcre3-dev
+RUN dnf update -y && dnf install -y pcre pcre-devel
 
 # Only retain the ${*_PATH} contents in the final image
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
@@ -148,7 +158,7 @@ COPY --from=intermediate ${OSSLDIR} ${OSSLDIR}
 COPY --from=intermediate ${CAROOTDIR} ${CAROOTDIR}
 
 # Package for deployment
-RUN tar czvf oqs-nginx-${LIBOQS_TAG}.tgz ${BASEDIR}
+RUN tar czvf oqs-nginx-0.14.0.tgz ${BASEDIR}
 
 # Package for root CA cert and key
-RUN tar czvf oqs-testserver-rootca-${LIBOQS_TAG}.tgz ${CAROOTDIR}
+RUN tar czvf oqs-testserver-rootca-0.14.0.tgz ${CAROOTDIR}
