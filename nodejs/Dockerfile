@@ -5,8 +5,8 @@ ARG INSTALLDIR=/opt/oqssa
 
 # OpenSSL/OQS Versions
 ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.13.0
-ARG OQSPROVIDER_TAG=0.9.0
+ARG LIBOQS_TAG=0.14.0
+ARG OQSPROVIDER_TAG=0.10.0
 
 # Nodejs specific versions, Always use an LTS version for nodejs
 ARG NODEJS_VERSION=v22.16.0

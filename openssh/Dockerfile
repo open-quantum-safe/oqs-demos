@@ -1,7 +1,7 @@
 # Define build arguments for version tags, installation paths, and configurations
 # Note: Changing LIBOQS_TAG may require updates in sshd_config and ssh_config
 ARG ALPINE_VERSION=3.21
-ARG LIBOQS_TAG=0.13.0
+ARG LIBOQS_TAG=0.14.0
 ARG OQS_OPENSSH_RELEASE="OQS-v9"
 ARG DEFAULT_INSTALL_DIR=/opt/oqs-ssh
 ARG INSTALL_DIR=${DEFAULT_INSTALL_DIR}
