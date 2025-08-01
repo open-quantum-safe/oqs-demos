@@ -2,8 +2,8 @@
 ARG UBUNTU_VERSION=24.04
 ARG WIRESHARK_VERSION=4.4.7
 ARG OPENSSL_TAG=3.4.0
-ARG LIBOQS_TAG=0.13.0
-ARG OQSPROVIDER_TAG=0.9.0
+ARG LIBOQS_TAG=0.14.0
+ARG OQSPROVIDER_TAG=0.10.0
 ARG INSTALLDIR=/opt/oqs
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
