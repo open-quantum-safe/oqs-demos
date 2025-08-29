@@ -5,7 +5,7 @@ signature algorithms supported by `liboqs`.
 
 If you built the docker image yourself following the instructions
 [here](https://github.com/open-quantum-safe/oqs-demos/tree/main/plotly-dash-sig-visualization), exchange the name of the
-image from `openquantumsafe/pqc-sig-plotly` in the examples below to just `pqc-sig-plotly`.
+image from `openquantumsafe/plotly-sig-visualization` in the examples below to just `plotly-sig-visualization`.
 
 ## Quick start 
 
@@ -13,8 +13,7 @@ The dataset used in [HSLU's public instance](https://pqc.crypto-lab.ch/sig-chart
 this repo, so to quickly start the webapp with that dataset simply run:
 
 ```console
-docker build -t pqc-sig-plotly .
-docker run --rm -p 7000:7000 pqc-sig-plotly
+docker run --rm --name plotly-sig-visualization -p 7000:7000 openquantumsafe/plotly-sig-visualization
 ```
 
 And open the local webapp [here](http://localhost:7000).
@@ -29,10 +28,9 @@ installs everything that is needed.
 You can generate a new dataset and start the visualization with it running the following commands:
 
 ```console
-docker build -t pqc-sig-plotly-dataset -f gen_dataset.Dockerfile .
-docker run --rm -it -v $PWD/webapp/data:/webapp/data pqc-sig-plotly-dataset
-docker build -t pqc-sig-plotly .
-docker run --detach --rm --name pqc-sig-plotly -p 7000:7000 pqc-sig-plotly
+docker run --rm -it -v $PWD/webapp/data:/webapp/data openquantumsafe/plotly-sig-visualization-benchmarking
+docker build -t plotly-sig-visualization .
+docker run --detach --rm --name plotly-sig-visualization -p 7000:7000 plotly-sig-visualization
 ```
 
 Then, the visualization is shown [here](http://localhost:7000).

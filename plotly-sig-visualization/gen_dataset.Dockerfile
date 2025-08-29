@@ -38,7 +38,7 @@ RUN cmake -G Ninja -B build \
         -DOQS_USE_AES_OPENSSL=ON \
         -DOQS_USE_SHA2_OPENSSL=ON \
         -DOQS_USE_SHA3_OPENSSL=ON \
-        -DOQS_OPT_TARGET=x86-64 \
+        -DOQS_OPT_TARGET=generic \
         -DOQS_STRICT_WARNINGS=ON \
         -Wno-dev && \
     ninja -C build

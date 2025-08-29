@@ -12,8 +12,8 @@ keys and certificate sizes.
 [Install Docker](https://docs.docker.com/install) and run the following
 commands in this directory:
 
-1. `docker build -t pqc-sig-plotly .`
-2. `docker run --detach --rm --name pqc-sig-plotly -p 7000:7000 pqc-sig-plotly`
+1. `docker build -t plotly-sig-visualization .`
+2. `docker run --detach --rm --name plotly-sig-visualization -p 7000:7000 plotly-sig-visualization`
 
 ## Usage
 
