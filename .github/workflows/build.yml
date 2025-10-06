@@ -124,3 +124,10 @@ jobs:
     with:
         build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
         release_tag: ${{ inputs.release_tag }}
+
+  plotly-sig-visualization:
+    uses: ./.github/workflows/plotly-sig-visualization.yml
+    secrets: inherit
+    with:
+        build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+        release_tag: ${{ inputs.release_tag }}
