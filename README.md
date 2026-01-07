@@ -63,7 +63,7 @@ All modifications to this repository are released under the same terms as [liboq
     Keelan Cannoo (University of Mauritius / Cyberstorm.mu)
     Dindyal Jeevesh Rishi (University of Mauritius / cyberstorm.mu)
     Dan Rouhana (University of Washington)
-    JT (Henan Raytonne Trading Company)
+    JT
     David Gomez-Cambronero (Telefonica Innovacion digital)
     Khalid Alraddady (linkedin.com/in/alraddady)
 
