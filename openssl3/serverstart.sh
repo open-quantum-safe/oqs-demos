@@ -3,7 +3,7 @@ set -e
 
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/oqs-provider#kem-algorithms
 if [ -z $KEM_ALG ]; then
-	export KEM_ALG=kyber768
+	export KEM_ALG=frodo640aes
 fi
 
 # Start a TLS1.3 test server based on OpenSSL accepting only the specified KEM_ALG

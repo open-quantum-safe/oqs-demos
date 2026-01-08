@@ -1,13 +1,13 @@
 # Define build arguments for version tags, installation paths, and configurations
 ARG ALPINE_VERSION=3.21
-ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.12.0
-ARG OQSPROVIDER_TAG=0.8.0
+ARG OPENSSL_TAG=openssl-3.6.0
+ARG LIBOQS_TAG=0.15.0
+ARG OQSPROVIDER_TAG=0.11.0
 
 ARG INSTALLDIR_OPENSSL=/opt/openssl
 ARG INSTALLDIR_LIBOQS=/opt/liboqs
 
-ARG SIG_ALG="dilithium3"
+ARG SIG_ALG="mayo2"
 
 # Stage 1: Build OpenSSL
 FROM alpine:${ALPINE_VERSION} AS buildopenssl
@@ -16,7 +16,7 @@ ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
 ARG SIG_ALG
 
-LABEL version="3"
+LABEL version="4"
 
 RUN apk --no-cache add build-base linux-headers \
             libtool automake autoconf make git wget
@@ -39,7 +39,7 @@ ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
 ARG SIG_ALG
 
-LABEL version="3"
+LABEL version="4"
 
 RUN apk --no-cache add build-base linux-headers \
             libtool automake autoconf cmake ninja \
@@ -65,7 +65,7 @@ ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
 ARG SIG_ALG
 
-LABEL version="3"
+LABEL version="4"
 
 RUN apk --no-cache add build-base linux-headers \
             libtool cmake ninja git wget
@@ -86,7 +86,7 @@ RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DOPENSSL_ROOT_DIR=${INSTALLDIR_OPENSS
     sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
     sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
     sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
-    sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = kyber768/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
+    sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = frodo640aes/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
 
 # Update PATH to include the newly installed OpenSSL binaries
 WORKDIR ${INSTALLDIR_OPENSSL}/bin

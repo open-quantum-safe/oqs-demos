@@ -1,17 +1,17 @@
 # Define build arguments for version tags, installation paths, and configurations
-ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.12.0
-ARG OQSPROVIDER_TAG=0.8.0
+ARG OPENSSL_TAG=openssl-3.6.0
+ARG LIBOQS_TAG=0.15.0
+ARG OQSPROVIDER_TAG=0.11.0
 
 ARG INSTALLDIR_OPENSSL=/opt/openssl
 ARG INSTALLDIR_LIBOQS=/opt/liboqs
 
-ARG SIG_ALG="dilithium3"
+ARG SIG_ALG="mayo2"
 
 # Stage 1: Build OpenSSL
 FROM ubuntu AS buildopenssl
 
-LABEL version="3"
+LABEL version="4"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG OPENSSL_TAG
@@ -38,7 +38,7 @@ RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR_OPENSSL}/lib64" \
 # Stage 2: Build liboqs
 FROM ubuntu AS buildliboqs
 
-LABEL version="3"
+LABEL version="4"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG LIBOQS_TAG
@@ -71,7 +71,7 @@ ARG INSTALLDIR_OPENSSL
 ARG INSTALLDIR_LIBOQS
 ARG SIG_ALG
 
-LABEL version="3"
+LABEL version="4"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -109,7 +109,7 @@ RUN liboqs_DIR=${INSTALLDIR_LIBOQS} cmake -DNOPUBKEY_IN_PRIVKEY=ON \
     sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
     sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
     sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:DEFAULT_GROUPS\n/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf && \
-    sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = kyber768/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
+    sed -i "s/HOME\t\t\t= ./HOME           = .\nDEFAULT_GROUPS = frodo640aes/g" ${INSTALLDIR_OPENSSL}/ssl/openssl.cnf
 
 # Update the PATH to prioritize the newly installed OpenSSL binaries
 WORKDIR ${INSTALLDIR_OPENSSL}/bin
