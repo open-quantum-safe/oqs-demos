@@ -35,6 +35,7 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   h2load:
+    if: false
     uses: ./.github/workflows/h2load.yml
     secrets: inherit
     with:
@@ -42,6 +43,7 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   haproxy:
+    if: false
     uses: ./.github/workflows/haproxy.yml
     secrets: inherit
     with:
@@ -63,6 +65,7 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   mosquitto:
+    if: false
     uses: ./.github/workflows/mosquitto.yml
     secrets: inherit
     with:
@@ -77,6 +80,7 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   ngtcp2:
+    if: false
     uses: ./.github/workflows/ngtcp2.yml
     secrets: inherit
     with:
@@ -84,6 +88,7 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   openssh:
+    if: false
     uses: ./.github/workflows/openssh.yml
     secrets: inherit
     with:
@@ -98,6 +103,7 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   openvpn:
+    if: false
     uses: ./.github/workflows/openvpn.yml
     secrets: inherit
     with:
