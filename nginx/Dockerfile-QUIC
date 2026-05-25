@@ -1,16 +1,24 @@
-ARG NGINX_VERSION=1.28.1
+ARG NGINX_VERSION=1.30.2
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
 FROM ubuntu:latest AS build
 ARG NGINX_VERSION
 
 # Install required build tools and system dependencies
-RUN apt-get update && apt-get install --no-install-recommends -y \
-      g++ make cmake git build-essential \
-      libpcre3 libpcre3-dev zlib1g-dev \
-      wget ninja-build libunwind-dev \
-      pkg-config python3 ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt update && \
+    apt install -y \
+      build-essential \
+      cmake \
+      make \
+      ninja-build \
+      git \
+      g++ \
+      wget \
+      pkg-config \
+      python3 \
+      zlib1g-dev \
+      libpcre2-dev \
+      libunwind-dev
 
 # Download and prepare source files needed for the build process
 WORKDIR /home/build
@@ -92,7 +100,7 @@ COPY --from=build /usr/local/lib /usr/local/lib
 
 # Install essential runtime tools and libraries
 RUN apt-get update && apt-get install --no-install-recommends -y \
-      adduser libpcre3 && \
+      adduser libpcre2-8-0 && \
     rm -rf /var/lib/apt/lists/*
 
 # Create a dedicated 'nginx' user and group
