@@ -8,7 +8,7 @@ ARG QUICHE_VERSION
 
 # Install required build tools and system dependencies
 RUN apt update && \
-    apt install cmake gcc ninja-build libunwind-dev pkg-config build-essential cargo git wget -y
+    apt install cmake clang ninja-build libunwind-dev pkg-config build-essential cargo git wget -y
 
 # Download and prepare source files needed for the build process.
 WORKDIR /root
