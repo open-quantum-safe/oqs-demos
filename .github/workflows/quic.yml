@@ -39,14 +39,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build NGINX QUIC Docker image
-      uses: docker/build-push-action@v7
-      with:
-        context: .
-        file: nginx/Dockerfile-QUIC
-        load: true
-        tags: ${{ env.TARGET_NAME }}/nginx-quic:latest
-
     - name: Build cURL QUIC Docker image
       uses: docker/build-push-action@v7
       with:
@@ -54,6 +46,14 @@ jobs:
         file: curl/Dockerfile-QUIC
         load: true
         tags: ${{ env.TARGET_NAME }}/curl-quic:latest
+
+    - name: Build NGINX QUIC Docker image
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        file: nginx/Dockerfile-QUIC
+        load: true
+        tags: ${{ env.TARGET_NAME }}/nginx-quic:latest
 
     - name: Create a shared volume
       run: docker volume create shared-1
