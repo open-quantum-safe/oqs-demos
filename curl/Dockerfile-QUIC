@@ -1,5 +1,5 @@
 ARG CURL_VERSION=8.20.0
-ARG QUICHE_VERSION=0.29.0
+ARG QUICHE_VERSION=0.24.7
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
 FROM ubuntu:latest AS build
@@ -34,9 +34,13 @@ RUN cmake -GNinja  \
     && cp -rp "../install/include" "/usr/local/include/bssl" \
     && cp -rp "../install/lib" "/usr/local/lib/bssl"
 
+# Build quiche with custom BoringSSL integration, enabling HTTP/3 and QUIC support
+WORKDIR /root/quiche/quiche/deps
+RUN rm -R boringssl \
+    && ln -s /root/bssl boringssl
+
 WORKDIR /root/quiche
-RUN BORING_BSSL_PATH="/root/bssl/install" RUSTFLAGS="-L native=/root/bssl/install/lib" \
-    && cargo build --package quiche --release --features ffi,pkg-config-meta,qlog \
+RUN cargo build --package quiche --release --features ffi,pkg-config-meta,qlog \
     && cp -p target/release/libquiche.so /usr/local/lib/bssl/libquiche.so.0
 
 # Build and install cURL
