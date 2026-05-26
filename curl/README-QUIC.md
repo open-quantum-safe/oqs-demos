@@ -31,4 +31,4 @@ Once inside the container, you can use the following command to make HTTP/3 requ
 curl --http3-only https://example.com --curves kex
 ```
 
-In this command, `kex` represents the key exchange algorithm, such as `mlkem768`.
+In this command, `kex` represents the key exchange algorithm, such as `p256_mlkem512`.
