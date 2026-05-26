@@ -34,13 +34,8 @@ RUN cmake -GNinja  \
     && cp -rp "../install/include" "/usr/local/include/bssl" \
     && cp -rp "../install/lib" "/usr/local/lib/bssl"
 
-# Build quiche with custom BoringSSL integration, enabling HTTP/3 and QUIC support
-WORKDIR /root/quiche/quiche/deps
-RUN rm -R boringssl \
-    && ln -s /root/bssl boringssl
-
 WORKDIR /root/quiche
-RUN cargo build --package quiche --release --features ffi,pkg-config-meta,qlog \
+RUN BORING_BSSL_PATH="/root/bssl/install" cargo build --package quiche --release --features ffi,pkg-config-meta,qlog \
     && cp -p target/release/libquiche.so /usr/local/lib/bssl/libquiche.so.0
 
 # Build and install cURL
