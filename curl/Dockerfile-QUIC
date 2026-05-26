@@ -35,7 +35,8 @@ RUN cmake -GNinja  \
     && cp -rp "../install/lib" "/usr/local/lib/bssl"
 
 WORKDIR /root/quiche
-RUN BORING_BSSL_PATH="/root/bssl/install" cargo build --package quiche --release --features ffi,pkg-config-meta,qlog \
+RUN BORING_BSSL_PATH="/root/bssl/install" RUSTFLAGS="-L native=/root/bssl/install/lib" \
+    && cargo build --package quiche --release --features ffi,pkg-config-meta,qlog \
     && cp -p target/release/libquiche.so /usr/local/lib/bssl/libquiche.so.0
 
 # Build and install cURL
