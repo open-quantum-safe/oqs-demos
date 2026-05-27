@@ -28,7 +28,7 @@ docker run -it --name curl-quic-instance curl-quic
 Once inside the container, you can use the following command to make HTTP/3 requests:
 
 ```bash
-curl --http3-only https://example.com -curves kex
+curl --http3-only https://example.com --curves kex
 ```
 
-In this command, `kex` represents the key exchange algorithm, such as `mlkem768`.
+In this command, `kex` represents the key exchange algorithm, such as `p256_mlkem512`.

@@ -23,37 +23,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Login to Docker Hub
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       if: env.push == 'true'
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build NGINX QUIC Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        file: nginx/Dockerfile-QUIC
-        load: true
-        tags: ${{ env.TARGET_NAME }}/nginx-quic:latest
-
     - name: Build cURL QUIC Docker image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         file: curl/Dockerfile-QUIC
         load: true
         tags: ${{ env.TARGET_NAME }}/curl-quic:latest
+
+    - name: Build NGINX QUIC Docker image
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        file: nginx/Dockerfile-QUIC
+        load: true
+        tags: ${{ env.TARGET_NAME }}/nginx-quic:latest
 
     - name: Create a shared volume
       run: docker volume create shared-1
@@ -64,7 +64,7 @@ jobs:
         docker run -v shared-1:/certs $TARGET_NAME/oqs-ossl3 /bin/sh -c "\
         openssl req -x509 -new -newkey rsa3072_falcon512 -keyout /certs/CA.key -out /certs/CA.crt -nodes -subj '/C=US/O=Open Quantum Safe/CN=OQS Demos' -days 1461 && \
         openssl req -new -newkey mayo3 -keyout /certs/server.key -out /certs/server.csr -nodes -subj '/CN=host.docker.internal' && \
-        openssl x509 -req -in /certs/server.csr -out /certs/server.crt -CA /certs/CA.crt -CAkey /certs/CA.key -CAcreateserial -days 365"
+        openssl x509 -req -in /certs/server.csr -out /certs/server.crt -CA /certs/CA.crt -CAkey /certs/CA.key -CAcreateserial -days 3"
       shell: bash
 
     - name: Start NGINX server with QUIC support
@@ -82,7 +82,7 @@ jobs:
 
     - name: Scan cURL QUIC Docker Image
       if: env.push == 'true'
-      uses: docker/scout-action@v1.16.1
+      uses: docker/scout-action@v1.21.0
       with:
         image: ${{ env.TARGET_NAME }}/curl-quic
         command: cves,recommendations
@@ -90,7 +90,7 @@ jobs:
 
     - name: Scan NGINX QUIC Docker Image
       if: env.push == 'true'
-      uses: docker/scout-action@v1.16.1
+      uses: docker/scout-action@v1.21.0
       with:
         image: ${{ env.TARGET_NAME }}/nginx-quic
         command: cves,recommendations
@@ -98,14 +98,14 @@ jobs:
 
     - name: Upload Scan Results for cURL QUIC
       if: env.push == 'true'
-      uses: actions/upload-artifact@v4.4.3
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: curl-quic-scan-results
         path: curl-quic-scan-results.sarif
 
     - name: Upload Scan Results for NGINX QUIC
       if: env.push == 'true'
-      uses: actions/upload-artifact@v4.4.3
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: nginx-quic-scan-results
         path: nginx-quic-scan-results.sarif
