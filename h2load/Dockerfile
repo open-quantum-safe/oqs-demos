@@ -53,7 +53,7 @@ RUN ln -s ../openssl . && \
 
 # Build and install nghttp2
 WORKDIR /opt/nghttp2
-RUN LD_LIBRARY_PATH="${INSTALLDIR}/lib64" autoreconf -i && automake && autoconf && ./configure \
+RUN LD_LIBRARY_PATH="${INSTALLDIR}/lib64" autoreconf -i && automake && autoconf && LDFLAGS="-Wl,-z,stack-size=8388608" ./configure \
     PKG_CONFIG_PATH="/opt/oqssa/lib64/pkgconfig" && make -j"$(nproc)" install
 
 # Copy all required shared object dependencies to a single directory
