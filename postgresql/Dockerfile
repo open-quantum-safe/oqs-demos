@@ -106,6 +106,9 @@ RUN PKG_CONFIG_PATH="${INSTALLDIR}/lib64/pkgconfig" \
                 --with-libraries="${INSTALLDIR}/lib64" && \
     make -j"$(nproc)" && make install
 
+# Remove CA private key so it is not baked into the runtime image
+RUN rm -f ${INSTALLDIR}/bin/CA.key
+
 # Stage 2: Runtime - Create a lightweight image with essential binaries and configurations
 FROM alpine:${ALPINE_VERSION}
 ARG INSTALLDIR
@@ -126,6 +129,8 @@ ENV PATH="/opt/postgresql/bin:${INSTALLDIR}/bin:${PATH}" \
     PGDATA="/var/lib/postgresql/data" \
     OPENSSL_CONF="${INSTALLDIR}/ssl/openssl.cnf" \
     DEFAULT_GROUPS="${DEFAULT_GROUPS}" \
+    SIG_ALG="${SIG_ALG}" \
+    POSTGRES_PASSWORD="oqs-demo-password" \
     LD_LIBRARY_PATH="${INSTALLDIR}/lib64"
 
 # Create non-root user for PostgreSQL

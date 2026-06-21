@@ -8,7 +8,7 @@ services:
     image: oqs-postgresql
     container_name: oqs-postgresql
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
       - DEFAULT_GROUPS=${DEFAULT_GROUPS:-x25519:x448:prime256v1:secp384r1:mlkem512:mlkem768:mlkem1024:X25519MLKEM768:SecP256r1MLKEM768}
     volumes:

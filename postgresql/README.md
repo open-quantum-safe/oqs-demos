@@ -23,8 +23,6 @@ The Dockerfile provided allows for significant customization of the image built:
 
 Tag of `openssl` release to be used. Default is `openssl-3.4.0`.
 
-To use OpenSSL 3.5+ with native PQC support, set this to e.g. `openssl-3.5.0`. The entrypoint script will automatically detect OpenSSL 3.5+ and configure `ssl_groups` in `postgresql.conf`.
-
 ### LIBOQS_TAG
 
 Tag of `liboqs` release to be used. Default is `0.13.0`.

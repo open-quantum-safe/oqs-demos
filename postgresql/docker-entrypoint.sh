@@ -1,10 +1,10 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
 # Initialize PostgreSQL data directory if it doesn't exist
 if [ ! -s "${PGDATA}/PG_VERSION" ]; then
     echo "Initializing PostgreSQL database..."
-    initdb --username=postgres --auth=trust "${PGDATA}"
+    initdb --username=postgres --auth=scram-sha-256 --pwfile=<(echo "${POSTGRES_PASSWORD:-oqs-demo-password}") "${PGDATA}"
 
     # Configure PostgreSQL for PQC TLS
     cat >> "${PGDATA}/postgresql.conf" <<EOF
@@ -18,14 +18,15 @@ listen_addresses = '*'
 EOF
 
     # Configure client authentication - require SSL for remote connections
+    # NOTE: This is a demo configuration. For production use, review and harden these settings.
     cat > "${PGDATA}/pg_hba.conf" <<EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
-# Local connections
-local   all             all                                     trust
+# Local connections (password not required for local socket connections in this demo)
+local   all             all                                     scram-sha-256
 # IPv4 remote connections (SSL required)
-hostssl all             all             0.0.0.0/0               trust
+hostssl all             all             0.0.0.0/0               scram-sha-256
 # IPv6 remote connections (SSL required)
-hostssl all             all             ::/0                    trust
+hostssl all             all             ::/0                    scram-sha-256
 EOF
 
     echo "PostgreSQL initialized with PQC TLS configuration."
