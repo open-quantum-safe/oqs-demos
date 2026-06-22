@@ -90,11 +90,34 @@ HANDSHAKE_OUTPUT=$(docker exec "${CONTAINER_NAME}" bash -c \
     "echo '' | timeout 5 openssl s_client -connect localhost:5432 -starttls postgres 2>&1" || true)
 
 if echo "${HANDSHAKE_OUTPUT}" | grep -q "Peer signature type: ${SIG_ALG}"; then
-    echo "PASS: PQC peer signature verified in TLS handshake"
+    echo "PASS: PQC peer signature verified in TLS handshake (PQC authentication)"
 else
     echo "WARN: Could not verify PQC peer signature via s_client"
 fi
 echo "${HANDSHAKE_OUTPUT}" | grep -E "Peer signature type|Server Temp Key|Protocol|Cipher" | head -5 || true
+
+# Verify PQC KEM key exchange (PostgreSQL 18+ with ssl_groups)
+echo ""
+echo "--- Verifying PQC KEM key exchange ---"
+PG_MAJOR=$(docker exec "${CONTAINER_NAME}" bash -c 'postgres --version | sed "s/.*) //" | cut -d. -f1' 2>/dev/null)
+if [ "${PG_MAJOR}" -ge 18 ] 2>/dev/null; then
+    if echo "${HANDSHAKE_OUTPUT}" | grep -q "Server Temp Key:.*ML-KEM-768\|Server Temp Key:.*X25519MLKEM768"; then
+        echo "PASS: PQC KEM key exchange negotiated (X25519MLKEM768)"
+    else
+        echo "WARN: PQC KEM key exchange not detected in handshake output"
+        echo "  (Server Temp Key line may vary by OpenSSL version)"
+    fi
+
+    # Verify ssl_groups is configured in PostgreSQL
+    SSL_GROUPS=$(docker exec "${CONTAINER_NAME}" bash -c 'PGPASSWORD="${POSTGRES_PASSWORD}" psql -U postgres -t -A -c "SHOW ssl_groups;" 2>/dev/null' || true)
+    if [ -n "${SSL_GROUPS}" ]; then
+        echo "PASS: ssl_groups configured: ${SSL_GROUPS}"
+    else
+        echo "WARN: Could not verify ssl_groups setting"
+    fi
+else
+    echo "SKIP: PQC KEM key exchange test (requires PostgreSQL 18+, detected: ${PG_MAJOR})"
+fi
 
 # Clean up
 echo ""

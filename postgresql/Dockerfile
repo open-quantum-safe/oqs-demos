@@ -3,7 +3,7 @@ ARG ALPINE_VERSION=3.21
 ARG OPENSSL_TAG=openssl-3.4.0
 ARG LIBOQS_TAG=0.13.0
 ARG OQSPROVIDER_TAG=0.9.0
-ARG POSTGRESQL_VERSION=17.2
+ARG POSTGRESQL_VERSION=18.4
 ARG INSTALLDIR=/opt/oqssa
 
 # Specify supported signature and key encapsulation mechanisms (KEM) algorithms

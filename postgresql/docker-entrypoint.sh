@@ -17,6 +17,17 @@ ssl_ca_file = '/opt/pqcerts/CA.crt'
 listen_addresses = '*'
 EOF
 
+    # PostgreSQL 18+ supports ssl_groups for PQC KEM key exchange
+    PG_MAJOR=$(postgres --version | sed 's/.*) //' | cut -d. -f1)
+    if [ "${PG_MAJOR}" -ge 18 ] 2>/dev/null; then
+        echo "# PQC KEM key exchange (PostgreSQL 18+)" >> "${PGDATA}/postgresql.conf"
+        echo "ssl_groups = 'X25519MLKEM768:X25519:prime256v1:secp384r1'" >> "${PGDATA}/postgresql.conf"
+        echo "PostgreSQL ${PG_MAJOR} detected: ssl_groups configured for PQC KEM key exchange."
+    else
+        echo "PostgreSQL ${PG_MAJOR} detected: ssl_groups not available (requires PostgreSQL 18+)."
+        echo "PQC authentication is active, but key exchange uses classical ECDH."
+    fi
+
     # Configure client authentication - require SSL for remote connections
     # NOTE: This is a demo configuration. For production use, review and harden these settings.
     cat > "${PGDATA}/pg_hba.conf" <<EOF
