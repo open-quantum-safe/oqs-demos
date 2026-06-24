@@ -50,11 +50,17 @@ else
     exit 1
 fi
 
-# Show OpenSSL version and provider information
+# Verify OpenSSL version and OQS provider
 echo ""
 echo "--- OpenSSL information ---"
 docker exec "${CONTAINER_NAME}" openssl version
-docker exec "${CONTAINER_NAME}" openssl list -providers 2>/dev/null || true
+if docker exec "${CONTAINER_NAME}" openssl list -providers 2>/dev/null | grep -qi "oqs"; then
+    echo "PASS: OQS provider is loaded"
+else
+    echo "FAIL: OQS provider not detected"
+    docker rm -f "${CONTAINER_NAME}" 2>/dev/null
+    exit 1
+fi
 
 # Verify PQC certificate is in use
 echo ""
@@ -107,23 +113,18 @@ if [ "${PG_MAJOR}" -ge 18 ] 2>/dev/null; then
         echo "WARN: Could not verify ssl_groups setting"
     fi
 
-    # Perform a TLS handshake requesting X25519MLKEM768 and compare
-    # the client key_share size against a classical-only handshake.
-    # X25519MLKEM768 key shares are ~1200 bytes; X25519 is 32 bytes,
-    # so the "written" byte count is a reliable differentiator.
+    # Request ONLY the PQC group X25519MLKEM768. If the server supports it,
+    # the connection succeeds; if not, the handshake fails -- no heuristic needed.
     KEM_HANDSHAKE=$(docker exec "${CONTAINER_NAME}" bash -c \
         "echo '' | timeout 5 openssl s_client -connect localhost:5432 -starttls postgres -groups X25519MLKEM768 2>&1" || true)
-    KEM_WRITTEN=$(echo "${KEM_HANDSHAKE}" | grep -o 'written [0-9]* bytes' | grep -o '[0-9]*')
-    CLASSIC_HANDSHAKE=$(docker exec "${CONTAINER_NAME}" bash -c \
-        "echo '' | timeout 5 openssl s_client -connect localhost:5432 -starttls postgres -groups X25519 2>&1" || true)
-    CLASSIC_WRITTEN=$(echo "${CLASSIC_HANDSHAKE}" | grep -o 'written [0-9]* bytes' | grep -o '[0-9]*')
 
-    if [ -n "${KEM_WRITTEN}" ] && [ -n "${CLASSIC_WRITTEN}" ] && [ "${KEM_WRITTEN}" -gt "${CLASSIC_WRITTEN}" ]; then
+    if echo "${KEM_HANDSHAKE}" | grep -q "Protocol.*TLSv1.3"; then
         echo "PASS: PQC KEM key exchange negotiated (X25519MLKEM768)"
-        echo "  KEM handshake: ${KEM_WRITTEN} bytes written vs classical: ${CLASSIC_WRITTEN} bytes"
+        echo "${KEM_HANDSHAKE}" | grep -E "Server Temp Key|Protocol" | head -3 || true
     else
-        echo "WARN: PQC KEM key exchange could not be confirmed via handshake size"
-        echo "  KEM written=${KEM_WRITTEN:-n/a}, classical written=${CLASSIC_WRITTEN:-n/a}"
+        echo "FAIL: PQC KEM key exchange not established (server does not support X25519MLKEM768)"
+        docker rm -f "${CONTAINER_NAME}" 2>/dev/null
+        exit 1
     fi
 else
     echo "SKIP: PQC KEM key exchange test (requires PostgreSQL 18+, detected: ${PG_MAJOR})"

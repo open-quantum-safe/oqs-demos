@@ -21,7 +21,7 @@ EOF
     PG_MAJOR=$(postgres --version | sed 's/.*) //' | cut -d. -f1)
     if [ "${PG_MAJOR}" -ge 18 ] 2>/dev/null; then
         echo "# PQC KEM key exchange (PostgreSQL 18+)" >> "${PGDATA}/postgresql.conf"
-        echo "ssl_groups = 'X25519MLKEM768:X25519:prime256v1:secp384r1'" >> "${PGDATA}/postgresql.conf"
+        echo "ssl_groups = '${DEFAULT_GROUPS}'" >> "${PGDATA}/postgresql.conf"
         echo "PostgreSQL ${PG_MAJOR} detected: ssl_groups configured for PQC KEM key exchange."
     else
         echo "PostgreSQL ${PG_MAJOR} detected: ssl_groups not available (requires PostgreSQL 18+)."
@@ -47,7 +47,11 @@ EOF
     # Verify OpenSSL providers are loaded
     echo "OpenSSL version and providers:"
     openssl version
-    openssl list -providers 2>/dev/null || true
+    if openssl list -providers 2>/dev/null | grep -qi "oqs"; then
+        echo "OQS provider: loaded"
+    else
+        echo "WARNING: OQS provider not detected"
+    fi
 fi
 
 exec postgres -D "${PGDATA}"

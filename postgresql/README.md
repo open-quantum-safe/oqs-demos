@@ -57,7 +57,7 @@ This defines the set of (possibly PQ) TLS 1.3 groups supported by the server at 
 
 The default value is `x25519:x448:prime256v1:secp384r1:mlkem512:mlkem768:mlkem1024:X25519MLKEM768:SecP256r1MLKEM768` enabling ML-KEM variants alongside classic key exchange algorithms. For the full list of supported PQ KEM algorithms see [the oqs-provider algorithm documentation](https://github.com/open-quantum-safe/oqs-provider#algorithms).
 
-Note: On PostgreSQL 18+, the `ssl_groups` parameter in `postgresql.conf` controls the actual groups offered by the server. The entrypoint script automatically configures `ssl_groups = 'X25519MLKEM768:X25519:prime256v1:secp384r1'` for PostgreSQL 18+.
+Note: On PostgreSQL 18+, the `ssl_groups` parameter in `postgresql.conf` controls the actual groups offered by the server. The entrypoint script automatically configures `ssl_groups` using the `DEFAULT_GROUPS` environment variable for PostgreSQL 18+.
 
 ### ALPINE_VERSION
 

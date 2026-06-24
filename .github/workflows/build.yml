@@ -117,6 +117,13 @@ jobs:
         build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
         release_tag: ${{ inputs.release_tag }}
 
+  postgresql:
+    uses: ./.github/workflows/postgresql.yml
+    secrets: inherit
+    with:
+      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      release_tag: ${{ inputs.release_tag }}
+
   wireshark:
     uses: ./.github/workflows/wireshark.yml
     secrets: inherit
