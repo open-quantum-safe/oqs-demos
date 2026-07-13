@@ -86,13 +86,24 @@ jobs:
 
       - name: Test PostgreSQL PQC TLS
         run: |
-          docker run -d --name oqs-postgresql -p 15432:5432 oqs-postgresql &&
-          sleep 5 &&
-          docker exec oqs-postgresql bash -c 'pg_isready -q' &&
-          docker exec oqs-postgresql bash -c 'PGPASSWORD="${POSTGRES_PASSWORD}" psql -U postgres -t -A -c "SHOW ssl;"' | grep -q 'on' &&
-          docker exec oqs-postgresql bash -c 'openssl list -providers 2>/dev/null | grep -qi oqs' &&
-          docker exec oqs-postgresql bash -c 'echo "" | timeout 5 openssl s_client -connect localhost:5432 -starttls postgres -groups X25519MLKEM768 2>&1 | grep -q "Protocol.*TLSv1.3"' &&
-          echo "All PostgreSQL PQC TLS tests passed" &&
+          docker run -d --name oqs-postgresql -p 15432:5432 oqs-postgresql
+          for i in $(seq 1 30); do
+            if docker exec oqs-postgresql pg_isready -q 2>/dev/null; then
+              echo "PostgreSQL is ready after ${i}s"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "ERROR: PostgreSQL failed to start"
+              docker logs oqs-postgresql
+              docker rm -f oqs-postgresql
+              exit 1
+            fi
+            sleep 1
+          done
+          docker exec oqs-postgresql bash -c 'PGPASSWORD="${POSTGRES_PASSWORD}" psql -U postgres -t -A -c "SHOW ssl;"' | grep -q 'on'
+          docker exec oqs-postgresql bash -c 'openssl list -providers 2>/dev/null | grep -qi oqs'
+          docker exec oqs-postgresql bash -c 'echo "" | timeout 5 openssl s_client -connect localhost:5432 -starttls postgres -groups X25519MLKEM768 2>&1 | grep -q "Protocol.*TLSv1.3"'
+          echo "All PostgreSQL PQC TLS tests passed"
           docker rm -f oqs-postgresql
 
       - name: Push Docker image to registries
