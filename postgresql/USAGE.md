@@ -26,7 +26,7 @@ docker exec -it oqs-postgresql psql -U postgres "sslmode=require"
 
 ### Configuring KEM algorithms
 
-This PostgreSQL image supports all quantum-safe key exchange algorithms [presently supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). You can control which algorithms are available via the `DEFAULT_GROUPS` environment variable:
+This PostgreSQL image supports quantum-safe key exchange algorithms. With OpenSSL 3.5+, NIST-standardized algorithms (ML-KEM, ML-DSA) work via the default provider; non-standardized algorithms are available via [oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). You can control which algorithms are available via the `DEFAULT_GROUPS` environment variable:
 
 ```
 docker run -e DEFAULT_GROUPS=mlkem768 -p 5432:5432 openquantumsafe/postgresql

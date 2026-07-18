@@ -38,7 +38,7 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
-# Verify SSL is enabled (via local socket, which does not require TLS)
+# Verify SSL is enabled
 echo ""
 echo "--- Verifying SSL configuration ---"
 SSL_STATUS=$(docker exec "${CONTAINER_NAME}" bash -c 'PGPASSWORD="${POSTGRES_PASSWORD}" psql -U postgres -t -A -c "SHOW ssl;"' 2>/dev/null)

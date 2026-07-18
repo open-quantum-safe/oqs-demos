@@ -28,12 +28,12 @@ EOF
         echo "PQC authentication is active, but key exchange uses classical ECDH."
     fi
 
-    # Configure client authentication - require SSL for remote connections
-    # NOTE: This is a demo configuration. For production use, review and harden these settings.
+    # Configure client authentication - require SSL for all connections
     cat > "${PGDATA}/pg_hba.conf" <<EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
-# Local connections (password not required for local socket connections in this demo)
-local   all             all                                     scram-sha-256
+# Local loopback connections (SSL required)
+hostssl all             all             127.0.0.1/32            scram-sha-256
+hostssl all             all             ::1/128                 scram-sha-256
 # IPv4 remote connections (SSL required)
 hostssl all             all             0.0.0.0/0               scram-sha-256
 # IPv6 remote connections (SSL required)
@@ -44,14 +44,10 @@ EOF
     echo "Signature algorithm: ${SIG_ALG:-mldsa65}"
     echo "KEM groups: ${DEFAULT_GROUPS}"
 
-    # Verify OpenSSL providers are loaded
+    # Log OpenSSL version and provider status
     echo "OpenSSL version and providers:"
     openssl version
-    if openssl list -providers 2>/dev/null | grep -qi "oqs"; then
-        echo "OQS provider: loaded"
-    else
-        echo "WARNING: OQS provider not detected"
-    fi
+    openssl list -providers 2>/dev/null || true
 fi
 
 exec postgres -D "${PGDATA}"

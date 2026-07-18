@@ -33,6 +33,8 @@ The Dockerfile provided allows for significant customization of the image built:
 
 Tag of `openssl` release to be used. Default is `openssl-3.4.0`.
 
+Note: With OpenSSL 3.5+, NIST-standardized PQ algorithms (ML-KEM, ML-DSA) are available via the default provider — the oqs-provider is still used for non-standardized algorithms. Everything should work identically with a more current OpenSSL version.
+
 ### LIBOQS_TAG
 
 Tag of `liboqs` release to be used. Default is `0.13.0`.
@@ -100,10 +102,12 @@ To connect with a PQC-enabled `psql` client, you can use the OQS-enabled OpenSSL
 docker exec -it oqs-postgresql psql -U postgres -h 127.0.0.1 "sslmode=require"
 ```
 
+This connects over TCP with SSL required (all connections require TLS in this demo).
+
 To verify the PQC TLS handshake with `openssl s_client`:
 
 ```
-docker exec -it oqs-postgresql openssl s_client -connect localhost:5432 -starttls postgres
+docker exec -it oqs-postgresql openssl s_client -connect localhost:5432 -starttls postgres -groups X25519MLKEM768
 ```
 
 You should see `Peer signature type: mldsa65` confirming post-quantum authentication. On PostgreSQL 18+, you should also see `Server Temp Key: ML-KEM-768` (or `X25519MLKEM768`) confirming post-quantum key exchange.
