@@ -28,15 +28,15 @@ EOF
         echo "PQC authentication is active, but key exchange uses classical ECDH."
     fi
 
-    # Configure client authentication - require SSL for all connections
+    # Configure client authentication - require SSL for all TCP connections
     cat > "${PGDATA}/pg_hba.conf" <<EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
-# Local loopback connections (SSL required)
+# Unix socket connections (cannot use SSL — inherently local and secure)
+local   all             all                                     scram-sha-256
+# All TCP connections require SSL (including localhost)
 hostssl all             all             127.0.0.1/32            scram-sha-256
 hostssl all             all             ::1/128                 scram-sha-256
-# IPv4 remote connections (SSL required)
 hostssl all             all             0.0.0.0/0               scram-sha-256
-# IPv6 remote connections (SSL required)
 hostssl all             all             ::/0                    scram-sha-256
 EOF
 
