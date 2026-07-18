@@ -1,0 +1,128 @@
+name: postgresql
+
+on:
+  push:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/postgresql.yml', 'postgresql/**']
+  pull_request:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/postgresql.yml', 'postgresql/**']
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and oqsprovider main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which docker tag to push to"
+        required: false
+        type: string
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    OQSPROVIDER_TAG=main
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        if: env.push == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: postgresql
+          build-args: |
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: oqs-postgresql
+
+      - name: Scan Docker Image
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: oqs-postgresql
+          command: cves,recommendations
+          sarif-file: postgresql-scan-results.sarif
+
+      - name: Upload Scan Results
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: postgresql-scan-results
+          path: postgresql-scan-results.sarif
+
+      - name: Test PostgreSQL PQC TLS
+        run: |
+          docker run -d --name oqs-postgresql -p 15432:5432 oqs-postgresql
+          for i in $(seq 1 30); do
+            if docker exec oqs-postgresql pg_isready -q 2>/dev/null; then
+              echo "PostgreSQL is ready after ${i}s"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "ERROR: PostgreSQL failed to start"
+              docker logs oqs-postgresql
+              docker rm -f oqs-postgresql
+              exit 1
+            fi
+            sleep 1
+          done
+          docker exec oqs-postgresql bash -c 'PGPASSWORD="${POSTGRES_PASSWORD}" psql -U postgres -t -A -c "SHOW ssl;"' | grep -q 'on'
+          docker exec oqs-postgresql bash -c 'openssl list -providers 2>/dev/null | grep -qi oqs'
+          docker exec oqs-postgresql bash -c 'echo "" | timeout 5 openssl s_client -connect localhost:5432 -starttls postgres -groups X25519MLKEM768 2>&1 | grep -q "Protocol.*TLSv1.3"'
+          echo "All PostgreSQL PQC TLS tests passed"
+          docker rm -f oqs-postgresql
+
+      - name: Push Docker image to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: postgresql
+          build-args: |
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/postgresql:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/postgresql:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+
+  push:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    uses: ./.github/workflows/push-manifest.yml
+    secrets: inherit
+    with:
+      image_name: postgresql
+      release_tag: ${{ inputs.release_tag || 'latest' }}
