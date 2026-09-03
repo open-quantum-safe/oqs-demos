@@ -3,7 +3,7 @@ set -e
 
 # Optionally set KEM to one defined in https://github.com/open-quantum-safe/oqs-provider#algorithms
 if [ "x$KEM_ALG" == "x" ]; then
-	export DEFAULT_GROUPS=kyber512
+	export DEFAULT_GROUPS=mlkem768
 else
         export DEFAULT_GROUPS=$KEM_ALG
 fi
