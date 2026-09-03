@@ -34,10 +34,10 @@ docker run --network nginx-test -it openquantumsafe/curl curl -k https://oqs-ngi
 
 ## Slightly more advanced usage options
 
-This nginx image supports all quantum-safe key exchange algorithms [presently supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). If you want to control which algorithm is actually used, you can request one from the list above to the curl command with the '--curves' parameter, e.g., requesting the hybrid Kyber768 variant:
+This nginx image supports all quantum-safe key exchange algorithms [presently supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). If you want to control which algorithm is actually used, you can request one from the list above to the curl command with the '--curves' parameter, e.g., requesting the hybrid mlkem768 variant:
 
 ```
-docker run -it openquantumsafe/curl curl -k https://oqs-nginx:4433  --curves p384_kyber768
+docker run -it openquantumsafe/curl curl -k https://oqs-nginx:4433  --curves p384_mlkem768
 ```
 
 
@@ -53,7 +53,7 @@ docker run -p 4433:4433 --name oqs-nginx -v `pwd`/nginx-conf:/opt/nginx/nginx-co
 
 ### openssl configuration
 
-Of particular interest is the environment variable `DEFAULT_GROUPS` as it can be used to change the set of the (quantum safe) cryptographic (KEM) algorithms supported by the nginx installation. By default (not setting `DEFAULT_GROUPS`), the plain and hybrid variants of the Kyber family as listed [here](https://github.com/open-quantum-safe/oqs-provider#algorithms) are enabled.
+Of particular interest is the environment variable `DEFAULT_GROUPS` as it can be used to change the set of the (quantum safe) cryptographic (KEM) algorithms supported by the nginx installation. By default (not setting `DEFAULT_GROUPS`), the plain and hybrid variants of the mlkem family as listed [here](https://github.com/open-quantum-safe/oqs-provider#algorithms) are enabled.
 
 Thus, in order to set up `nginx` to use the `frodo640aes` KEM the following command would do:
 
