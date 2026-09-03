@@ -101,7 +101,7 @@ jobs:
           docker network create nginx-test &&
           docker run --network nginx-test --detach --rm --name oqs-nginx oqs-nginx &&
           sleep 2 &&
-          docker run --network nginx-test oqs-curl-generic openssl list -providers
+          docker run --network nginx-test oqs-curl-generic curl -k https://oqs-nginx:4433
 
       - name: Push Docker image to registries
         if: env.push == 'true'
