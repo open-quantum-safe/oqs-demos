@@ -9,9 +9,9 @@ As different images providing the same base functionality may be available, e.g.
 ## Quick start
 
 1) `docker run -it openquantumsafe/curl` starts an OQS-enabled TLS test server.
-2) On the command prompt in the docker container resulting from the first comment, one can query that server by issuing the command `curl --curves kyber768 https://localhost:4433`. 
+2) On the command prompt in the docker container resulting from the first comment, one can query that server by issuing the command `curl --curves mlkem768 https://localhost:4433`. 
 
-The latter command returns all TLS information documenting use of OQS-enabled TLS. The parameter to the `--curves` argument is [any Kex Exchange algorithm supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). Alternatively, the environment variable "DEFAULT_GROUPS" can be set to request a specific PQ KEM, e.g., `DEFAULT_GROUPS=p384_kyber768 curl https://localhost:4433`. The latter example of course also necessitates starting the test server with the same KEM, e.g., by running `docker run -e KEM_ALG=p384_kyber768 -it oqs-curl`.
+The latter command returns all TLS information documenting use of OQS-enabled TLS. The parameter to the `--curves` argument is [any Kex Exchange algorithm supported by oqs-provider](https://github.com/open-quantum-safe/oqs-provider#algorithms). Alternatively, the environment variable "DEFAULT_GROUPS" can be set to request a specific PQ KEM, e.g., `DEFAULT_GROUPS=mlkem768 curl https://localhost:4433`. The latter example of course also necessitates starting the test server with the same KEM, e.g., by running `docker run -e KEM_ALG=mlkem768 -it oqs-curl`.
 
 ## Retrieving data from other QSC-enabled TLS servers
 
@@ -31,13 +31,13 @@ Simply start
 ```
 docker run -it openquantumsafe/curl perftest.sh
 ```
-to perform TLS handshakes for 200 seconds (TEST_TIME default value) using dilithium2 (SIG_ALG default value) and kyber768 (KEM_ALG default value) keys and certificates.
+to perform TLS handshakes for 200 seconds (TEST_TIME default value) using dilithium2 (SIG_ALG default value) and mlkem768 (KEM_ALG default value) keys and certificates.
 
 A 'worked example' and more general alternative form of the command is
 ```
-docker run -e TEST_TIME=5 -e KEM_ALG=kyber768 -e SIG_ALG=dilithium3 -it openquantumsafe/curl perftest.sh
+docker run -e TEST_TIME=5 -e KEM_ALG=mlkem768 -e SIG_ALG=dilithium3 -it openquantumsafe/curl perftest.sh
 ```
-runs TLS handshakes for 5 seconds exercizing `dilithium3` and `kyber768`. Again, all [supported QSC algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms) can be set here. Be sure to properly distinguish between SIGnature_ALGorithms and KEM(Key Exchange Mechanism)_ALGorithms.
+runs TLS handshakes for 5 seconds exercizing `ML-KEM-768` and `mlkem768`. Again, all [supported QSC algorithms](https://github.com/open-quantum-safe/oqs-provider#algorithms) can be set here. Be sure to properly distinguish between SIGnature_ALGorithms and KEM(Key Exchange Mechanism)_ALGorithms.
 
 
 ### Algorithm performance
@@ -48,7 +48,7 @@ docker run -it openquantumsafe/curl openssl speed
 ```
 to run through all crypto algorithms built into and enabled in the docker image. This includes classic as well as quantum-safe algorithms side by side.
 
-If interested in performance of only specific algorithms, this can be done by providing parameters as usual for [openssl speed](https://www.openssl.org/docs/man1.1.1/man1/openssl-speed.html). The list of [currently supported OQS algorithms is accessible here](https://github.com/open-quantum-safe/oqs-provider#algorithms), so an example call would be `docker run -it openquantumsafe/curl openssl speed -seconds 2 kyber512`.
+If interested in performance of only specific algorithms, this can be done by providing parameters as usual for [openssl speed](https://www.openssl.org/docs/man1.1.1/man1/openssl-speed.html). The list of [currently supported OQS algorithms is accessible here](https://github.com/open-quantum-safe/oqs-provider#algorithms), so an example call would be `docker run -it openquantumsafe/curl openssl speed -seconds 2 mlkem768`.
 
 #### Classic algorithm names for reference
 
