@@ -1,8 +1,8 @@
 # Define build arguments for version tags, installation paths, and configurations.
 ARG ALPINE_VERSION=3.21
-ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.13.0
-ARG OQSPROVIDER_TAG=0.9.0
+ARG OPENSSL_TAG=openssl-4.0.2
+ARG LIBOQS_TAG=0.16.0
+ARG OQSPROVIDER_TAG=0.12.0-rc2
 ARG CURL_VERSION=8.14.0
 ARG INSTALLDIR=/opt/oqssa
 
