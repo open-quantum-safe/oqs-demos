@@ -40,6 +40,11 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
     && tar -zxf nginx-${NGINX_VERSION}.tar.gz \
     && rm nginx-${NGINX_VERSION}.tar.gz
 
+# OpenSSL 4.0.2 AArch64 Poly1305 SVE2 is a preemptible global; hide it so
+# static libcrypto.a can be linked into oqsprovider.so (upstream #32132).
+COPY openssl-4.0.2-poly1305-sve2-hidden.patch /tmp/openssl-4.0.2-poly1305-sve2-hidden.patch
+RUN patch -d /opt/openssl -p1 < /tmp/openssl-4.0.2-poly1305-sve2-hidden.patch
+
 # Build and install liboqs
 WORKDIR /opt/liboqs/build
 RUN cmake -G"Ninja"  \
@@ -52,7 +57,9 @@ RUN cmake -G"Ninja"  \
 WORKDIR /opt/nginx-${NGINX_VERSION}
 RUN ./configure --prefix=${INSTALLDIR} \
     --with-debug --with-http_ssl_module  \
-    --with-openssl=/opt/openssl --without-http_gzip_module && \
+    --with-openssl=/opt/openssl \
+    --with-openssl-opt=-fPIC \
+    --without-http_gzip_module && \
     make -j"$(nproc)" && make install
 
 # Configure OpenSSL to support the oqs-provider
