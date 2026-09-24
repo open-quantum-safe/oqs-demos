@@ -8,7 +8,7 @@ ARG INSTALLDIR=/opt/oqssa
 
 # Specify supported signature and key encapsulation mechanisms (KEM) algorithms.
 ARG SIG_ALG="mldsa65"
-ARG DEFAULT_GROUPS="x25519:x448:mlkem512:p256_mlkem512:mlkem768:p384_mlkem768:mlkem1024:p521_mlkem1024"
+ARG DEFAULT_GROUPS="x25519:x448:prime256v1:secp384r1:secp521r1:mlkem512:mlkem768:mlkem1024:X25519MLKEM768:SecP256r1MLKEM768"
 
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
@@ -106,12 +106,15 @@ RUN wget https://test.openquantumsafe.org/CA.crt && \
 FROM alpine:${ALPINE_VERSION} AS dev
 ARG INSTALLDIR
 ARG SIG_ALG
+ARG DEFAULT_GROUPS
 
 # Copy runtime files and configure environment for OpenSSL and Curl
 COPY --from=intermediate ${INSTALLDIR} ${INSTALLDIR}
-ENV PATH="${INSTALLDIR}/bin:${PATH}"
-ENV OPENSSL=${INSTALLDIR}/bin/openssl
-ENV OPENSSL_CNF=${INSTALLDIR}/ssl/openssl.cnf
+ENV PATH="${INSTALLDIR}/bin:${PATH}" \
+    OPENSSL=${INSTALLDIR}/bin/openssl \
+    OPENSSL_CNF=${INSTALLDIR}/ssl/openssl.cnf \
+    OPENSSL_CONF=${INSTALLDIR}/ssl/openssl.cnf \
+    DEFAULT_GROUPS=${DEFAULT_GROUPS}
 
 # Generate server certificates
 WORKDIR ${INSTALLDIR}/bin

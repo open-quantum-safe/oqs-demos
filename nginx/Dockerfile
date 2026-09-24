@@ -103,6 +103,7 @@ FROM alpine:${ALPINE_VERSION}
 ARG INSTALLDIR
 ARG SIG_ALG
 ARG BASEDIR
+ARG DEFAULT_GROUPS
 ARG OSSLDIR=${BASEDIR}/openssl/.openssl
 
 # Install required build tools and system dependencies
@@ -125,7 +126,8 @@ EXPOSE 4433
 # --with-openssl option was used to build OpenSSL and the OPENSSL_CONF
 # environment variable is not set." Hence we must explicitly set OPENSSL_CONF.
 ENV PATH="${INSTALLDIR}/sbin:${PATH}" \
-    OPENSSL_CONF="${OSSLDIR}/ssl/openssl.cnf"
+    OPENSSL_CONF="${OSSLDIR}/ssl/openssl.cnf" \
+    DEFAULT_GROUPS=${DEFAULT_GROUPS}
 
 # Create non-root user and update permissions
 RUN addgroup -g 1000 -S oqs \
