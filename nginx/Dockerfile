@@ -38,12 +38,12 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
     && git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git \
     && wget -q nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
     && tar -zxf nginx-${NGINX_VERSION}.tar.gz \
-    && rm nginx-${NGINX_VERSION}.tar.gz
-
-# OpenSSL 4.0.2 AArch64 Poly1305 SVE2 is a preemptible global; hide it so
-# static libcrypto.a can be linked into oqsprovider.so (upstream #32132).
-COPY openssl-4.0.2-poly1305-sve2-hidden.patch /tmp/openssl-4.0.2-poly1305-sve2-hidden.patch
-RUN patch -d /opt/openssl -p1 < /tmp/openssl-4.0.2-poly1305-sve2-hidden.patch
+    && rm nginx-${NGINX_VERSION}.tar.gz \
+    && awk 'BEGIN{p=0} {print} /\.globl/ && /poly1305_blocks_sve2/ && !p {print ".hidden\tpoly1305_blocks_sve2"; p=1}' \
+        openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl \
+        > openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl.tmp \
+    && mv openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl.tmp \
+        openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl
 
 # Build and install liboqs
 WORKDIR /opt/liboqs/build
