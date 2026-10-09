@@ -1,8 +1,12 @@
 ARG NGINX_VERSION=1.30.2
+# liboqs main renamed SNOVA identifiers (SNOVA_24_5_4 -> SNOVA_I_B, etc.).
+# OQS-BoringSSL still uses the 0.16.0 names, so keep these releases in lockstep.
+ARG LIBOQS_TAG=0.16.0
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies
 FROM ubuntu:latest AS build
 ARG NGINX_VERSION
+ARG LIBOQS_TAG
 
 # Install required build tools and system dependencies
 RUN apt update && \
@@ -22,7 +26,7 @@ RUN apt update && \
 
 # Download and prepare source files needed for the build process
 WORKDIR /home/build
-RUN git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git && \
+RUN git clone --branch ${LIBOQS_TAG} --single-branch --depth 1 https://github.com/open-quantum-safe/liboqs.git && \
     git clone --branch main --single-branch --depth 1 https://github.com/open-quantum-safe/boringssl.git && \
     wget -qO- "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar -xzf -
 
