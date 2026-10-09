@@ -33,7 +33,7 @@ on:
 env:
   build-args: |
     LIBOQS_TAG=0.16.0
-    OQSPROVIDER_TAG=0.12.0-rc1-branch
+    OQSPROVIDER_TAG=0.12.0
   push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
 
 jobs:
