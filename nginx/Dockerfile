@@ -1,9 +1,9 @@
 # Define build arguments for version tags, installation paths, and configurations
 ARG ALPINE_VERSION=3.21
-ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.13.0
-ARG OQSPROVIDER_TAG=0.9.0
-ARG NGINX_VERSION=1.28.0
+ARG OPENSSL_TAG=openssl-4.0.2
+ARG LIBOQS_TAG=0.16.0
+ARG OQSPROVIDER_TAG=0.12.0
+ARG NGINX_VERSION=1.29.8
 ARG BASEDIR="/opt"
 ARG INSTALLDIR=${BASEDIR}/nginx
 
@@ -36,7 +36,12 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
     && git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git \
     && wget -q nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
     && tar -zxf nginx-${NGINX_VERSION}.tar.gz \
-    && rm nginx-${NGINX_VERSION}.tar.gz
+    && rm nginx-${NGINX_VERSION}.tar.gz \
+    && awk 'BEGIN{p=0} {print} /\.globl/ && /poly1305_blocks_sve2/ && !p {print ".hidden\tpoly1305_blocks_sve2"; p=1}' \
+        openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl \
+        > openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl.tmp \
+    && mv openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl.tmp \
+        openssl/crypto/poly1305/asm/poly1305-armv9-sve2.pl
 
 # Build and install liboqs
 WORKDIR /opt/liboqs/build
@@ -50,7 +55,9 @@ RUN cmake -G"Ninja"  \
 WORKDIR /opt/nginx-${NGINX_VERSION}
 RUN ./configure --prefix=${INSTALLDIR} \
     --with-debug --with-http_ssl_module  \
-    --with-openssl=/opt/openssl --without-http_gzip_module && \
+    --with-openssl=/opt/openssl \
+    --with-openssl-opt=-fPIC \
+    --without-http_gzip_module && \
     make -j"$(nproc)" && make install
 
 # Configure OpenSSL to support the oqs-provider
@@ -94,6 +101,7 @@ FROM alpine:${ALPINE_VERSION}
 ARG INSTALLDIR
 ARG SIG_ALG
 ARG BASEDIR
+ARG DEFAULT_GROUPS
 ARG OSSLDIR=${BASEDIR}/openssl/.openssl
 
 # Install required build tools and system dependencies
@@ -116,7 +124,8 @@ EXPOSE 4433
 # --with-openssl option was used to build OpenSSL and the OPENSSL_CONF
 # environment variable is not set." Hence we must explicitly set OPENSSL_CONF.
 ENV PATH="${INSTALLDIR}/sbin:${PATH}" \
-    OPENSSL_CONF="${OSSLDIR}/ssl/openssl.cnf"
+    OPENSSL_CONF="${OSSLDIR}/ssl/openssl.cnf" \
+    DEFAULT_GROUPS=${DEFAULT_GROUPS}
 
 # Create non-root user and update permissions
 RUN addgroup -g 1000 -S oqs \
