@@ -1,11 +1,11 @@
 # Multi-stage build: First the full builder image:
 
 # Define build arguments for version tags, installation paths, and configurations.
-ARG ALPINE_VERSION=3.21
+ARG ALPINE_VERSION=3.24
 ARG OPENSSL_TAG=openssl-3.6.5
 ARG LIBOQS_TAG=0.16.0
 ARG OQSPROVIDER_TAG=0.12.0
-ARG NGHTTP2_TAG=v1.69.0
+ARG NGHTTP2_TAG=v1.71.0
 ARG INSTALLDIR=/opt/oqssa
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
