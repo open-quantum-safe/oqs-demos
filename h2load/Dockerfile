@@ -26,7 +26,7 @@ WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
-    git clone --depth 1 --branch ${NGHTTP2_TAG} --recursive https://github.com/nghttp2/nghttp2.git
+    git clone --depth 1 --branch ${NGHTTP2_TAG} --recurse-submodules=third-party/urlparse --shallow-submodules https://github.com/nghttp2/nghttp2.git
 
 # Build and install liboqs
 WORKDIR /opt/liboqs/build
