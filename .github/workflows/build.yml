@@ -35,7 +35,6 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   h2load:
-    if: false
     uses: ./.github/workflows/h2load.yml
     secrets: inherit
     with:
