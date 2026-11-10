@@ -4,7 +4,7 @@
 server="https://test.openquantumsafe.org:6000/"
 
 # create an array of algorithms
-algorithms="bikel1 bikel3 bikel5 kyber512 kyber768 kyber1024 frodo640aes frodo640shake frodo976aes frodo976shake frodo1344aes frodo1344shake hqc128 hqc192 hqc256"
+algorithms="bikel1 bikel3 bikel5 mlkem512 mlkem768 mlkem1024 efrodo640aes efrodo640shake efrodo976aes efrodo976shake efrodo1344aes efrodo1344shake hqc1 hqc3 hqc5"
 
 # declare variables for successes and failures
 successes=""

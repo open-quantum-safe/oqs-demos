@@ -23,7 +23,7 @@ To force http/1.1 for both http and https URI, specify `--h1`
 
 On the command prompt in the h2load docker container, run 
 ```bash
-h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups kyber512
+h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups mlkem512
 ```
 
 ### Usage

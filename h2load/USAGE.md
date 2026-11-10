@@ -28,12 +28,12 @@ where <num_requests> is the number of requests to send, <num_clients> is the num
 
 For example, 
 ```bash
-h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups kyber512
+h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups mlkem512
 ```
 
-This will send 1000 requests with 10 clients to the oqs-nginx web server on port 4433. The test uses Kyber512 key exchange algorithm. 
+This will send 1000 requests with 10 clients to the oqs-nginx web server on port 4433. The test uses the ML-KEM-512 key exchange algorithm. 
 If multiple algorithms are selected, they are separated with colons. 
-For example, `--groups=kyber512:p256_bikel1`
+For example, `--groups=mlkem512:p384_bikel3`
 
 
 
@@ -48,7 +48,7 @@ This method conducts load testing based on a specified time duration instead of 
 To perform timing-based load testing with h2load, use the --duration option followed by the desired duration in seconds. For example, to run a load test for 10 seconds with 100 concurrent clients while limiting the maximum number of streams to 100 per client, use:
 
 ```
-h2load -c100 --duration=10 --warm-up-time=5 https://oqs-nginx:4433 --groups kyber512
+h2load -c100 --duration=10 --warm-up-time=5 https://oqs-nginx:4433 --groups mlkem512
 ```
 
 For more options, run `h2load --help`
