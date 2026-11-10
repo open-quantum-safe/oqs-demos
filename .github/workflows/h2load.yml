@@ -97,8 +97,11 @@ jobs:
       - name: Test h2load using nginx
         run: |
           docker network create h2load-test &&
-          docker run --network h2load-test --detach --rm --name oqs-nginx oqs-nginx &&
-          docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups mlkem512"
+          docker run --network h2load-test --detach --rm --name oqs-nginx -e DEFAULT_GROUPS=x25519:mlkem512:bikel3 oqs-nginx &&
+          docker run --network h2load-test oqs-h2load sh -c "h2load -n 100 -c 10 https://oqs-nginx:4433 --groups mlkem512" | tee mlkem.out &&
+          grep -q "100 succeeded, 0 failed, 0 errored" mlkem.out &&
+          docker run --network h2load-test oqs-h2load sh -c "h2load -n 10 -c 1 https://oqs-nginx:4433 --groups bikel3" | tee bike.out &&
+          grep -q "10 succeeded, 0 failed, 0 errored" bike.out
 
       - name: Push Docker image to registries
         if: env.push == 'true'
