@@ -17,13 +17,13 @@ will run the container for the PQ-enabled h2load.
 ### Testing
 After running the h2load container, to verify that h2load performs quantum-safe key exchange, run an OQS-enabled TLS test server using the following commands
 ```bash
-docker run --rm --name oqs-nginx --network h2load-test openquantumsafe/nginx
+docker run --rm --name oqs-nginx --network h2load-test -e DEFAULT_GROUPS=x25519:mlkem512:bikel3 openquantumsafe/nginx
 ```
 To force http/1.1 for both http and https URI, specify `--h1`
 
 On the command prompt in the h2load docker container, run 
 ```bash
-h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups mlkem512
+h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups bikel3
 ```
 
 ### Usage

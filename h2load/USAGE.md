@@ -15,8 +15,9 @@ After running the h2load container, you can perform HTTP/2 load tests.
 For local testing, make sure that the container hosting the test server is on the same network by using the `--network` flag and `--name` flag to specify the network and name of the container. For example, you can use the following command to run OQS-enabled TLS test server:
 
 ```bash
-docker run --rm --name oqs-nginx --network h2load-test openquantumsafe/nginx
+docker run --rm --name oqs-nginx --network h2load-test -e DEFAULT_GROUPS=x25519:mlkem512:bikel3 openquantumsafe/nginx
 ```
+The `DEFAULT_GROUPS` option is needed because the nginx image does not enable BIKE by default.
 
 
 ### HTTP/2 Load Test
@@ -28,12 +29,12 @@ where <num_requests> is the number of requests to send, <num_clients> is the num
 
 For example, 
 ```bash
-h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups mlkem512
+h2load -n 1000 -c 10 https://oqs-nginx:4433 --groups bikel3
 ```
 
-This will send 1000 requests with 10 clients to the oqs-nginx web server on port 4433. The test uses the ML-KEM-512 key exchange algorithm. 
+This will send 1000 requests with 10 clients to the oqs-nginx web server on port 4433. The test uses the BIKE-L3 key exchange algorithm. 
 If multiple algorithms are selected, they are separated with colons. 
-For example, `--groups=mlkem512:p384_bikel3`
+For example, `--groups=bikel3:mlkem512`
 
 
 
@@ -48,7 +49,7 @@ This method conducts load testing based on a specified time duration instead of 
 To perform timing-based load testing with h2load, use the --duration option followed by the desired duration in seconds. For example, to run a load test for 10 seconds with 100 concurrent clients while limiting the maximum number of streams to 100 per client, use:
 
 ```
-h2load -c100 --duration=10 --warm-up-time=5 https://oqs-nginx:4433 --groups mlkem512
+h2load -c100 --duration=10 --warm-up-time=5 https://oqs-nginx:4433 --groups bikel3
 ```
 
 For more options, run `h2load --help`

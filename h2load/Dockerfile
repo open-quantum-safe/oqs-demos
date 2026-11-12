@@ -49,9 +49,11 @@ RUN ln -s ../openssl . && \
     sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && \
     sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && \
     sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:KEM_ALG\n/g" /opt/oqssa/ssl/openssl.cnf && \
-    sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = mlkem512\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
+    sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = bikel3\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
 
 # Build and install nghttp2
+# musl's default thread stack (128 KiB) is too small for BIKE, so request
+# 8 MiB (8388608 bytes), the usual default on glibc-based distros.
 WORKDIR /opt/nghttp2
 RUN LD_LIBRARY_PATH="${INSTALLDIR}/lib64" autoreconf -i && automake && autoconf && LDFLAGS="-Wl,-z,stack-size=8388608" ./configure \
     PKG_CONFIG_PATH="/opt/oqssa/lib64/pkgconfig" && make -j"$(nproc)" install
