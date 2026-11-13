@@ -7,8 +7,8 @@ ARG CURL_VERSION=8.14.0
 ARG INSTALLDIR=/opt/oqssa
 
 # Specify supported signature and key encapsulation mechanisms (KEM) algorithms.
-ARG SIG_ALG="mldsa65"
-ARG DEFAULT_GROUPS="x25519:x448:mlkem512:p256_mlkem512:mlkem768:p384_mlkem768:mlkem1024:p521_mlkem1024"
+ARG SIG_ALG="mayo2"
+ARG DEFAULT_GROUPS="x25519:x448:frodo640aes:bikel1:frodo976aes:bikel3:frodo1344aes:bikel5"
 
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
