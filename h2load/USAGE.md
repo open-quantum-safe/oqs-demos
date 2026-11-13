@@ -17,7 +17,7 @@ For local testing, make sure that the container hosting the test server is on th
 ```bash
 docker run --rm --name oqs-nginx --network h2load-test -e DEFAULT_GROUPS=x25519:mlkem512:bikel3 openquantumsafe/nginx
 ```
-The `DEFAULT_GROUPS` option is needed because the nginx image does not enable BIKE by default.
+The client and server must have at least one key exchange group in common: the server can only choose a group that both sides support, so without an overlap the TLS handshake fails and every request fails. `DEFAULT_GROUPS` sets the groups the nginx server accepts. It is set here so that the list includes `bikel3`, the group used in the examples below.
 
 
 ### HTTP/2 Load Test
