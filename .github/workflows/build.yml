@@ -136,3 +136,43 @@ jobs:
     with:
         build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
         release_tag: ${{ inputs.release_tag }}
+
+  report-integration-failures:
+    needs:
+      - curl
+      - h2load
+      - httpd
+      - locust
+      - nginx
+      - openssl3
+      - nodejs
+      - postgresql
+      - wireshark
+      - epiphany
+    if: >-
+      ${{ always() && !cancelled() &&
+          contains(needs.*.result, 'failure') &&
+          github.repository == 'open-quantum-safe/oqs-demos' &&
+          github.ref == 'refs/heads/main' &&
+          (github.event_name == 'schedule' ||
+           (github.event_name == 'workflow_dispatch' && inputs.build_main == true)) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    concurrency:
+      group: upstream-integration-reports
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Report upstream integration failures
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_ISSUES_TOKEN: ${{ secrets.UPSTREAM_ISSUES_TOKEN }}
+          UPSTREAM_ISSUE_ROUTES: ${{ vars.UPSTREAM_ISSUE_ROUTES }}
+          CANARY_BUILD: ${{ github.event_name == 'schedule' || inputs.build_main == true }}
+        run: python3 scripts/report-integration-failures.py
