@@ -1,11 +1,11 @@
 # Multi-stage build: First the full builder image:
 
 # Define build arguments for version tags, installation paths, and configurations.
-ARG ALPINE_VERSION=3.21
-ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.12.0
-ARG OQSPROVIDER_TAG=0.8.0
-ARG NGHTTP2_TAG=v1.64.0
+ARG ALPINE_VERSION=3.24
+ARG OPENSSL_TAG=openssl-3.6.5
+ARG LIBOQS_TAG=0.16.0
+ARG OQSPROVIDER_TAG=0.12.0
+ARG NGHTTP2_TAG=v1.71.0
 ARG INSTALLDIR=/opt/oqssa
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
@@ -26,7 +26,7 @@ WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
-    git clone --depth 1 --branch ${NGHTTP2_TAG} https://github.com/nghttp2/nghttp2.git
+    git clone --depth 1 --branch ${NGHTTP2_TAG} --recurse-submodules=third-party/urlparse --shallow-submodules https://github.com/nghttp2/nghttp2.git
 
 # Build and install liboqs
 WORKDIR /opt/liboqs/build
@@ -49,11 +49,13 @@ RUN ln -s ../openssl . && \
     sed -i "s/default = default_sect/default = default_sect\noqsprovider = oqsprovider_sect/g" /opt/oqssa/ssl/openssl.cnf && \
     sed -i "s/\[default_sect\]/\[default_sect\]\nactivate = 1\n\[oqsprovider_sect\]\nactivate = 1\n/g" /opt/oqssa/ssl/openssl.cnf && \
     sed -i "s/providers = provider_sect/providers = provider_sect\nssl_conf = ssl_sect\n\n\[ssl_sect\]\nsystem_default = system_default_sect\n\n\[system_default_sect\]\nGroups = \$ENV\:\:KEM_ALG\n/g" /opt/oqssa/ssl/openssl.cnf && \
-    sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = kyber512\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
+    sed -i "s/\# Use this in order to automatically load providers/\# Set default KEM alg if not set via environment variable\nKEM_ALG = bikel3\n\n# Use this in order to automatically load providers/g" /opt/oqssa/ssl/openssl.cnf
 
 # Build and install nghttp2
+# musl's default thread stack (128 KiB) is too small for BIKE, so request
+# 8 MiB (8388608 bytes), the usual default on glibc-based distros.
 WORKDIR /opt/nghttp2
-RUN LD_LIBRARY_PATH="${INSTALLDIR}/lib64" autoreconf -i && automake && autoconf && ./configure \
+RUN LD_LIBRARY_PATH="${INSTALLDIR}/lib64" autoreconf -i && automake && autoconf && LDFLAGS="-Wl,-z,stack-size=8388608" ./configure \
     PKG_CONFIG_PATH="/opt/oqssa/lib64/pkgconfig" && make -j"$(nproc)" install
 
 # Copy all required shared object dependencies to a single directory
