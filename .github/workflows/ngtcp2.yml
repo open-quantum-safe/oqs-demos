@@ -34,7 +34,7 @@ env:
   build-args: |
     LIBOQS_TAG=main
     OQSPROVIDER_TAG=main
-  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && !inputs.build_main }}
 
 jobs:
   build:
@@ -68,7 +68,7 @@ jobs:
           file: ngtcp2/Dockerfile-server
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            ${{ inputs.build_main && env.build-args || null }}
           tags: oqs-ngtcp2-server
 
       - name: Build the client Docker image
@@ -79,7 +79,7 @@ jobs:
           file: ngtcp2/Dockerfile-client
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            ${{ inputs.build_main && env.build-args || null }}
           tags: oqs-ngtcp2-client
 
       - name: Scan Docker Image for ngtcp2-server
@@ -128,7 +128,7 @@ jobs:
           file: ngtcp2/Dockerfile-server
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            ${{ inputs.build_main && env.build-args || null }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/ngtcp2-server:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
             openquantumsafe/ngtcp2-server:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
@@ -142,13 +142,13 @@ jobs:
           file: ngtcp2/Dockerfile-client
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            ${{ inputs.build_main && env.build-args || null }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/ngtcp2-client:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
             openquantumsafe/ngtcp2-client:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
 
   push-server:
-    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && !inputs.build_main }}
     needs: build
     uses: ./.github/workflows/push-manifest.yml
     secrets: inherit
@@ -157,7 +157,7 @@ jobs:
       release_tag: ${{ inputs.release_tag || 'latest' }}
 
   push-client:
-    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && !inputs.build_main }}
     needs: build
     uses: ./.github/workflows/push-manifest.yml
     secrets: inherit

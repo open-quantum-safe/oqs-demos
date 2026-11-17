@@ -34,7 +34,7 @@ env:
   build-args: |
     LIBOQS_TAG=main
     OQSPROVIDER_TAG=main
-  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && !inputs.build_main }}
 
 jobs:
   build:
@@ -67,7 +67,7 @@ jobs:
           context: openssh
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            ${{ inputs.build_main && env.build-args || null }}
           tags: oqs-openssh
 
       - name: Scan Docker Image
@@ -97,13 +97,13 @@ jobs:
           context: openssh
           build-args: |
             MAKE_DEFINES=-j4
-            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            ${{ inputs.build_main && env.build-args || null }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/openssh:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
             openquantumsafe/openssh:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
 
   push:
-    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && !inputs.build_main }}
     needs: build
     uses: ./.github/workflows/push-manifest.yml
     secrets: inherit

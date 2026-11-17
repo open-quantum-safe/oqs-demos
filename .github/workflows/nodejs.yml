@@ -34,7 +34,7 @@ env:
   build-args: |
     LIBOQS_TAG=main
     OQSPROVIDER_TAG=main
-  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && !inputs.build_main }}
 
 jobs:
   build:
@@ -66,7 +66,7 @@ jobs:
             load: true
             context: nodejs
             build-args: |
-                ${{ (inputs.build_main == 'true') && env.build-args || null }}
+                ${{ inputs.build_main && env.build-args || null }}
             tags: oqs-nodejs
 
       - name: Build the curl Docker image (with generic liboqs for interop testing)
@@ -77,7 +77,7 @@ jobs:
             build-args: |
                 MAKE_DEFINES=-j4
                 LIBOQS_BUILD_DEFINES="-DOQS_OPT_TARGET=generic"
-                ${{ (inputs.build_main == 'true') && env.build-args || null }}
+                ${{ inputs.build_main && env.build-args || null }}
             tags: oqs-curl-generic
 
       - name: Scan Docker Image
@@ -107,13 +107,13 @@ jobs:
           push: true
           context: nodejs
           build-args: |
-            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+            ${{ inputs.build_main && env.build-args || null }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/nodejs:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
             openquantumsafe/nodejs:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
 
   push:
-    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && !inputs.build_main }}
     needs: build
     uses: ./.github/workflows/push-manifest.yml
     secrets: inherit

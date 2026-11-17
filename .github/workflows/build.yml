@@ -31,14 +31,14 @@ jobs:
     uses: ./.github/workflows/curl.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   h2load:
     uses: ./.github/workflows/h2load.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   haproxy:
@@ -46,21 +46,21 @@ jobs:
     uses: ./.github/workflows/haproxy.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   httpd:
     uses: ./.github/workflows/httpd.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   locust:
     uses: ./.github/workflows/locust.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   mosquitto:
@@ -68,14 +68,14 @@ jobs:
     uses: ./.github/workflows/mosquitto.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   nginx:
     uses: ./.github/workflows/nginx.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   ngtcp2:
@@ -83,7 +83,7 @@ jobs:
     uses: ./.github/workflows/ngtcp2.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   openssh:
@@ -91,14 +91,14 @@ jobs:
     uses: ./.github/workflows/openssh.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   openssl3:
     uses: ./.github/workflows/openssl3.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   openvpn:
@@ -106,33 +106,33 @@ jobs:
     uses: ./.github/workflows/openvpn.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   nodejs:
     uses: ./.github/workflows/nodejs.yml
     secrets: inherit
     with:
-        build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+        build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
         release_tag: ${{ inputs.release_tag }}
 
   postgresql:
     uses: ./.github/workflows/postgresql.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   wireshark:
     uses: ./.github/workflows/wireshark.yml
     secrets: inherit
     with:
-      build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+      build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
       release_tag: ${{ inputs.release_tag }}
 
   epiphany:
     uses: ./.github/workflows/epiphany.yml
     secrets: inherit
     with:
-        build_main: ${{ !contains(inputs.build_main == 'true', 'false') }}
+        build_main: ${{ github.event_name == 'schedule' || inputs.build_main }}
         release_tag: ${{ inputs.release_tag }}
