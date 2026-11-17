@@ -1,0 +1,30 @@
+name: Test integration reporter
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/build.yml'
+      - '.github/workflows/test-integration-reporter.yml'
+      - 'scripts/report-integration-failures.py'
+      - 'scripts/tests/**'
+  push:
+    branches: ['main']
+    paths:
+      - '.github/workflows/build.yml'
+      - '.github/workflows/test-integration-reporter.yml'
+      - 'scripts/report-integration-failures.py'
+      - 'scripts/tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run reporter unit tests
+        run: python3 -B -m unittest discover -s scripts/tests -v
