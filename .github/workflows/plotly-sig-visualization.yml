@@ -1,0 +1,161 @@
+name: plotly-sig-visualization
+
+on:
+  push:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/plotly-sig-visualization.yml', 'plotly-sig-visualization/**']
+
+  pull_request:
+    branches: [ 'main' ]
+    paths: ['.github/workflows/plotly-sig-visualization.yml', 'plotly-sig-visualization/**']
+
+  workflow_call:
+    inputs:
+      build_main:
+        description: "Build using liboqs and liboqs-python main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which Docker tag to push to"
+        required: false
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      build_main:
+        description: "Build using liboqs and liboqs-python main branches"
+        required: false
+        default: false
+        type: boolean
+      release_tag:
+        description: "Which Docker tag to push to"
+        required: false
+        type: string
+
+env:
+  build-args: |
+    LIBOQS_TAG=main
+    LIBOQS_PYTHON_TAG=main
+
+  push: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the Docker image (visualization)
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: plotly-sig-visualization
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: plotly-sig-visualization
+
+      - name: Build the Docker image (benchmarking)
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          context: plotly-sig-visualization
+          file: gen_dataset.Dockerfile
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: plotly-sig-visualization-benchmarking
+
+      - name: Scan Docker Image (visualization)
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: plotly-sig-visualization
+          command: cves,recommendations
+          sarif-file: plotly-sig-visualization-scan-results.sarif
+
+      - name: Scan Docker Image (benchmarking)
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: docker/scout-action@v1.16.1
+        with:
+          image: plotly-sig-visualization-benchmarking
+          command: cves,recommendations
+          sarif-file: plotly-sig-visualization-benchmarking-scan-results.sarif
+
+      - name: Upload Scan Results (visualization)
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: plotly-sig-visualization-scan-results
+          path: plotly-sig-visualization-scan-results.sarif
+
+      - name: Upload Scan Results (benchmarking)
+        if: matrix.arch == 'x86_64' && env.push == 'true'
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: plotly-sig-visualization-benchmarking-scan-results
+          path: plotly-sig-visualization-benchmarking-scan-results.sarif
+
+      # Run tests for the demo (add your specific test logic here)
+      # TODO
+
+      - name: Push Docker image (visualization) to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: plotly-sig-visualization
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/plotly-sig-visualization:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/plotly-sig-visualization:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+
+      - name: Push Docker image (benchmarking) to registries
+        if: env.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: plotly-sig-visualization
+          file: gen_dataset.Dockerfile
+          build-args: |
+            MAKE_DEFINES=-j4
+            ${{ (inputs.build_main == 'true') && env.build-args || null }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/plotly-sig-visualization-benchmarking:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+            openquantumsafe/plotly-sig-visualization-benchmarking:${{ inputs.release_tag || 'latest' }}-${{ matrix.arch }}
+
+  push:
+    if: ${{ github.repository == 'open-quantum-safe/oqs-demos' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'  && inputs.build_main != 'true' }}
+    needs: build
+    strategy:
+      matrix:
+        image: [plotly-sig-visualization, plotly-sig-visualization-benchmarking]
+    uses: ./.github/workflows/push-manifest.yml
+    secrets: inherit
+    with:
+      image_name: ${{ matrix.image }}
+      release_tag: ${{ inputs.release_tag || 'latest' }}
