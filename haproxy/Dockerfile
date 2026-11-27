@@ -1,17 +1,19 @@
 # Define build arguments for version tags, installation paths, and configurations.
-ARG ALPINE_VERSION=3.21
-ARG OPENSSL_TAG=openssl-3.4.0
-ARG LIBOQS_TAG=0.13.0
-ARG OQSPROVIDER_TAG=0.9.0
+ARG ALPINE_VERSION=3.24
+ARG OPENSSL_TAG=openssl-3.6.5
+ARG LIBOQS_TAG=0.16.0
+ARG OQSPROVIDER_TAG=0.12.0
 ARG HAPROXY_RELEASE=3.0
-ARG HAPROXY_MICRO=5
+ARG HAPROXY_MICRO=32
 ARG HAPROXY_VERSION=${HAPROXY_RELEASE}.${HAPROXY_MICRO}
 ARG INSTALLDIR=/opt/oqssa
 ARG HAPROXYDIR=/opt/haproxy
+ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
+ARG MAKE_DEFINES="-j4"
 
 # Specify supported signature and key encapsulation mechanisms (KEM) algorithms.
-ARG KEM_ALGLIST="mlkem768:p384_mlkem768"
-ARG SIG_ALG=mldsa65
+ARG KEM_ALGLIST="frodo640aes"
+ARG SIG_ALG=mayo2
 
 # Stage 1: Build - Compile and assemble all necessary components and dependencies.
 FROM alpine:${ALPINE_VERSION} AS intermediate
@@ -21,6 +23,7 @@ ARG OQSPROVIDER_TAG
 ARG INSTALLDIR
 ARG HAPROXYDIR
 ARG LIBOQS_BUILD_DEFINES
+ARG MAKE_DEFINES
 ARG KEM_ALGLIST
 ARG SIG_ALG
 ARG HAPROXY_VERSION
@@ -39,19 +42,19 @@ WORKDIR /opt
 RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-safe/liboqs && \
     git clone --depth 1 --branch ${OPENSSL_TAG} https://github.com/openssl/openssl.git && \
     git clone --depth 1 --branch ${OQSPROVIDER_TAG} https://github.com/open-quantum-safe/oqs-provider.git && \
-    wget http://www.haproxy.org/download/${HAPROXY_RELEASE}/src/haproxy-${HAPROXY_VERSION}.tar.gz && \
+    wget https://www.haproxy.org/download/${HAPROXY_RELEASE}/src/haproxy-${HAPROXY_VERSION}.tar.gz && \
     tar xzvf haproxy-${HAPROXY_VERSION}.tar.gz && \
     mv haproxy-${HAPROXY_VERSION} $HAPROXYDIR
 
 # Build and install liboqs
 WORKDIR /opt/liboqs/build
-RUN cmake -G"Ninja" ..  -DOQS_DIST_BUILD=ON -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && \
+RUN cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && \
     ninja install
 
 # build and install OpenSSL
 WORKDIR /opt/openssl
 RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix="${INSTALLDIR}" && \
-    make -j "$(nproc)" && make install_sw install_ssldirs && \
+    make ${MAKE_DEFINES} && make install_sw install_ssldirs && \
     if [ -d "${INSTALLDIR}/lib64" ]; then ln -s "${INSTALLDIR}/lib64" "${INSTALLDIR}/lib"; fi && \
     if [ -d "${INSTALLDIR}/lib" ]; then ln -s "${INSTALLDIR}/lib" "${INSTALLDIR}/lib64"; fi
 
@@ -69,7 +72,7 @@ RUN ln -s ../openssl . && \
 
 # Build and install haproxy
 WORKDIR ${HAPROXYDIR}
-RUN make -j "$(nproc)" \
+RUN make ${MAKE_DEFINES} \
     LDFLAGS="-Wl,-rpath,${INSTALLDIR}/lib64" \
     SSL_INC="${INSTALLDIR}/include" \
     SSL_LIB="${INSTALLDIR}/lib64" \
