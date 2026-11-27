@@ -17,7 +17,6 @@ To leave the server running, use `docker run --detach --rm --name oqs-haproxy -p
 
 HAProxy listens for TLS 1.3 connections on port 4433 and serves content from two load-balanced `lighttpd` backends on ports 8181 and 8182.
 
-
 ## Usage
 
 Complete information how to use the image is [available in the separate file USAGE.md](USAGE.md).

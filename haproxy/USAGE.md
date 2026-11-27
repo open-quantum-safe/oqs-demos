@@ -54,4 +54,4 @@ Supported names depend on the chosen liboqs and oqs-provider versions. Check the
 - `/opt/haproxy/cacert/CA.crt` holds the demo CA certificate.
 - Port 8484 exposes HAProxy's plain HTTP statistics page if published with `-p 8484:8484`.
 
-You can mount custom configuration and certificates at those paths. The container runs as the non-root `oqs` user, so mounted files must be readable by that user and the certificate directory must be writable for the startup script to create `certkey.pem`.
+You can mount custom configuration and certificates at those paths. The container runs as the non-root `oqs` user, so mounted files must be readable by that user. The startup script writes `certkey.pem` in `/opt/haproxy`, which must remain writable by `oqs`.
