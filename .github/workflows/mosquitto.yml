@@ -84,15 +84,8 @@ jobs:
           name: mosquitto-scan-results
           path: mosquitto-scan-results.sarif
 
-      - name: Test mosquitto using local docker network
-        run: |
-          docker network create --subnet=192.168.0.0/16 mosquitto-test &&
-          docker run --network mosquitto-test --ip 192.168.0.2 -it --rm --name oqs-mosquitto-broker -e "BROKER_IP=192.168.0.2" -e "EXAMPLE=broker-start.sh" -d oqs-mosquitto &&
-          docker run --network mosquitto-test --ip 192.168.0.3 -it --rm --name oqs-mosquitto-subscriber -e "BROKER_IP=192.168.0.2" -e "SUB_IP=192.168.0.3" -e "EXAMPLE=subscriber-start.sh" -d oqs-mosquitto &&
-          docker run --network mosquitto-test --ip 192.168.0.4 -it --rm --name oqs-mosquitto-publisher -e "BROKER_IP=192.168.0.2" -e "PUB_IP=192.168.0.4" -e "EXAMPLE=publisher-start.sh" -d oqs-mosquitto &&
-          sleep 2 &&
-          docker logs oqs-mosquitto-publisher | grep "Client_pub sending PUBLISH" &&
-          docker logs oqs-mosquitto-subscriber | grep "Hello world"
+      - name: Test post-quantum TLS and MQTT delivery
+        run: sh mosquitto/test.sh oqs-mosquitto
 
       - name: Push Docker image to registries
         if: env.push == 'true'

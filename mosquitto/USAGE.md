@@ -1,66 +1,44 @@
-This directory contains a Dockerfile that builds [Mosquitto](https://mosquitto.org) using OpenSSL v3 using the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows `Moquitto` to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+# Manual Mosquitto demo
 
-## Suggested use
+Build the image from the `mosquitto` directory:
 
-To communicate between the server(broker) and the client(publisher and subscriber), a quantum-safe crypto client program is required.
-
-### In a docker network
-
-We can use docker network to do a simple test. A docker network named "mosquitto-test":
-
-Create a docker network and specify a network segment
-```bash
-docker network create --subnet=174.18.0.0/16 mosquitto-test
+```sh
+docker build -t oqs-mosquitto .
 ```
 
-Run a Mosquitto MQTT broker
-```bash
-docker run --network mosquitto-test --ip 174.18.0.2 -it --rm --name oqs-mosquitto-broker -e "BROKER_IP=174.18.0.2" -e "EXAMPLE=broker-start.sh" oqs-mosquitto
+Open three terminals. Create a Docker network, then start the broker:
+
+```sh
+docker network create oqs-mosquitto-demo
+docker run --name oqs-mosquitto-broker --network oqs-mosquitto-demo --network-alias broker \
+  -e BROKER_IP=broker -e EXAMPLE=broker-start.sh oqs-mosquitto
 ```
 
-Then run a Mosquitto MQTT subscriber
-```bash
-docker run --network mosquitto-test --ip 174.18.0.3 -it --rm --name oqs-mosquitto-subscriber -e "BROKER_IP=174.18.0.2" -e "SUB_IP=174.18.0.3" -e "EXAMPLE=subscriber-start.sh" oqs-mosquitto
+In the second terminal, start a subscriber:
+
+```sh
+docker run --name oqs-mosquitto-subscriber --network oqs-mosquitto-demo \
+  -e BROKER_IP=broker -e EXAMPLE=subscriber-start.sh oqs-mosquitto
 ```
 
-Finally run a Mosquitto MQTT publisher
-```bash
-docker run --network mosquitto-test --ip 174.18.0.4 -it --rm --name oqs-mosquitto-publisher -e "BROKER_IP=174.18.0.2" -e "PUB_IP=174.18.0.4" -e "EXAMPLE=publisher-start.sh" oqs-mosquitto
+In the third terminal, publish one message:
+
+```sh
+docker run --name oqs-mosquitto-publisher --network oqs-mosquitto-demo \
+  -e BROKER_IP=broker -e EXAMPLE=publisher-start.sh oqs-mosquitto
 ```
 
-According to these steps, we can do a simple MQTT test including a broker, a subscriber, and a publisher. If you want to do more experiments, you can use other options below.
+The subscriber should print `test/sensor1 Hello world.` and exit. The broker listens on port 8883 and requires a client certificate. Its certificate has a `broker` DNS subject alternative name, which the MQTT clients verify through the shared demo CA.
 
-By the way, the docker image has already generated a CA certificate and a CA key at build time. You can create the CA certificate and CA key yourself.
+For a repeatable check of the post-quantum TLS handshake and message delivery, use `sh ./test.sh oqs-mosquitto` instead of these manual steps.
 
-## Other usage options
+Remove the manual demo resources when finished:
 
-### Authentication algorithm
-
-This mosquitto image is capable of supporting all quantum-safe signature algorithms listed [here](https://github.com/open-quantum-safe/oqs-provider#algorithms). If you want to control with algorithm is actually used, you can set an environment variable when running the Docker container, e.g., requesting the dilithium5 variant:
-
-```bash
-docker run -it --rm --name oqs-mosquitto-demo -p 8883:8883 -e "BROKER_IP=<ip-name-of-broker-testmachine>" -e "SIG_ALG=dilithium5" oqs-mosquitto
+```sh
+docker rm -f oqs-mosquitto-publisher oqs-mosquitto-subscriber oqs-mosquitto-broker
+docker network rm oqs-mosquitto-demo
 ```
 
-### Set the TLS_DEFAULT_GROUPS
+`BROKER_IP` is the broker hostname or IP address used by the clients and in the broker certificate. If you change it, use a name that the clients can resolve or an address they can reach. `PUB_IP` and `SUB_IP` set client certificate names; they default to `publisher` and `subscriber`. `EXAMPLE` selects one of the three startup scripts.
 
-`TLS_DEFAULT_GROUPS` is an environment variable that allows selection of QSC KEMs. This supports the colon-separated list of KEM algorithms. You can only select either the complete list or subset of what was defined in `KEM_ALGLIST` when the docker image was built.
-
-### Change Mosquitto instructions or configurations
-
-There are three shell scripts(broker-start.sh, publisher-start.sh, and subscriber-start.sh) that can be used in this directory. Use subscriber as an example:
-
-```bash
-docker run -it --rm --name oqs-mosquitto-demo -p 8883:8883 -e "BROKER_IP=<ip-name-of-broker-testmachine>" -e "EXAMPLE=subscriber-start.sh" oqs-mosquitto
-```
-
-If you want to change Mosquitto's instructions, you can modify instructions to what you want in these scripts. If you also want to change Mosquitto broker's configuration file, you can modify this to what you want in 'broker-start.sh'.
-
-### Set the IP address of the machine
-
-There are three environment variables(BROKER_IP, PUB_IP, and SUB_IP) that can be set when running the Docker container.
-
-### docker -name and --rm options
-
-To ease rapid startup and teardown, we strongly recommend using the docker [--name](https://docs.docker.com/engine/reference/commandline/run/#assign-name-and-allocate-pseudo-tty---name--it) and automatic removal option [--rm](https://docs.docker.com/engine/reference/commandline/run/).
-
+The image includes its demo CA private key so each container can issue its own certificate. Do not use this CA for production or expose this image to an untrusted network.

@@ -2,13 +2,13 @@
 # Multi-stage build: First the full builder image:
 
 # define the openssl tag to be used
-ARG OPENSSL_TAG=openssl-3.4.0
+ARG OPENSSL_TAG=openssl-3.6.5
 
 # define the liboqs tag to be used
-ARG LIBOQS_TAG=0.13.0
+ARG LIBOQS_TAG=0.16.0
 
 # define the oqsprovider tag to be used
-ARG OQSPROVIDER_TAG=0.9.0
+ARG OQSPROVIDER_TAG=0.12.0
 
 # Default location where all binaries wind up:
 ARG INSTALLDIR=/opt/oqssa
@@ -17,23 +17,24 @@ ARG INSTALLDIR=/opt/oqssa
 ARG LIBOQS_BUILD_DEFINES="-DOQS_DIST_BUILD=ON"
 
 # Default KEM algorithms to be utilized
-ARG KEM_ALGLIST="mlkem768:p384_mlkem768"
+ARG KEM_ALGLIST="frodo640aes"
 
 # Default Signature algorithm to be used
-ARG SIG_ALG="mldsa65"
+ARG SIG_ALG="mayo2"
 
-ARG MOSQUITTO_TAG=v2.0.20
+ARG MOSQUITTO_TAG=v2.1.4
+ARG MAKE_DEFINES="-j4"
 
-# define IP addresses or Domain Name
+# Broker name and client certificate identities
 ARG BROKER_IP=localhost
-ARG PUB_IP=localhost
-ARG SUB_IP=localhost
+ARG PUB_IP=publisher
+ARG SUB_IP=subscriber
 
 # choose the shell script(simple example)
 ARG EXAMPLE=broker-start.sh
 
 # First stage: the full build image:
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 # Set timezone
 ARG TZ=Europe/London
@@ -43,10 +44,10 @@ ARG OPENSSL_TAG
 ARG LIBOQS_TAG
 ARG OQSPROVIDER_TAG
 ARG INSTALLDIR
-ARG HAPROXYDIR
 ARG LIBOQS_BUILD_DEFINES
 ARG KEM_ALGLIST
 ARG MOSQUITTO_TAG
+ARG MAKE_DEFINES
 
 # Update image and install all prerequisites
 RUN apt update && apt install -y build-essential \
@@ -77,16 +78,14 @@ RUN git clone --depth 1 --branch ${LIBOQS_TAG} https://github.com/open-quantum-s
 # build liboqs
 WORKDIR /opt/liboqs
 RUN mkdir build && cd build && \
-    cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} && \
+    cmake -G"Ninja" .. ${LIBOQS_BUILD_DEFINES} -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} -DCMAKE_INSTALL_LIBDIR=lib64 && \
     ninja install
 
 # build OpenSSL3
 WORKDIR /opt/openssl
-RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} && \
-    make -j $(nproc) && \
-    make install_sw install_ssldirs && \
-    if [ -d ${INSTALLDIR}/lib64 ]; then ln -s ${INSTALLDIR}/lib64 ${INSTALLDIR}/lib; fi && \
-    if [ -d ${INSTALLDIR}/lib ]; then ln -s ${INSTALLDIR}/lib ${INSTALLDIR}/lib64; fi
+RUN LDFLAGS="-Wl,-rpath -Wl,${INSTALLDIR}/lib64" ./config shared --prefix=${INSTALLDIR} --libdir=lib64 && \
+    make ${MAKE_DEFINES} && \
+    make install_sw install_ssldirs
 
 # set path to use 'new' openssl. Dyn libs have been properly linked in to match
 ENV PATH="${INSTALLDIR}/bin:${PATH}"
@@ -102,11 +101,13 @@ RUN ln -s ../openssl . && \
 
 # Build and install Mosquitto
 WORKDIR /opt/mosquitto
-RUN make -j$(nproc) && \
-    make install
+RUN make ${MAKE_DEFINES} CPPFLAGS="-I${INSTALLDIR}/include" LDFLAGS="-L${INSTALLDIR}/lib64 -Wl,-rpath,${INSTALLDIR}/lib64" \
+        WITH_DOCS=no WITH_SRV=no WITH_HTTP_API=no WITH_EDITLINE=no WITH_SQLITE=no WITH_WEBSOCKETS=no && \
+    make CPPFLAGS="-I${INSTALLDIR}/include" LDFLAGS="-L${INSTALLDIR}/lib64 -Wl,-rpath,${INSTALLDIR}/lib64" \
+        WITH_DOCS=no WITH_SRV=no WITH_HTTP_API=no WITH_EDITLINE=no WITH_SQLITE=no WITH_WEBSOCKETS=no install
 
 # Second stage: Only create minimal image:
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 RUN apt update && apt install -y libcjson1
 
 ARG SIG_ALG
@@ -120,17 +121,13 @@ ENV SUB_IP=${SUB_IP}
 ARG EXAMPLE
 ENV EXAMPLE=${EXAMPLE}
 
-ARG KEM_ALGLIST
-# Set the TLS_DEFAULT_GROUPS environment variable to permit selection of QSC KEMs, by default the ones associated with the openssl configuration are chosen
-ENV TLS_DEFAULT_GROUPS=${KEM_ALGLIST}
-
 ARG INSTALLDIR
 
 # Copy files from the local storage to a destination in the Docker image
 WORKDIR /
 RUN mkdir test
 ADD . /test
-RUN chmod 777 /test/* && sed -i 's/\r//' /test/*
+RUN chmod +x /test/*-start.sh
 
 # openssl
 COPY --from=builder ${INSTALLDIR} ${INSTALLDIR}
@@ -144,12 +141,19 @@ RUN ln -s /usr/local/lib/libmosquitto.so.1 /usr/lib/libmosquitto.so.1 && ldconfi
 
 # Dynamically link to Newly built OpenSSL
 ENV LD_LIBRARY_PATH=$INSTALLDIR/lib64
+ENV OPENSSL_CONF=${INSTALLDIR}/ssl/openssl.cnf
+ENV OPENSSL_MODULES=${INSTALLDIR}/lib64/ossl-modules
 
 # Set path
 ENV PATH="/usr/local/bin:/usr/local/sbin:${INSTALLDIR}/bin:$PATH"
 
 # Generate the CA key and the cert
 RUN openssl req -x509 -new -newkey $SIG_ALG -keyout /test/CA.key -out /test/CA.crt -nodes -subj "/O=test-ca" -days 3650
+
+# Run the broker and clients without root privileges.
+RUN useradd --system --user-group --uid 1883 --shell /usr/sbin/nologin mosquitto && \
+    chown -R mosquitto:mosquitto /test
+USER mosquitto
 
 # MQTTS port
 EXPOSE 8883
