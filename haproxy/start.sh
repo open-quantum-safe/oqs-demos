@@ -2,6 +2,12 @@
 set -eu
 
 if [ -n "${KEM_ALG:-}" ]; then
+   case "$KEM_ALG" in
+      *[!A-Za-z0-9_:]*)
+         echo "KEM_ALG must be a colon-separated list of group names" >&2
+         exit 1
+         ;;
+   esac
    echo "Setting KEM group $KEM_ALG"
    sed -i "s|curves [^[:space:]]*|curves $KEM_ALG|" /opt/haproxy/conf/haproxy.cfg
 fi
@@ -28,7 +34,10 @@ if ! kill -0 "$backend1" 2>/dev/null || ! kill -0 "$backend2" 2>/dev/null; then
    exit 1
 fi
 
-cat pki/server.crt pki/server.key > certkey.pem
+umask 077
+certkey_tmp=$(mktemp /opt/haproxy/.certkey.XXXXXX)
+cat pki/server.crt pki/server.key > "$certkey_tmp"
+mv -f "$certkey_tmp" certkey.pem
 
 # Start HAProxy:
 exec /opt/oqssa/sbin/haproxy -f /opt/haproxy/conf/haproxy.cfg

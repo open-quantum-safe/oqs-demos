@@ -11,7 +11,7 @@ The default build uses Alpine 3.24, OpenSSL 3.6.5, liboqs 0.16.0, oqs-provider 0
 1. `docker build -t oqs-haproxy .`
 2. `sh ./test.sh oqs-haproxy`
 
-The test starts the image, checks that oqs-provider is loaded, and requires a TLS 1.3 handshake with only `frodo640aes` offered. It validates the server certificate and checks that an HTTP response came from a backend.
+The test starts the image, checks that oqs-provider is loaded, and requires a TLS 1.3 handshake with only `frodo640aes` offered. It checks the negotiated group, verifies the `mayo2` certificate, and checks that an HTTP response came from a backend.
 
 To leave the server running, use `docker run --detach --rm --name oqs-haproxy -p 4433:4433 oqs-haproxy`.
 
@@ -53,7 +53,7 @@ The default is `mayo2`. Choose another TLS-capable signature algorithm from the 
 
 This defines the quantum-safe key exchange mechanisms to be supported.
 
-The default is `frodo640aes`. Set this build argument to a colon-separated list of [provider KEM groups](https://github.com/open-quantum-safe/oqs-provider#algorithms). At runtime, `KEM_ALG` can override the configured `curves` list. Set `TEST_GROUP` when running `test.sh` against an image built with a different group.
+The default is `frodo640aes`. Set this build argument to a colon-separated list of [provider KEM groups](https://github.com/open-quantum-safe/oqs-provider#algorithms). At runtime, `KEM_ALG` can override the configured `curves` list. Set `TEST_GROUP` or `TEST_SIG` when running `test.sh` against an image built with a different group or signature algorithm.
 
 ### HAPROXY_RELEASE and HAPROXY_MICRO
 
