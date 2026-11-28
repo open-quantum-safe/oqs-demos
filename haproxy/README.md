@@ -1,14 +1,21 @@
-This directory contains a Dockerfile that builds `haproxy` using OpenSSL v3 using the [OQS provider](https://github.com/open-quantum-safe/oqs-provider), which allows `haproxy` to negotiate quantum-safe keys and use quantum-safe authentication in TLS 1.3.
+# HAProxy demo
+
+This directory builds HAProxy with OpenSSL 3, [liboqs](https://github.com/open-quantum-safe/liboqs), and [oqs-provider](https://github.com/open-quantum-safe/oqs-provider) for experimental post-quantum TLS 1.3 key exchange and authentication. It includes two local lighttpd backends to demonstrate HTTPS load balancing.
+
+The default build uses Alpine 3.24, OpenSSL 3.6.5, liboqs 0.16.0, oqs-provider 0.12.0, and HAProxy 3.0.32. The default KEM group is `frodo640aes` and the certificate signature algorithm is `mayo2`. These exercise oqs-provider even when OpenSSL itself supplies standardized ML-KEM and ML-DSA algorithms.
 
 ## Getting started
 
 [Install Docker](https://docs.docker.com/install) and run the following commands in this directory:
 
-1. `docker build --build-arg SIG_ALG=<SIG> --build-arg KEM_ALGLIST=<KEMS> --tag oqs-haproxy .` (`<SIG>` can be any of the signature authentication algorithms and `<KEMS>` can be a colon separated list of the Key exchange mechanisms listed [here](https://github.com/open-quantum-safe/oqs-provider#algorithms)). An alternative, simplified build instruction is `docker build -t oqs-haproxy .`: This will generate the image with a default QSC algorithm and KEMs (dilithium3, p384_kyber768:kyber768 -- see Dockerfile to change this).
-2. `docker run --detach --rm --name oqs-haproxy -p 4433:4433 oqs-haproxy`
+1. `docker build -t oqs-haproxy .`
+2. `sh ./test.sh oqs-haproxy`
 
-This will start a docker container that has haproxy listening for TLS 1.3 connections on port 4433. Actual data will be served via a load-balanced `lighttpd` server running on ports 8181 and 8182.
+The test starts the image, checks that oqs-provider is loaded, and requires a TLS 1.3 handshake with only `frodo640aes` offered. It checks the negotiated group, verifies the `mayo2` certificate, and checks that an HTTP response came from a backend.
 
+To leave the server running, use `docker run --detach --rm --name oqs-haproxy -p 4433:4433 oqs-haproxy`.
+
+HAProxy listens for TLS 1.3 connections on port 4433 and serves content from two load-balanced `lighttpd` backends on ports 8181 and 8182.
 
 ## Usage
 
@@ -40,14 +47,14 @@ By default, the image is built such as to have maximum portability regardless of
 
 This defines the quantum-safe cryptographic signature algorithm for the internally generated (demonstration) CA and server certificates.
 
-The default value is 'dilithium3' but can be set to any value documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
+The default is `mayo2`. Choose another TLS-capable signature algorithm from the [provider algorithm list](https://github.com/open-quantum-safe/oqs-provider#algorithms) if needed.
 
 ### KEM_ALGLIST
 
 This defines the quantum-safe key exchange mechanisms to be supported.
 
-The default value is `p384_kyber768:kyber768` but can be set to any set of colon separated values documented [here](https://github.com/open-quantum-safe/oqs-provider#algorithms).
+The default is `frodo640aes`. Set this build argument to a colon-separated list of [provider KEM groups](https://github.com/open-quantum-safe/oqs-provider#algorithms). At runtime, `KEM_ALG` can override the configured `curves` list. Set `TEST_GROUP` or `TEST_SIG` when running `test.sh` against an image built with a different group or signature algorithm.
 
 ### HAPROXY_RELEASE and HAPROXY_MICRO
 
-These define the version of HAPROXY to use with the default set to 3.0 and 5 respectively to represent haproxy version 3.0.5.
+These select the HAProxy version, currently 3.0.32.

@@ -42,7 +42,6 @@ jobs:
       release_tag: ${{ inputs.release_tag }}
 
   haproxy:
-    if: false
     uses: ./.github/workflows/haproxy.yml
     secrets: inherit
     with:

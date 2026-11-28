@@ -85,22 +85,8 @@ jobs:
           name: haproxy-scan-results
           path: haproxy-scan-results.sarif
 
-      - name: Build the curl Docker image
-        uses: docker/build-push-action@v6
-        with:
-          load: true
-          context: curl
-          build-args: |
-            MAKE_DEFINES=-j4
-            ${{ inputs.build_main && env.build-args || null }}
-          tags: oqs-curl
-
-      - name: Test haproxy using curl
-        run: |
-          docker network create haproxy-test &&
-          docker run --network haproxy-test --detach --rm --name oqs-haproxy oqs-haproxy &&
-          sleep 4 &&
-          docker run --network haproxy-test oqs-curl curl -k https://oqs-haproxy:4433
+      - name: Test HAProxy TLS and backend response
+        run: sh haproxy/test.sh oqs-haproxy
 
       - name: Push Docker image to registries
         if: env.push == 'true'
